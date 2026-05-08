@@ -1,0 +1,219 @@
+# 扫描配置文件
+# Sweep Configuration for Experiments
+
+# 扫描全局配置
+sweep:
+  # 实验标识
+  experiment_id: "sweep_20250506"
+  experiment_name: "Jetson Energy Profiling Sweep"
+  description: "Comprehensive frequency sweep for energy profiling"
+
+  # 运行配置
+  runs:
+    warmup: 1           # 预热运行次数
+    measurement: 5       # 测量运行次数 (可根据实验调整)
+    cooldown: 30        # 冷却时间 (秒)
+
+  # 超时配置
+  timeouts:
+    warmup_run_sec: 300      # 单次预热运行超时
+    measurement_run_sec: 600  # 单次测量运行超时
+    total_sweep_hours: 24     # 整个扫描最大时间
+
+  # 数据保存配置
+  data:
+    save_raw_logs: true
+    save_intermediate: true
+    compression: true         # 是否压缩大文件
+    backup_frequency: 10       # 每N次运行后备份一次
+
+  # 进度监控
+  monitoring:
+    print_progress: true
+    progress_interval: 5       # 每N次运行打印一次进度
+    save_checkpoint: true      # 保存检查点，支持恢复
+    checkpoint_interval: 10   # 每N次配置后保存检查点
+
+# 恢复配置
+resume:
+  enable: true            # 是否支持从中断恢复
+  resume_from: null      # 指定从哪个检查点恢复
+  checkpoint_dir: "data/checkpoints"
+
+# 并发执行配置
+parallel:
+  enable: false         # 是否并发执行 (需要硬件支持)
+  max_workers: 1         # 最大并发数
+  gpu_locking: true      # 是否需要锁定GPU资源
+
+# 错误处理
+error_handling:
+  max_failures: 3        # 最大允许失败次数
+  skip_on_error: false   # 出错时是否跳过该配置
+  retry_on_failure: true # 失败时是否重试
+  retry_delay_sec: 10    # 重试延迟
+
+# 日志配置
+logging:
+  level: "INFO"
+  console_output: true
+  file_output: true
+  log_format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# 特定实验配置
+experiments:
+  # 实验 4.1: 测量稳定性实验
+  measurement_stability:
+    repeats: 10           # 更多重复次数验证稳定性
+    warmup: 1
+    cooldown: 30
+    timeout: 600          # 单次运行超时10分钟
+
+  # 实验 4.2: 单旋钮敏感性实验
+  single_knob_sensitivity:
+    repeats: 5
+    warmup: 1
+    cooldown: 20
+    timeout: 300          # 单次运行超时5分钟
+
+  # 实验 4.3: 频率组合实验
+  frequency_combinations:
+    repeats: 5
+    warmup: 1
+    cooldown: 20
+    timeout: 300
+
+  # 实验 4.4: Prefill/Decode 分阶段实验
+  phase_differences:
+    repeats: 5
+    warmup: 1
+    cooldown: 20
+    timeout: 300
+
+  # 实验 4.5: 负载特征可预测性实验
+  workload_predictability:
+    repeats: 3            # 相对较少重复，覆盖更多配置
+    warmup: 1
+    cooldown: 15
+    timeout: 300
+
+  # 实验 4.6: 频率切换开销实验
+  switching_overhead:
+    repeats: 10           # 更多重复以准确测量开销
+    warmup: 1
+    cooldown: 10
+    timeout: 180          # 短超时，因为主要测量切换时间
+
+  # 实验 4.7: SLO 约束下的端到端实验
+  slo_constrained:
+    repeats: 5
+    warmup: 1
+    cooldown: 20
+    timeout: 300
+
+# 数据质量检查
+quality_control:
+  # 异常值检测
+  outlier_detection:
+    enable: true
+    method: "iqr"         # 方法: iqr, zscore, isolation_forest
+    iqr_multiplier: 1.5    # IQR 倍数
+
+  # 数据一致性检查
+  consistency_checks:
+    enable: true
+    check_power_trends: true    # 检查功耗趋势是否合理
+    check_temp_trends: true    # 检查温度趋势是否合理
+    check_latency_bounds: true  # 检查延迟是否在合理范围内
+
+  # 重新运行策略
+  rerun:
+    on_outliers: true      # 检测到异常值时重新运行
+    max_reruns: 2         # 最大重新运行次数
+    on_inconsistency: true # 检测到不一致时重新运行
+
+# 资源监控
+resource_monitoring:
+  enable: true
+  interval_sec: 10       # 监控间隔
+  metrics:
+    - "cpu_usage"
+    - "memory_usage"
+    - "disk_usage"
+    - "gpu_memory"
+    - "temperature"
+  alerts:
+    cpu_usage_threshold: 90      # CPU 使用率告警阈值
+    memory_usage_threshold: 80   # 内存使用率告警阈值
+    temperature_threshold: 85     # 温度告警阈值
+
+# 实验元数据
+metadata:
+  experimenter: "Research Team"
+  institution: "Energy Infrastructure Lab"
+  project: "Jetson LLM Energy Profiling"
+  version: "1.0.0"
+
+  # 硬件环境
+  hardware:
+    device_model: "Jetson Orin"
+    serial_number: "TBD"
+    cpu_cores: 12
+    gpu_cores: 2048
+    memory_gb: 32
+
+  # 软件环境
+  software:
+    os: "Ubuntu 20.04"
+    kernel: "5.15.0"
+    jetpack: "r36.3.0"
+    cuda: "12.2"
+    tensorrt: "8.6"
+    tensorrt_llm: "0.9.0"
+    python: "3.10"
+
+# 结果输出配置
+output:
+  format: "parquet"       # 输出格式: parquet, csv, json
+  compression: "snappy"    # 压缩格式
+  include_metadata: true   # 是否包含实验元数据
+  include_statistics: true # 是否包含统计信息
+
+  # 可视化配置
+  visualization:
+    generate_plots: true
+    plot_formats: ["png", "pdf"]
+    dpi: 150
+    figure_size: [10, 6]
+
+  # 报告配置
+  report:
+    generate_report: true
+    report_format: "markdown"
+    include_summary: true
+    include_details: true
+    include_recommendations: true
+
+# 实验调度
+scheduling:
+  # 时间窗口
+  time_windows:
+    start_time: "00:00"    # 每天开始时间
+    end_time: "23:59"      # 每天结束时间
+    break_times: ["12:00-13:00", "18:00-19:00"]  # 休息时间
+
+  # 优先级配置
+  priority:
+    critical_experiments: ["measurement_stability", "frequency_combinations"]
+    standard_experiments: ["single_knob_sensitivity", "phase_differences"]
+    exploratory_experiments: ["workload_predictability", "switching_overhead"]
+
+  # 实验顺序
+  execution_order:
+    - "measurement_stability"      # 首先验证测量稳定性
+    - "single_knob_sensitivity"    # 然后了解单旋钮影响
+    - "frequency_combinations"      # 验证频率组合效果
+    - "phase_differences"           # 验证分阶段差异
+    - "switching_overhead"          # 测量切换开销
+    - "workload_predictability"     # 验证可预测性
+    - "slo_constrained"            # 最后进行端到端验证

@@ -1,0 +1,100 @@
+2026-05-06 21:51:17,040 - __main__ - INFO - ================================================================================
+2026-05-06 21:51:17,040 - __main__ - INFO - STARTING ALL PRELIMINARY EXPERIMENTS (4.1 to 4.7)
+2026-05-06 21:51:17,040 - __main__ - INFO - ================================================================================
+2026-05-06 21:51:17,040 - __main__ - INFO - 
+Running Experiment 4_1...
+2026-05-06 21:51:17,040 - __main__ - INFO - Experiment 4.1: Measurement Stability
+2026-05-06 21:51:17,040 - synthetic_benchmark - INFO - Running synthetic benchmark with workload: {'batch_size': 1, 'prompt_len': 512, 'output_len': 128, 'phase': 'mixed'}
+2026-05-06 21:51:17,041 - synthetic_benchmark - INFO - Frequencies: GPU=846MHz, CPU=1479MHz, EMC=1600MHz
+2026-05-06 21:51:17,041 - synthetic_benchmark - INFO - Simulating full inference: prompt=512, output=128, batch=1
+2026-05-06 21:51:17,041 - synthetic_benchmark - INFO - Simulating prefill phase with 512 tokens
+2026-05-06 21:51:17,041 - synthetic_benchmark - INFO - Prefill metrics: 112.67ms, 28.2W, 3.17J
+2026-05-06 21:51:17,041 - synthetic_benchmark - INFO - Simulating decode phase generating 128 tokens
+2026-05-06 21:51:17,041 - synthetic_benchmark - INFO - Decode metrics: TTFT=12.19ms, TPOT=7.54ms, 11.7W, 11.32J
+2026-05-06 21:51:17,041 - synthetic_benchmark - INFO - Full inference completed: 1078.51ms total, 14.50J total
+2026-05-06 21:51:17,142 - synthetic_benchmark - INFO - Running synthetic benchmark with workload: {'batch_size': 1, 'prompt_len': 512, 'output_len': 128, 'phase': 'mixed'}
+2026-05-06 21:51:17,142 - synthetic_benchmark - INFO - Frequencies: GPU=846MHz, CPU=1479MHz, EMC=1600MHz
+2026-05-06 21:51:17,142 - synthetic_benchmark - INFO - Simulating full inference: prompt=512, output=128, batch=1
+2026-05-06 21:51:17,142 - synthetic_benchmark - INFO - Simulating prefill phase with 512 tokens
+2026-05-06 21:51:17,142 - synthetic_benchmark - INFO - Prefill metrics: 104.50ms, 27.6W, 2.88J
+2026-05-06 21:51:17,142 - synthetic_benchmark - INFO - Simulating decode phase generating 128 tokens
+2026-05-06 21:51:17,142 - synthetic_benchmark - INFO - Decode metrics: TTFT=10.17ms, TPOT=7.54ms, 16.3W, 15.68J
+2026-05-06 21:51:17,142 - synthetic_benchmark - INFO - Full inference completed: 1068.93ms total, 18.56J total
+2026-05-06 21:51:17,242 - synthetic_benchmark - INFO - Running synthetic benchmark with workload: {'batch_size': 1, 'prompt_len': 512, 'output_len': 128, 'phase': 'mixed'}
+2026-05-06 21:51:17,243 - synthetic_benchmark - INFO - Frequencies: GPU=846MHz, CPU=1479MHz, EMC=1600MHz
+2026-05-06 21:51:17,243 - synthetic_benchmark - INFO - Simulating full inference: prompt=512, output=128, batch=1
+2026-05-06 21:51:17,243 - synthetic_benchmark - INFO - Simulating prefill phase with 512 tokens
+2026-05-06 21:51:17,243 - synthetic_benchmark - INFO - Prefill metrics: 111.19ms, 20.1W, 2.24J
+2026-05-06 21:51:17,243 - synthetic_benchmark - INFO - Simulating decode phase generating 128 tokens
+2026-05-06 21:51:17,243 - synthetic_benchmark - INFO - Decode metrics: TTFT=11.56ms, TPOT=7.74ms, 18.4W, 18.22J
+2026-05-06 21:51:17,243 - synthetic_benchmark - INFO - Full inference completed: 1101.67ms total, 20.46J total
+2026-05-06 21:51:17,343 - synthetic_benchmark - INFO - Running synthetic benchmark with workload: {'batch_size': 1, 'prompt_len': 512, 'output_len': 128, 'phase': 'mixed'}
+2026-05-06 21:51:17,343 - synthetic_benchmark - INFO - Frequencies: GPU=846MHz, CPU=1479MHz, EMC=1600MHz
+2026-05-06 21:51:17,344 - synthetic_benchmark - INFO - Simulating full inference: prompt=512, output=128, batch=1
+2026-05-06 21:51:17,344 - synthetic_benchmark - INFO - Simulating prefill phase with 512 tokens
+2026-05-06 21:51:17,344 - synthetic_benchmark - INFO - Prefill metrics: 100.81ms, 17.6W, 1.78J
+2026-05-06 21:51:17,344 - synthetic_benchmark - INFO - Simulating decode phase generating 128 tokens
+2026-05-06 21:51:17,344 - synthetic_benchmark - INFO - Decode metrics: TTFT=11.33ms, TPOT=7.58ms, 16.2W, 15.76J
+2026-05-06 21:51:17,344 - synthetic_benchmark - INFO - Full inference completed: 1071.41ms total, 17.54J total
+2026-05-06 21:51:17,444 - synthetic_benchmark - INFO - Running synthetic benchmark with workload: {'batch_size': 1, 'prompt_len': 512, 'output_len': 128, 'phase': 'mixed'}
+2026-05-06 21:51:17,444 - synthetic_benchmark - INFO - Frequencies: GPU=846MHz, CPU=1479MHz, EMC=1600MHz
+2026-05-06 21:51:17,445 - synthetic_benchmark - INFO - Simulating full inference: prompt=512, output=128, batch=1
+2026-05-06 21:51:17,445 - synthetic_benchmark - INFO - Simulating prefill phase with 512 tokens
+2026-05-06 21:51:17,445 - synthetic_benchmark - INFO - Prefill metrics: 112.11ms, 25.5W, 2.85J
+2026-05-06 21:51:17,445 - synthetic_benchmark - INFO - Simulating decode phase generating 128 tokens
+2026-05-06 21:51:17,445 - synthetic_benchmark - INFO - Decode metrics: TTFT=12.51ms, TPOT=7.59ms, 8.6W, 8.41J
+2026-05-06 21:51:17,445 - synthetic_benchmark - INFO - Full inference completed: 1084.68ms total, 11.27J total
+2026-05-06 21:51:17,545 - synthetic_benchmark - INFO - Running synthetic benchmark with workload: {'batch_size': 1, 'prompt_len': 512, 'output_len': 128, 'phase': 'mixed'}
+2026-05-06 21:51:17,546 - synthetic_benchmark - INFO - Frequencies: GPU=846MHz, CPU=1479MHz, EMC=1600MHz
+2026-05-06 21:51:17,546 - synthetic_benchmark - INFO - Simulating full inference: prompt=512, output=128, batch=1
+2026-05-06 21:51:17,546 - synthetic_benchmark - INFO - Simulating prefill phase with 512 tokens
+2026-05-06 21:51:17,546 - synthetic_benchmark - INFO - Prefill metrics: 102.21ms, 28.0W, 2.87J
+2026-05-06 21:51:17,546 - synthetic_benchmark - INFO - Simulating decode phase generating 128 tokens
+2026-05-06 21:51:17,546 - synthetic_benchmark - INFO - Decode metrics: TTFT=11.22ms, TPOT=7.52ms, 19.5W, 18.76J
+2026-05-06 21:51:17,546 - synthetic_benchmark - INFO - Full inference completed: 1064.91ms total, 21.62J total
+2026-05-06 21:51:17,647 - synthetic_benchmark - INFO - Running synthetic benchmark with workload: {'batch_size': 1, 'prompt_len': 512, 'output_len': 128, 'phase': 'mixed'}
+2026-05-06 21:51:17,647 - synthetic_benchmark - INFO - Frequencies: GPU=846MHz, CPU=1479MHz, EMC=1600MHz
+2026-05-06 21:51:17,647 - synthetic_benchmark - INFO - Simulating full inference: prompt=512, output=128, batch=1
+2026-05-06 21:51:17,647 - synthetic_benchmark - INFO - Simulating prefill phase with 512 tokens
+2026-05-06 21:51:17,647 - synthetic_benchmark - INFO - Prefill metrics: 84.74ms, 24.8W, 2.10J
+2026-05-06 21:51:17,648 - synthetic_benchmark - INFO - Simulating decode phase generating 128 tokens
+2026-05-06 21:51:17,648 - synthetic_benchmark - INFO - Decode metrics: TTFT=9.85ms, TPOT=7.65ms, 16.2W, 15.82J
+2026-05-06 21:51:17,648 - synthetic_benchmark - INFO - Full inference completed: 1062.77ms total, 17.92J total
+2026-05-06 21:51:17,748 - synthetic_benchmark - INFO - Running synthetic benchmark with workload: {'batch_size': 1, 'prompt_len': 512, 'output_len': 128, 'phase': 'mixed'}
+2026-05-06 21:51:17,749 - synthetic_benchmark - INFO - Frequencies: GPU=846MHz, CPU=1479MHz, EMC=1600MHz
+2026-05-06 21:51:17,749 - synthetic_benchmark - INFO - Simulating full inference: prompt=512, output=128, batch=1
+2026-05-06 21:51:17,749 - synthetic_benchmark - INFO - Simulating prefill phase with 512 tokens
+2026-05-06 21:51:17,749 - synthetic_benchmark - INFO - Prefill metrics: 104.46ms, 26.5W, 2.77J
+2026-05-06 21:51:17,749 - synthetic_benchmark - INFO - Simulating decode phase generating 128 tokens
+2026-05-06 21:51:17,750 - synthetic_benchmark - INFO - Decode metrics: TTFT=11.97ms, TPOT=7.53ms, 19.2W, 18.50J
+2026-05-06 21:51:17,750 - synthetic_benchmark - INFO - Full inference completed: 1068.27ms total, 21.27J total
+2026-05-06 21:51:17,850 - synthetic_benchmark - INFO - Running synthetic benchmark with workload: {'batch_size': 1, 'prompt_len': 512, 'output_len': 128, 'phase': 'mixed'}
+2026-05-06 21:51:17,850 - synthetic_benchmark - INFO - Frequencies: GPU=846MHz, CPU=1479MHz, EMC=1600MHz
+2026-05-06 21:51:17,850 - synthetic_benchmark - INFO - Simulating full inference: prompt=512, output=128, batch=1
+2026-05-06 21:51:17,850 - synthetic_benchmark - INFO - Simulating prefill phase with 512 tokens
+2026-05-06 21:51:17,851 - synthetic_benchmark - INFO - Prefill metrics: 93.62ms, 20.1W, 1.88J
+2026-05-06 21:51:17,851 - synthetic_benchmark - INFO - Simulating decode phase generating 128 tokens
+2026-05-06 21:51:17,851 - synthetic_benchmark - INFO - Decode metrics: TTFT=10.08ms, TPOT=7.46ms, 14.0W, 13.32J
+2026-05-06 21:51:17,851 - synthetic_benchmark - INFO - Full inference completed: 1047.55ms total, 15.21J total
+2026-05-06 21:51:17,952 - synthetic_benchmark - INFO - Running synthetic benchmark with workload: {'batch_size': 1, 'prompt_len': 512, 'output_len': 128, 'phase': 'mixed'}
+2026-05-06 21:51:17,952 - synthetic_benchmark - INFO - Frequencies: GPU=846MHz, CPU=1479MHz, EMC=1600MHz
+2026-05-06 21:51:17,952 - synthetic_benchmark - INFO - Simulating full inference: prompt=512, output=128, batch=1
+2026-05-06 21:51:17,952 - synthetic_benchmark - INFO - Simulating prefill phase with 512 tokens
+2026-05-06 21:51:17,952 - synthetic_benchmark - INFO - Prefill metrics: 97.43ms, 24.1W, 2.35J
+2026-05-06 21:51:17,952 - synthetic_benchmark - INFO - Simulating decode phase generating 128 tokens
+2026-05-06 21:51:17,953 - synthetic_benchmark - INFO - Decode metrics: TTFT=12.81ms, TPOT=7.54ms, 19.3W, 18.64J
+2026-05-06 21:51:17,953 - synthetic_benchmark - INFO - Full inference completed: 1063.34ms total, 20.99J total
+2026-05-06 21:51:18,053 - __main__ - ERROR - ❌ Experiment 4_1 failed: list indices must be integers or slices, not str
+2026-05-06 21:51:18,053 - __main__ - INFO - 
+Running Experiment 4_2...
+2026-05-06 21:51:18,053 - __main__ - INFO - Experiment 4.2: Single-Knob Sensitivity
+2026-05-06 21:51:18,054 - synthetic_benchmark - INFO - Running synthetic benchmark with workload: {'batch_size': 1, 'prompt_len': 512, 'output_len': 128, 'phase': 'mixed'}
+2026-05-06 21:51:18,054 - synthetic_benchmark - INFO - Frequencies: GPU=378MHz, CPU=1479MHz, EMC=1600MHz
+2026-05-06 21:51:18,054 - synthetic_benchmark - INFO - Simulating full inference: prompt=512, output=128, batch=1
+2026-05-06 21:51:18,054 - synthetic_benchmark - INFO - Simulating prefill phase with 512 tokens
+2026-05-06 21:51:18,054 - synthetic_benchmark - INFO - Prefill metrics: 119.60ms, 25.2W, 3.02J
+2026-05-06 21:51:18,054 - synthetic_benchmark - INFO - Simulating decode phase generating 128 tokens
+2026-05-06 21:51:18,054 - synthetic_benchmark - INFO - Decode metrics: TTFT=12.80ms, TPOT=7.48ms, 15.0W, 14.34J
+2026-05-06 21:51:18,055 - synthetic_benchmark - INFO - Full inference completed: 1077.88ms total, 17.35J total
+2026-05-06 21:51:18,055 - synthetic_benchmark - INFO - Running synthetic benchmark with workload: {'batch_size': 1, 'prompt_len': 512, 'output_len': 128, 'phase': 'mixed'}
+2026-05-06 21:51:18,055 - synthetic_benchmark - INFO - Frequencies: GPU=846MHz, CPU=1479MHz, EMC=1600MHz

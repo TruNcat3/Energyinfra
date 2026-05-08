@@ -1,0 +1,304 @@
+# 工作负载配置文件（更新版 - 使用所有频率档位进行对比）
+# Workload Configuration (Updated - Use all frequency levels for comparison)
+
+# 模型配置
+models:
+  - name: "qwen-7b-int4"
+    display_name: "Qwen-7B-INT4"
+    params: "7B"
+    quantization: "int4"
+    engine_path: "/path/to/qwen-7b-int4.engine"
+    context_length: 4096
+    max_output_length: 512
+
+# 批处理大小配置
+batch_sizes:
+  - 1      # 单请求 (single request)
+  - 2      # 小批量
+  - 4      # 中批量
+  - 8      # 大批量
+
+# Prompt 长度配置 (tokens)
+prompt_lengths:
+  - 128    # 短 prompt
+  - 512    # 中等 prompt
+  - 1024   # 长 prompt
+  - 2048   # 超长 prompt
+
+# Output 长度配置 (tokens)
+output_lengths:
+  - 32     # 短输出
+  - 128    # 中等输出
+  - 512    # 长输出
+
+# 推理阶段配置
+phases:
+  - "prefill"       # 仅 prefill 阶段
+  - "decode"        # 仅 decode 阶段
+  - "mixed"         # 混合阶段 (正常推理)
+
+# 并发度配置 (并发请求数)
+concurrency_levels:
+  - 1      # 单并发
+  - 2      # 低并发
+  - 4      # 中并发
+  - 8      # 高并发
+
+# 前置实验特定配置（更新版 - 使用所有频率档位进行对比）
+preliminary_experiments:
+  # 实验 4.1: 测量稳定性实验
+  measurement_stability:
+    model: "qwen-7b-int4"
+    batch_size: 1
+    prompt_len: 512
+    output_len: 128
+    phase: "mixed"
+    concurrency: 1
+    repeats: 10               # 重复次数
+    warmup_runs: 1           # 预热运行次数
+    # 使用所有频率档位进行对比（Jetson Orin 的完整频率范围）
+    gpu_freqs: [378, 513, 624, 729, 846, 936, 1065, 1152, 1242, 1308, 1428]  # 所有可用的 GPU 频率
+    cpu_freqs: [1020, 1152, 1200, 1479, 1632, 1764, 1908, 2015]  # 所有可用的 CPU 频率
+    emc_freqs: [133, 800, 1066, 1333, 1600, 1866, 2133]  # 所有可用的 EMC 频率
+    # 注意：不是简单的 low/mid/high，而是使用所有可用的频率进行对比
+
+  # 实验 4.2: 单旋钮敏感性实验（更新版）
+  single_knob_sensitivity:
+    model: "qwen-7b-int4"
+    batch_size: 1
+    prompt_len: 512
+    output_len: 128
+    phase: "mixed"
+    concurrency: 1
+    repeats: 5                 # 每个配置重复5次
+    warmup_runs: 1
+
+    # GPU sweep（使用所有 GPU 频率）
+    gpu_sweep:
+      gpu_freqs: [378, 513, 624, 729, 846, 936, 1065, 1152, 1242, 1308, 1428]
+      cpu_freq: 1479          # 固定 CPU 频率（中高）
+      emc_freq: 1600          # 固定 EMC 频率（中高）
+      total_configs: 13 * 5 = 65  # 13 个 GPU 频率 × 5 次重复
+
+    # CPU sweep（使用所有 CPU 频率）
+    cpu_sweep:
+      gpu_freq: 846              # 固定 GPU 频率（中）
+      cpu_freqs: [1020, 1152, 1200, 1479, 1632, 1764, 1908, 2015]
+      emc_freq: 1600          # 固定 EMC 频率（中高）
+      total_configs: 9 * 5 = 45  # 9 个 CPU 频率 × 5 次重复
+
+    # EMC sweep（使用所有 EMC 频率）
+    emc_sweep:
+      gpu_freq: 846              # 固定 GPU 频率（中）
+      cpu_freq: 1479          # 固定 CPU 频率（中高）
+      emc_freqs: [133, 800, 1066, 1333, 1600, 1866, 2133]
+      total_configs: 7 * 5 = 35  # 7 个 EMC 频率 × 5 次重复
+
+  # 实验 4.3: 频率组合交互实验（更新版 - 使用所有频率档位）
+  frequency_combinations:
+    model: "qwen-7b-int4"
+    batch_size: 1
+    prompt_len: 512
+    output_len: 128
+    phase: "mixed"
+    concurrency: 1
+    repeats: 5                 # 每个组合重复5次
+
+    # 使用部分关键频率档位进行全因子扫描（避免实验规模过大）
+    # 策略：选择代表性的频率档位覆盖整个范围
+    gpu_freqs: [378, 846, 1428]  # 低、中、高
+    cpu_freqs: [1020, 1479, 2015]  # 低、中、高
+    emc_freqs: [133, 1600, 2133]  # 低、中、高
+
+    # 部分扫描策略：先粗粒度扫描找到最优区域，然后细粒度验证
+    # 粗粒度扫描：27 个组合 (3×3×3)
+    gpu_freqs_coarse: [378, 846, 1428]
+    cpu_freqs_coarse: [1020, 1479, 2015]
+    emc_freqs_coarse: [133, 1600, 2133]
+
+    total_configs: 27 * 5 = 135  # 27 个组合 × 5 次重复
+
+  # 实验 4.4: Prefill/Decode 分阶段实验（更新版）
+  phase_differences:
+    model: "qwen-7b-int4"
+    batch_size: 1
+    concurrency: 1
+    repeats: 5
+
+    # 使用所有 GPU 频率档位进行不同阶段测试
+    gpu_freqs: [378, 513, 624, 729, 846, 936, 1065, 1152, 1242, 1308, 1428]
+
+    # Only-prefill
+    only_prefill:
+      prompt_len: 512
+      output_len: 0             # 无输出，仅测量 prefill
+      phase: "prefill"
+
+    # Only-decode
+    only_decode:
+      prompt_len: 128
+      output_len: 128
+      phase: "decode"
+
+    # Prefill-heavy
+    prefill_heavy:
+      prompt_len: 1024          # 长 prompt
+      output_len: 32            # 短输出
+      phase: "mixed"
+
+    # Decode-heavy
+    decode_heavy:
+      prompt_len: 128            # 短 prompt
+      output_len: 512            # 长输出
+      phase: "mixed"
+
+    total_scenarios: 4 * 5 = 20  # 4 个场景 × 5 次重复
+
+  # 实验 4.5: 负载特征可预测性实验
+  workload_predictability:
+    model: "qwen-7b-int4"
+    repeats: 3                 # 相对较少重复，因为要覆盖更多配置
+
+    # 采样策略：覆盖更多 workload 变化，同时保持实验规模可控
+    batch_sizes: [1, 2, 4]
+    prompt_lengths: [128, 512, 1024]
+    output_lengths: [32, 128, 512]
+
+    # 组合策略（减少总配置数）
+    # 使用部分代表性配置而不是全组合
+    sampled_configs: []
+    for bs in batch_sizes:
+        for pl in prompt_lengths[:2]:        # 采样部分 prompt 长度
+            for ol in output_lengths[:2]:    # 采样部分 output 长度
+                for phase in ["prefill", "decode"]:
+                    sampled_configs.append({
+                        'batch_size': bs,
+                        'prompt_len': pl,
+                        'output_len': ol,
+                        'phase': phase
+                    })
+
+    total_configs: len(sampled_configs) * 3 = 12  # 12 个配置 × 3 次重复
+
+  # 实验 4.6: 频率切换开销实验
+  switching_overhead:
+    model: "qwen-7b-int4"
+    batch_size: 1
+    prompt_len: 512
+    output_len: 128
+    phase: "mixed"
+    concurrency: 1
+    repeats: 10               # 更多重复以准确测量开销
+
+    # 各种频率切换场景
+    gpu_switches:
+      - from: "low", to: "high"
+      - from: "high", to: "low"
+      - from: "mid", to: "high"
+      - from: "mid", to: "low"
+      # 跨大范围的切换
+      - from: "378", to: "1428"
+      - from: "1428", to: "378"
+
+    emc_switches:
+      - from: "low", to: "high"
+      - from: "high", to: "low"
+      - from: "133", to: "2133"
+
+    cpu_switches:
+      - from: "low", to: "high"
+      - from: "high", to: "low"
+
+    # Phase boundary switching
+    phase_boundary:
+      prompt_len: 512
+      output_len: 256
+      phase: "mixed"
+
+    total_switch_scenarios: 7 * 10 = 70  # 7 种切换类型 × 10 次重复
+
+  # 实验 4.7: SLO 约束下的端到端实验
+  slo_constrained:
+    model: "qwen-7b-int4"
+    batch_size: 1
+    prompt_len: 512
+    output_len: 128
+    phase: "mixed"
+    concurrency: 1
+    repeats: 5
+
+    # Baseline 配置对比（更新版 - 使用更多档位）
+    baselines:
+      - name: "default_governor"
+        use_default: true          # 使用系统默认频率
+        gpu_freq: null
+        cpu_freq: null
+        emc_freq: null
+
+      - name: "max_n"
+        use_default: false
+        gpu_freq: 1428            # 最高 GPU 频率
+        cpu_freq: 2015            # 最高 CPU 频率
+        emc_freq: 2133            # 最高 EMC 频率
+
+      - name: "mid_range"
+        use_default: false
+        gpu_freq: 846              # 中档 GPU 频率
+        cpu_freq: 1479            # 中档 CPU 频率
+        emc_freq: 1600            # 中档 EMC 频率
+
+      - name: "low_range"
+        use_default: false
+        gpu_freq: 378              # 低档 GPU 频率
+        cpu_freq: 1020            # 低档 CPU 频率
+        emc_freq: 133             # 低档 EMC 频率
+
+      - name: "balanced_efficiency"
+        use_default: false
+        gpu_freq: 846              # 中 GPU 频率
+        cpu_freq: 1479            # 中 CPU 频率
+        emc_freq: 2133            # 高 EMC 频率（平衡内存访问）
+
+    # 测试场景（不同 SLO 优先级）
+    test_scenarios:
+      - name: "latency_optimized"
+        description: "延迟优先，最小化 TTFT 和 TPOT"
+        slo:
+          ttft_ms: 500           # 更严格的延迟要求
+          tpot_ms: 60
+          max_power_w: 60       # 允许更高功耗
+
+      - name: "throughput_optimized"
+        description: "吞吐量优先，最大化 tokens/s"
+        slo:
+          ttft_ms: 1000          # 较宽松的延迟要求
+          tpot_ms: 100
+          max_power_w: 50
+          throughput_min: 25.0   # 最小吞吐量要求
+
+      - name: "energy_optimized"
+        description: "能效优先，最小化 energy/token"
+        slo:
+          ttft_ms: 1000          # 较宽松的延迟要求
+          tpot_ms: 100
+          max_power_w: 30       # 较低的功耗限制
+
+    # 重要调整：所有能效对比都应该在满足 SLO 的条件下进行
+    # 不满足 SLO 的点应该在对比中被去除，避免不公平的比较
+    slo_filtering:
+      enabled: true
+      remove_violations: true    # 是否移除不满足 SLO 的配置
+
+# Benchmark 命令模板
+benchmark_template:
+  runtime: "tensorrt_llm"
+  command_template: "python run_benchmark.py --model {model} --engine {engine_path} --batch-size {batch_size} --input-len {prompt_len} --output-len {output_len} --warmup {warmup_runs} --repeats {repeats} --gpu-freq {gpu_freq} --cpu-freq {cpu_freq} --emc-freq {emc_freq}"
+
+  # TensorRT-LLM 特定配置
+  tensorrt_llm:
+    use_fp16: true
+    use_graph: true
+    num_beams: 1
+    top_k: 50
+    top_p: 0.9
+    temperature: 0.8

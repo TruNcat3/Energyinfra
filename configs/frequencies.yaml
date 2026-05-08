@@ -1,0 +1,191 @@
+# 频率配置文件
+# Frequency Configuration for Jetson Orin
+
+# Jetson Orin 频率配置 (具体数值需要根据实际设备确认)
+platform: jetson_orin
+
+# GPU 频率配置
+gpu:
+  # 可用频率选项 (MHz)
+  available:
+    - 378    # 最低频率
+    - 513
+    - 624
+    - 729
+    - 846
+    - 936
+    - 1065
+    - 1152
+    - 1242
+    - 1308
+    - 1428   # 最高频率
+
+  # 预设档位
+  presets:
+    low: 378      # 低功耗档位
+    mid: 846      # 平衡档位
+    high: 1428    # 高性能档位
+
+  # 频率限制
+  limits:
+    min: 378
+    max: 1428
+    step: 135      # 最小调节步长
+
+# CPU 频率配置
+cpu:
+  # 可用频率选项 (MHz)
+  available:
+    - 1020   # 最低频率
+    - 1152
+    - 1200
+    - 1479
+    - 1632
+    - 1776
+    - 1908
+    - 2015   # 最高频率
+
+  # 预设档位
+  presets:
+    low: 1020     # 低功耗档位
+    mid: 1479     # 平衡档位
+    high: 2015    # 高性能档位
+
+  # 频率限制
+  limits:
+    min: 1020
+    max: 2015
+    step: 135      # 最小调节步长
+
+# EMC 频率配置 (External Memory Controller)
+emc:
+  # 可用频率选项 (MHz)
+  available:
+    - 133    # 最低频率
+    - 800
+    - 1066
+    - 1333
+    - 1600
+    - 1866
+    - 2133   # 最高频率
+
+  # 预设档位
+  presets:
+    low: 133      # 低功耗档位
+    mid: 1600     # 平衡档位
+    high: 2133    # 高性能档位
+
+  # 频率限制
+  limits:
+    min: 133
+    max: 2133
+    step: 667      # 最小调节步长
+
+# 频率组合配置
+combinations:
+  # 完全低功耗
+  all_low:
+    gpu: "low"
+    cpu: "low"
+    emc: "low"
+
+  # 完全高性能
+  all_high:
+    gpu: "high"
+    cpu: "high"
+    emc: "high"
+
+  # 平衡配置
+  balanced:
+    gpu: "mid"
+    cpu: "mid"
+    emc: "mid"
+
+  # 高 GPU，低其他 (适合计算密集型)
+  high_gpu:
+    gpu: "high"
+    cpu: "mid"
+    emc: "mid"
+
+  # 高 EMC，低其他 (适合内存密集型)
+  high_emc:
+    gpu: "mid"
+    cpu: "mid"
+    emc: "high"
+
+  # 高 CPU，低其他 (适合控制密集型)
+  high_cpu:
+    gpu: "mid"
+    cpu: "high"
+    emc "mid"
+
+  # 潜在能效最优 (假设)
+  efficiency:
+    gpu: "high"    # 保持 GPU 高性能
+    cpu: "mid"     # CPU 中等频率
+    emc: "high"    # EMC 高性能 (对 KV cache 重要)
+
+# 频率切换策略
+switching:
+  # 频率切换开销估计 (毫秒)
+  overhead_ms:
+    gpu: 10        # GPU 切换开销
+    cpu: 5         # CPU 切换开销
+    emc: 2         # EMC 切换开销
+
+  # 最小保持时间 (秒) - 避免频繁切换
+  min_hold_time_sec:
+    gpu: 5
+    cpu: 3
+    emc: 2
+
+  # Hysteresis 阈值 - 避免抖动
+  hysteresis_mhz:
+    gpu: 100       # GPU 频率至少变化 100MHz 才切换
+    cpu: 200       # CPU 频率至少变化 200MHz 才切换
+    emc: 400       # EMC 频率至少变化 400MHz 才切换
+
+# 频率验证规则
+validation:
+  # 验证频率设置是否成功
+  verify_after_set: true
+
+  # 最大重试次数
+  max_retries: 3
+
+  # 重试间隔 (秒)
+  retry_interval_sec: 1
+
+  # 容差 (MHz) - 设置频率与实际读取频率的容差
+  tolerance_mhz:
+    gpu: 5
+    cpu: 10
+    emc: 10
+
+# 电源模式对应的频率建议
+power_modes:
+  # 15W 模式
+  mode_0:
+    gpu: "low"
+    cpu: "low"
+    emc: "low"
+
+  # 30W 模式
+  mode_1:
+    gpu: "mid"
+    cpu: "mid"
+    emc: "mid"
+
+  # 60W 模式
+  mode_2:
+    gpu: "high"
+    cpu: "high"
+    emc: "high"
+
+# 注意事项
+notes:
+  - "具体频率数值需要根据实际 Jetson Orin 设备确认"
+  - "不同 JetPack 版本可能支持不同的频率选项"
+  - "某些频率组合可能因电源限制不可用"
+  - "温度过高时可能触发热降频，实际频率可能低于设定频率"
+  - "频率设置可能需要 sudo 权限"

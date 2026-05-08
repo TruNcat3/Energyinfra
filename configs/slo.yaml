@@ -1,0 +1,297 @@
+# SLO (Service Level Objective) 配置文件
+# Service Level Objectives Configuration
+
+# 全局 SLO 配置
+slo:
+  # SLO 类型
+  types:
+    - "latency"      # 延迟约束
+    - "throughput"    # 吞吐量约束
+    - "power"        # 功耗约束
+    - "temperature"  # 温度约束
+    - "energy"       # 能耗约束
+
+  # 约束严格程度
+  strictness:
+    strict: true      # 是否严格遵守约束 (false 时允许轻微违反)
+    violation_tolerance: 0.05  # 违反容忍度 (5%)
+    grace_period: 10            # 试用期 (秒)
+
+# 延迟约束
+latency:
+  # Time to First Token (TTFT) - 首词延迟
+  ttft:
+    enabled: true
+    constraint_ms: 1000         # 首词延迟不超过 1000ms
+    percentile: 95             # P95 延迟约束
+    violation_cost: 1.0         # 违反代价权重
+
+  # Time Per Output Token (TPOT) - 每输出词延迟
+  tpot:
+    enabled: true
+    constraint_ms: 80           # 每输出词延迟不超过 80ms
+    percentile: 95             # P95 延迟约束
+    violation_cost: 1.5         # 违反代价权重 (比 TTFT 更重要)
+
+  # Inter-Token Latency (ITL) - 词间延迟
+  itl:
+    enabled: true
+    constraint_ms: 70           # 词间延迟不超过 70ms
+    percentile: 99             # P99 延迟约束 (更严格)
+    violation_cost: 1.2         # 违反代价权重
+
+  # Overall Latency - 总延迟
+  total_latency:
+    enabled: true
+    constraint_ms: 5000         # 总延迟不超过 5秒
+    percentile: 95             # P95 延迟约束
+    violation_cost: 1.0         # 违反代价权重
+
+# 吞吐量约束
+throughput:
+  # Tokens Per Second (TPS) - 每秒生成词数
+  tps:
+    enabled: true
+    min_tps: 20.0             # 最小吞吐量 20 tokens/s
+    percentile: 50             # 中位数吞吐量约束
+    violation_cost: 1.0         # 违反代价权重
+
+  # Requests Per Second (RPS) - 每秒请求数
+  rps:
+    enabled: false            # 当前不启用
+    min_rps: 1.0              # 最小请求数 1 req/s
+    percentile: 95
+    violation_cost: 0.8
+
+  # Batch Throughput - 批量吞吐量
+  batch_throughput:
+    enabled: true
+    min_batch_tps: 10.0       # 最小批量吞吐量
+    percentile: 50
+    violation_cost: 1.0
+
+# 功耗约束
+power:
+  # 平均功耗
+  avg_power:
+    enabled: true
+    max_power_w: 40.0         # 平均功耗不超过 40W
+    measurement_window: 60     # 测量窗口 60秒
+    violation_cost: 2.0         # 违反代价权重 (功耗约束很重要)
+
+  # 峰值功耗
+  peak_power:
+    enabled: true
+    max_power_w: 60.0         # 峰值功耗不超过 60W
+    duration_ms: 1000          # 持续时间 1000ms
+    violation_cost: 1.5
+
+  # 功耗变化率
+  power_slew:
+    enabled: false            # 当前不启用
+    max_rate_w_per_sec: 10.0   # 最大功耗变化率
+    violation_cost: 0.5
+
+# 温度约束
+temperature:
+  # CPU 温度
+  cpu_temp:
+    enabled: true
+    max_temp_c: 80.0          # CPU 温度不超过 80°C
+    percentile: 99             # P99 温度约束
+    violation_cost: 2.0         # 违反代价权重 (温度约束很重要)
+
+  # GPU 温度
+  gpu_temp:
+    enabled: true
+    max_temp_c: 75.0          # GPU 温度不超过 75°C
+    percentile: 99
+    violation_cost: 2.0
+
+  # SoC 温度
+  soc_temp:
+    enabled: true
+    max_temp_c: 85.0          # SoC 温度不超过 85°C
+    percentile: 99
+    violation_cost: 2.0
+
+# 能耗约束
+energy:
+  # 能耗每请求
+  energy_per_request:
+    enabled: true
+    max_energy_j: 2000.0     # 每请求最大能耗 2000J
+    violation_cost: 1.5
+
+  # 能耗每词
+  energy_per_token:
+    enabled: true
+    max_energy_j: 10.0       # 每词最大能耗 10J
+    violation_cost: 2.0         # 违反代价权重 (能效是主要目标)
+
+  # 能效指标
+  tokens_per_joule:
+    enabled: true
+    min_tokens_per_j: 0.05    # 最小能效 0.05 tokens/J
+    violation_cost: 1.0
+
+# 多目标优化配置
+multi_objective:
+  # 优化目标
+  objectives:
+    primary: "minimize_energy"   # 主要目标：最小化能耗
+    secondary: "satisfy_slo"    # 次要目标：满足 SLO
+    tertiary: "maximize_performance"  # 第三目标：最大化性能
+
+  # 目标权重
+  weights:
+    energy_cost: 1.0           # 能耗成本权重
+    slo_violation: 2.0         # SLO 违反惩罚权重
+    performance: 0.5           # 性能权重
+
+  # 优化策略
+  strategy: "constrained"       # 策略: constrained, weighted, lexicographic
+  tolerance: 0.05             # 优化容忍度
+
+# 不同场景的 SLO 配置
+scenarios:
+  # 实时对话场景
+  real_time:
+    latency:
+      ttft_ms: 500
+      tpot_ms: 50
+      itl_ms: 40
+    throughput:
+      min_tps: 15.0
+    power:
+      max_power_w: 35.0
+    priority: "latency"
+
+  # 批处理场景
+  batch_processing:
+    latency:
+      ttft_ms: 2000
+      tpot_ms: 150
+      itl_ms: 120
+    throughput:
+      min_tps: 50.0
+    power:
+      max_power_w: 50.0
+    priority: "throughput"
+
+  # 低功耗场景
+  low_power:
+    latency:
+      ttft_ms: 1500
+      tpot_ms: 100
+      itl_ms: 80
+    throughput:
+      min_tps: 10.0
+    power:
+      max_power_w: 20.0
+    temperature:
+      max_temp_c: 70.0
+    priority: "power"
+
+  # 高性能场景
+  high_performance:
+    latency:
+      ttft_ms: 300
+      tpot_ms: 30
+      itl_ms: 25
+    throughput:
+      min_tps: 30.0
+    power:
+      max_power_w: 55.0
+    priority: "performance"
+
+# SLO 监控配置
+monitoring:
+  # 监控频率
+  check_interval_sec: 10         # 每 10 秒检查一次 SLO
+
+  # 违反检测
+  violation_detection:
+    window_size: 5             # 检测窗口大小
+    threshold: 0.8             # 违反阈值 (80% 的测量违反)
+    consecutive_violations: 3    # 连续违反次数
+
+  # 告警配置
+  alerts:
+    enable: true
+    alert_levels:
+      - "warning"              # 警告级别
+      - "critical"             # 严重级别
+      - "emergency"            # 紧急级别
+
+  # 自动调整
+  auto_adjust:
+    enable: true
+    adjustment_strategy: "conservative"  # 调整策略
+    max_adjustments_per_hour: 6          # 每小时最大调整次数
+    cooldown_between_adjustments: 600      # 调整间冷却时间 (秒)
+
+# SLO 满足度评估
+evaluation:
+  # 满足度指标
+  metrics:
+    - "slo_satisfaction_rate"   # SLO 满足率
+    - "mean_satisfaction_score"  # 平均满足度分数
+    - "worst_slo_violation"     # 最严重的 SLO 违反
+    - "energy_slo_ratio"        # 能耗-SLO 比率
+
+  # 满足度计算
+  calculation:
+    method: "weighted_sum"      # 计算方法: weighted_sum, product, min
+    normalize: true            # 是否归一化
+    clip: true                # 是否裁剪到 [0, 1] 范围
+
+  # 报告配置
+  reporting:
+    generate_report: true
+    report_interval: "after_each_sweep"  # 报告间隔
+    include_plots: true
+    include_recommendations: true
+
+# 基准 SLO (用于对比)
+baseline_slo:
+  # 当前系统默认配置的 SLO
+  default_governor:
+    energy_per_token_j: 12.5    # 假设的当前能耗
+    slo_satisfaction_rate: 0.85   # 85% 满足率
+
+  # 目标改进
+  improvement_targets:
+    energy_reduction_percent: 20.0     # 能耗降低 20%
+    slo_satisfaction_improvement: 0.10 # SLO 满足率提升 10%
+    performance_improvement: 0.15      # 性能提升 15%
+
+# SLO 配置验证
+validation:
+  # 一致性检查
+  consistency_checks:
+    enable: true
+    check_latencies: true      # 检查延迟设置的一致性
+    check_power_temp: true    # 检查功耗和温度设置的一致性
+    check_throughput_latency: true  # 检查吞吐量和延迟设置的一致性
+
+  # 可行性检查
+  feasibility_checks:
+    enable: true
+    check_power_budget: true   # 检查功耗预算的可行性
+    check_thermal_limits: true # 检查热限制的可行性
+    check_platform_limits: true # 检查平台限制的可行性
+
+  # 推荐配置
+  recommendations:
+    enable: true
+    provide_alternatives: true  # 提供替代配置
+    explain_reasons: true      # 解释推荐原因
+
+# 注意事项
+notes:
+  - "SLO 配置应根据实际应用场景调整"
+  - "不同场景可能有不同的优先级和约束"
+  - "能耗和性能之间存在权衡关系"
+  - "温度约束可能间接影响其他约束"
+  - "建议先进行基准测试，再根据结果调整 SLO"

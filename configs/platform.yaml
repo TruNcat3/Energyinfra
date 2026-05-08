@@ -1,0 +1,65 @@
+# Jetson 平台配置文件
+# Platform Configuration for Jetson Devices
+
+# 基本信息
+platform:
+  name: jetson_orin           # 平台名称: jetson_orin, jetson_xavier
+  jetpack_version: "r36.3.0"   # JetPack 版本
+  cuda_version: "12.2"          # CUDA 版本
+  tensorrt_version: "8.6"       # TensorRT 版本
+  tensorrt_llm_version: "0.9.0"  # TensorRT-LLM 版本
+
+# 电源管理
+power:
+  mode: 0                      # 电源模式: 0=15W, 1=30W, 2=60W (Jetson Orin)
+  governor: "performance"       # 频率调节器: performance, powersave, ondemand
+  max_power_w: 60              # 最大功耗限制 (瓦特)
+
+# 风扇控制
+fan:
+  mode: "auto"                # 风扇模式: auto, fixed
+  speed_percent: 50            # 固定模式下的风扇转速百分比 (0-100)
+  auto_threshold_c: 65         # 自动模式下的温度阈值 (摄氏度)
+
+# 温度控制
+thermal:
+  max_temp_c: 85              # 最高温度限制 (摄氏度)
+  warning_temp_c: 75          # 警告温度 (摄氏度)
+  throttle_temp_c: 80         # 降频温度 (摄氏度)
+
+# 频率控制配置
+frequency_control:
+  method: "jetson_clocks"     # 控制方法: jetson_clocks, sysfs, nvidia-smi
+  requires_sudo: true         # 是否需要 sudo 权限
+  min_hold_time_sec: 5        # 频率最小保持时间 (秒) - 避免频繁切换
+  cooldown_between_changes_sec: 2  # 频率切换间的冷却时间 (秒)
+
+# 工具路径
+tools:
+  jetson_clocks: "/usr/bin/jetson_clocks"
+  tegrastats: "/usr/bin/tegrastats"
+  nvidia_smi: "/usr/bin/nvidia-smi"
+
+# 数据采集配置
+monitoring:
+  tegrastats_interval_ms: 1000  # tegrastats 采样间隔 (毫秒)
+  power_monitoring: true        # 是否监控功耗
+  temp_monitoring: true        # 是否监控温度
+  freq_monitoring: true        # 是否监控频率
+  memory_monitoring: true      # 是否监控内存使用
+
+# 日志配置
+logging:
+  level: "INFO"               # 日志级别: DEBUG, INFO, WARNING, ERROR
+  log_dir: "data/raw_logs"    # 原始日志目录
+  parsed_dir: "data/parsed"   # 解析数据目录
+  save_raw_logs: true         # 是否保存原始日志
+  log_rotation: true          # 是否启用日志轮转
+  max_log_size_mb: 100       # 单个日志文件最大大小 (MB)
+
+# 实验环境
+environment:
+  python_version: "3.8+"      # Python 版本要求
+  cuda_visible_devices: "0"    # 可见的 CUDA 设备
+  model_dir: "/path/to/models"  # 模型目录
+  engine_dir: "/path/to/engines"  # TensorRT 引擎目录

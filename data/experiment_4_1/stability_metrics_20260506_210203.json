@@ -1,0 +1,63 @@
+{
+  "stability_metrics": {
+    "ttft": {
+      "mean": 12.045436420534546,
+      "std": 1.4460402214543426,
+      "min": 9.582657260584718,
+      "max": 14.02255233623336,
+      "cv": 0.12004880279714855,
+      "count": 10
+    },
+    "tpot": {
+      "mean": 7.577158684484242,
+      "std": 0.08638337478214084,
+      "min": 7.445395843352703,
+      "max": 7.7375400548707685,
+      "cv": 0.011400496990914047,
+      "count": 10
+    },
+    "energy_token": {
+      "mean": 0.12847414759950332,
+      "std": 0.017041842664041087,
+      "min": 0.10527074052393495,
+      "max": 0.1515559710943685,
+      "cv": 0.13264803061520347,
+      "count": 10
+    },
+    "throughput": {
+      "mean": 119.61957076534888,
+      "std": 1.3359970739914677,
+      "min": 116.88325337512295,
+      "max": 121.56963767923787,
+      "cv": 0.011168716502186917,
+      "count": 10
+    }
+  },
+  "evaluation": {
+    "ttft_stable": false,
+    "tpot_stable": true,
+    "energy_token_stable": false,
+    "throughput_stable": true,
+    "overall_stable": 0
+  },
+  "configuration": {
+    "workload": {
+      "batch_size": 1,
+      "prompt_len": 512,
+      "output_len": 128,
+      "phase": "mixed"
+    },
+    "frequency": {
+      "gpu_freq": 846,
+      "cpu_freq": 1479,
+      "emc_freq": 1600
+    },
+    "repeats": 10,
+    "thresholds": {
+      "energy_token_cv": 0.05,
+      "ttft_cv": 0.05,
+      "tpot_cv": 0.05,
+      "throughput_cv": 0.05
+    }
+  }
+}

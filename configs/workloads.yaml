@@ -1,0 +1,246 @@
+# 工作负载配置文件
+# Workload Configuration for LLM Inference
+
+# 模型配置
+models:
+  - name: "qwen-7b-int4"
+    display_name: "Qwen-7B-INT4"
+    params: "7B"
+    quantization: "int4"
+    engine_path: "/path/to/qwen-7b-int4.engine"
+    context_length: 4096
+    max_output_length: 512
+
+  - name: "llama-3-8b-fp16"
+    display_name: "Llama-3-8B-FP16"
+    params: "8B"
+    quantization: "fp16"
+    engine_path: "/path/to/llama-3-8b-fp16.engine"
+    context_length: 8192
+    max_output_length: 1024
+
+# 批处理大小配置
+batch_sizes:
+  - 1      # 单请求 (single request)
+  - 2      # 小批量
+  - 4      # 中批量
+  - 8      # 大批量
+  - 16     # 超大批量
+
+# Prompt 长度配置 (tokens)
+prompt_lengths:
+  - 128    # 短 prompt
+  - 512    # 中等 prompt
+  - 1024   # 长 prompt
+  - 2048   # 超长 prompt
+
+# Output 长度配置 (tokens)
+output_lengths:
+  - 32     # 短输出
+  - 128    # 中等输出
+  - 512    # 长输出
+
+# 推理阶段配置
+phases:
+  - "prefill"       # 仅 prefill 阶段
+  - "decode"        # 仅 decode 阶段
+  - "mixed"         # 混合阶段 (正常推理)
+
+# 并发度配置 (并发请求数)
+concurrency_levels:
+  - 1      # 单并发
+  - 2      # 低并发
+  - 4      # 中并发
+  - 8      # 高并发
+
+# 前置实验特定配置
+preliminary_experiments:
+  # 实验 4.1: 测量稳定性实验
+  measurement_stability:
+    model: "qwen-7b-int4"
+    batch_size: 1
+    prompt_len: 512
+    output_len: 128
+    phase: "mixed"
+    concurrency: 1
+    repeats: 10               # 重复次数
+    warmup_runs: 1           # 预热次数
+    gpu_freq: "high"
+    cpu_freq: "high"
+    emc_freq: "high"
+
+  # 实验 4.2: 单旋钮敏感性实验
+  single_knob_sensitivity:
+    model: "qwen-7b-int4"
+    batch_size: 1
+    prompt_len: 512
+    output_len: 128
+    phase: "mixed"
+    concurrency: 1
+    repeats: 5                # 每个配置重复5次
+    warmup_runs: 1
+
+    # GPU sweep (固定 CPU/EMC)
+    gpu_sweep:
+      gpu_freqs: ["low", "mid", "high"]
+      cpu_freq: "mid"
+      emc_freq: "mid"
+
+    # CPU sweep (固定 GPU/EMC)
+    cpu_sweep:
+      gpu_freq: "mid"
+      cpu_freqs: ["low", "mid", "high"]
+      emc_freq: "mid"
+
+    # EMC sweep (固定 GPU/CPU)
+    emc_sweep:
+      gpu_freq: "mid"
+      cpu_freq: "mid"
+      emc_freqs: ["low", "mid", "high"]
+
+  # 实验 4.3: 频率组合交互实验
+  frequency_combinations:
+    model: "qwen-7b-int4"
+    batch_size: 1
+    prompt_len: 512
+    output_len: 128
+    phase: "mixed"
+    concurrency: 1
+    repeats: 5                # 每个组合重复5次
+    warmup_runs: 1
+    gpu_freqs: ["low", "mid", "high"]
+    cpu_freqs: ["low", "mid", "high"]
+    emc_freqs: ["low", "mid", "high"]
+
+  # 实验 4.4: Prefill/Decode 分阶段实验
+  phase_differences:
+    model: "qwen-7b-int4"
+    batch_size: 1
+    concurrency: 1
+    repeats: 5
+    warmup_runs: 1
+    gpu_freqs: ["low", "mid", "high"]
+    cpu_freq: "high"
+    emc_freq: "high"
+
+    # Only-prefill
+    only_prefill:
+      prompt_len: 512
+      output_len: 0            # 无输出，仅测量 prefill
+      phase: "prefill"
+
+    # Only-decode
+    only_decode:
+      prompt_len: 128          # 短 prompt
+      output_len: 128
+      phase: "decode"
+
+    # Prefill-heavy
+    prefill_heavy:
+      prompt_len: 1024         # 长 prompt
+      output_len: 32           # 短输出
+      phase: "mixed"
+
+    # Decode-heavy
+    decode_heavy:
+      prompt_len: 128          # 短 prompt
+      output_len: 512          # 长输出
+      phase: "mixed"
+
+  # 实验 4.5: 负载特征可预测性实验
+  workload_predictability:
+    models: ["qwen-7b-int4"]
+    batch_sizes: [1, 2, 4]
+    prompt_lengths: [128, 512, 1024]
+    output_lengths: [32, 128, 512]
+    phases: ["prefill", "decode", "mixed"]
+    concurrency_levels: [1, 2, 4]
+    repeats: 3
+    warmup_runs: 1
+    # 使用所有频率组合
+
+  # 实验 4.6: 频率切换开销实验
+  switching_overhead:
+    model: "qwen-7b-int4"
+    batch_size: 1
+    prompt_len: 512
+    output_len: 128
+    phase: "mixed"
+    concurrency: 1
+    repeats: 10               # 重复多次测量切换开销
+    warmup_runs: 1
+
+    # GPU 切换
+    gpu_switches:
+      - from: "low", to: "high"
+      - from: "high", to: "low"
+      - from: "mid", to: "high"
+      - from: "high", to: "mid"
+
+    # EMC 切换
+    emc_switches:
+      - from: "low", to: "high"
+      - from: "high", to: "low"
+
+    # CPU 切换
+    cpu_switches:
+      - from: "low", to: "high"
+      - from: "high", to: "low"
+
+    # Phase boundary 切换
+    phase_boundary_switch:
+      prompt_len: 512
+      output_len: 256
+      phase: "mixed"
+
+  # 实验 4.7: SLO 约束下的端到端实验
+  slo_constrained:
+    model: "qwen-7b-int4"
+    batch_size: 1
+    prompt_len: 512
+    output_len: 128
+    phase: "mixed"
+    concurrency: 1
+    repeats: 5
+    warmup_runs: 1
+
+    # Baseline 配置
+    baselines:
+      - name: "default_governor"
+        gpu_freq: null        # 使用系统默认
+        cpu_freq: null
+        emc_freq: null
+
+      - name: "max_n"
+        gpu_freq: "high"
+        cpu_freq: "high"
+        emc_freq: "high"
+
+      - name: "fixed_efficiency"
+        gpu_freq: "mid"      # 假设 mid 是能效最优
+        cpu_freq: "mid"
+        emc_freq: "mid"
+
+      - name: "oracle_best"
+        # 实验后根据结果设定最优配置
+        gpu_freq: "tbd"
+        cpu_freq: "tbd"
+        emc_freq: "tbd"
+
+      - name: "ours"
+        # 使用自适应选择器
+        use_selector: true
+
+# Benchmark 命令模板
+benchmark_template:
+  runtime: "tensorrt_llm"
+  command_template: "python run_benchmark.py --model {model} --engine {engine_path} --batch-size {batch_size} --input-len {prompt_len} --output-len {output_len} --warmup {warmup_runs} --repeats {repeats} --gpu-freq {gpu_freq} --cpu-freq {cpu_freq} --emc-freq {emc_freq}"
+
+  # TensorRT-LLM 特定配置
+  tensorrt_llm:
+    use_fp16: true
+    use_graph: true
+    num_beams: 1
+    top_k: 50
+    top_p: 0.9
+    temperature: 0.8

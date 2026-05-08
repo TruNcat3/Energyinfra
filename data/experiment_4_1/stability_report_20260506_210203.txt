@@ -1,0 +1,44 @@
+================================================================================
+Experiment 4.1: Measurement Stability Test - Report
+================================================================================
+
+📋 Experiment Configuration:
+  Workload: Batch=1, Prompt=512, Output=128
+  Frequency: GPU=846MHz, CPU=1479MHz, EMC=1600MHz
+  Repeats: 10
+
+📊 Stability Evaluation:
+  TTFT Stability: ❌ FAIL
+    - Mean: 12.05 ms
+    - Std:  1.45 ms
+    - CV:   12.00% (threshold: 5.0%)
+  TPOT Stability: ✅ PASS
+    - Mean: 7.58 ms
+    - Std:  0.09 ms
+    - CV:   1.14% (threshold: 5.0%)
+  Energy/token Stability: ❌ FAIL
+    - Mean: 0.1285 J/token
+    - Std:  0.0170 J/token
+    - CV:   13.26% (threshold: 5.0%)
+  Throughput Stability: ✅ PASS
+    - Mean: 119.62 tokens/s
+    - Std:  1.34 tokens/s
+    - CV:   1.12% (threshold: 5.0%)
+
+  Overall Stability: ❌ FAIL
+
+📈 Detailed Results:
+
+Iter | TTFT(ms) | TPOT(ms) | Throughput(tok/s) | Energy(J) | Energy/Token(J)
+--------------------------------------------------------------------------------
+   1 |    12.57 |     7.50 |          119.66 |    20.91 |        0.1516
+   2 |    11.12 |     7.69 |          118.97 |    26.36 |        0.1416
+   3 |    10.08 |     7.59 |          118.15 |    18.86 |        0.1076
+   4 |     9.58 |     7.56 |          120.68 |    22.15 |        0.1372
+   5 |    13.00 |     7.45 |          120.95 |    20.78 |        0.1441
+   6 |    14.02 |     7.57 |          120.31 |    17.37 |        0.1139
+   7 |    13.55 |     7.74 |          118.97 |    18.15 |        0.1053
+   8 |    11.34 |     7.48 |          121.57 |    20.20 |        0.1064
+   9 |    13.50 |     7.57 |          120.06 |    23.03 |        0.1384
+  10 |    11.67 |     7.63 |          116.88 |    19.31 |        0.1387
+================================================================================

@@ -1,0 +1,61 @@
+# Jetson Orin 固定功耗模式配置
+# Fixed Power Modes for Baseline Comparison
+
+# Jetson Orin 固定功耗模式（作为额外baseline，不应该是我们的主要测试对象）
+power_modes:
+  - name: "MAX_N"      # 最高性能模式（我们测试的细档位基准）
+    description: "Maximum performance mode - all frequencies at maximum"
+    default_frequencies:
+      gpu: "high"
+      cpu: "high"
+      emc: "high"
+    note: "This is our细-granular frequency comparison baseline"
+
+  - name: "15W"        # 15瓦功耗模式
+    description: "15W power limit mode (optimized frequencies)"
+    default_frequencies:
+      gpu: "mid-high"
+      cpu: "mid-high"
+      emc: "mid-high"
+    note: "Vendor-optimized power limit mode"
+
+  - name: "30W"        # 30瓦功耗模式
+    description: "30W power limit mode (balanced frequencies)"
+    default_frequencies:
+      gpu: "mid"
+      cpu: "mid"
+      emc: "mid"
+    note: "Balanced power and performance mode"
+
+  - name: "50W"        # 50瓦功耗模式
+    description: "50W power limit mode (low power optimization)"
+    default_frequencies:
+      gpu: "low"
+      cpu: "low"
+      emc: "low"
+    note: "Maximum energy efficiency mode"
+
+  - name: "Balanced"     # 平衡模式（我们的主要参考）
+    description: "Balanced frequency mode (our reference baseline)"
+    default_frequencies:
+      gpu: "mid"
+      cpu: "mid"
+      emc: "high"
+    note: "Balanced performance and power mode"
+
+# 重要说明
+# 1. 这些是Jetson自带的固定功耗模式，不是我们细分的所有频率档位
+# 2. 细档位频率应该基于这些固定模式下的实际测量来确定
+# 3. 所有能效对比都应该在满足SLO的前提下进行
+# 4. 不满足SLO的配置点在对比中被去除
+# 5. 比如balanced模式的某个配置在当前负载下TTFT=800ms < 1000ms，但功耗=35W > 40W，则该点在对比中不参与能效评估
+
+# 频外baseline示例
+# - MAXN: 所有频率=high, 最大性能，最高功耗（对比基准）
+# - Balanced: GPU=mid, CPU=mid, EMC=high（我们的参考配置）
+# - 15W/30W/50W: 功耗优化模式（能效对比基准）
+
+# 使用建议
+# 主要对比：balanced模式 vs 我们的自适应方法
+# 辅助对比：功耗优化模式
+# 场景测试：在不同SLO约束下测试balanced模式的性能表现
