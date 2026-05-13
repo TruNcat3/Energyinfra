@@ -1,0 +1,378 @@
+# Phase 3 Experiments Configuration
+# Phase 3 前置验证实验配置
+
+# 实验元数据
+metadata:
+  phase: "Phase 3"
+  name: "Preliminary Validation Experiments"
+  description: "Core system validation before real llama.cpp integration"
+  data_source: "synthetic_benchmark"
+  start_date: "2026-05-07"
+  end_date: "2026-05-08"
+
+# 实验 4.1：测量稳定性
+experiment_4_1_stability:
+  enabled: true
+  description: "验证测量稳定性，确定是否需要重复测量"
+  configuration:
+    workload:
+      batch_size: 1
+      prompt_length: 512
+      output_length: 128
+      phase: "mixed"
+    frequency:
+      gpu_freq_mhz: 846
+      cpu_freq_mhz: 1479
+      emc_freq_mhz: 1600
+
+  parameters:
+    repeat_runs: 10               # 重复运行次数
+    warmup_runs: 1               # 预热运行次数
+    cooldown_seconds: 5           # 冷却时间
+
+  success_criteria:
+    tpot_cv_threshold: 5.0        # TPOT CV < 5%
+    throughput_cv_threshold: 5.0  # Throughput CV < 5%
+    energy_cv_action: "use_median" # energy CV > 5% 时使用 median
+
+# 实验 4.2：单旋钮敏感性
+experiment_4_2_knob_sensitivity:
+  enabled: true
+  description: "分析 GPU、CPU、EMC 频率对性能的影响"
+  configuration:
+    base_workload:
+      batch_size: 1
+      prompt_length: 512
+      output_length: 128
+      phase: "mixed"
+
+  frequency_sweeps:
+    gpu:
+      enabled: true
+      frequencies: [378, 846, 1428]
+      fixed_cpu_freq: 1479
+      fixed_emc_freq: 1600
+
+    cpu:
+      enabled: true
+      frequencies: [1020, 1479, 2015]
+      fixed_gpu_freq: 846
+      fixed_emc_freq: 1600
+
+    emc:
+      enabled: true
+      frequencies: [133, 1600, 2133]
+      fixed_gpu_freq: 846
+      fixed_cpu_freq: 1479
+
+  parameters:
+    repeat_runs: 1                # 每个配置运行次数
+    warmup_runs: 1
+    cooldown_seconds: 3
+
+  metrics:
+    - ttft_ms
+    - tpot_ms
+    - energy_per_token_j
+    - tokens_per_second
+    - avg_power_w
+
+# 实验 4.3：频率组合交互
+experiment_4_3_combination_interactions:
+  enabled: true
+  description: "分析不同频率组合的交互效应"
+  configuration:
+    workload:
+      batch_size: 1
+      prompt_length: 512
+      output_length: 128
+      phase: "mixed"
+
+  # 关键频率组合（简化版，不是全组合）
+  key_combinations:
+    - name: "all_low"
+      gpu_freq_mhz: 378
+      cpu_freq_mhz: 1020
+      emc_freq_mhz: 133
+
+    - name: "all_mid"
+      gpu_freq_mhz: 846
+      cpu_freq_mhz: 1479
+      emc_freq_mhz: 1600
+
+    - name: "all_high"
+      gpu_freq_mhz: 1428
+      cpu_freq_mhz: 2015
+      emc_freq_mhz: 2133
+
+    - name: "mid_gpu_mid_cpu_high_emc"
+      gpu_freq_mhz: 846
+      cpu_freq_mhz: 1479
+      emc_freq_mhz: 2133
+
+  parameters:
+    repeat_runs: 1
+    warmup_runs: 1
+    cooldown_seconds: 3
+
+  analysis:
+    find_best_energy_config: true
+    find_best_latency_config: true
+    find_best_throughput_config: true
+    find_best_efficiency_config: true
+    check_maxn_optimality: true     # 检查 MaxN 是否是最优
+
+# 实验 4.4：Prefill/Decode 阶段差异
+experiment_4_4_phase_differences:
+  enabled: true
+  description: "验证 Prefill 和 Decode 阶段的最优配置差异"
+  configuration:
+    base_frequency:
+      cpu_freq_mhz: 1479
+      emc_freq_mhz: 1600
+
+  scenarios:
+    - name: "prefill"
+      description: "Only prefill phase"
+      workload:
+        prompt_length: 512
+        output_length: 0
+        phase: "prefill"
+      gpu_frequencies: [378, 846, 1428]
+
+    - name: "decode"
+      description: "Only decode phase"
+      workload:
+        prompt_length: 128
+        output_length: 128
+        phase: "decode"
+      gpu_frequencies: [378, 846, 1428]
+
+    - name: "prefill_heavy"
+      description: "Prefill-heavy workload"
+      workload:
+        prompt_length: 1024
+        output_length: 32
+        phase: "mixed"
+      gpu_frequencies: [378, 846, 1428]
+
+    - name: "decode_heavy"
+      description: "Decode-heavy workload"
+      workload:
+        prompt_length: 128
+        output_length: 512
+        phase: "mixed"
+      gpu_frequencies: [378, 846, 1428]
+
+  parameters:
+    repeat_runs: 1
+    warmup_runs: 1
+    cooldown_seconds: 2
+
+  analysis:
+    compare_optimal_configs: true    # 比较不同阶段的最优配置
+    calculate_efficiency_ratio: true # 计算效率比
+    validate_phase_aware_dvfs: true  # 验证 phase-aware DVFS
+
+# 实验 4.5：工作负载特征可预测性
+experiment_4_5_workload_predictability:
+  enabled: true
+  description: "分析工作负载特征对性能的影响"
+  configuration:
+    base_frequency:
+      gpu_freq_mhz: 846
+      cpu_freq_mhz: 1479
+      emc_freq_mhz: 1600
+
+  # 采样工作负载配置（简化版）
+  workload_configs:
+    - batch_size: 1
+      prompt_length: 512
+      output_length: 128
+
+    - batch_size: 2
+      prompt_length: 512
+      output_length: 128
+
+    - batch_size: 4
+      prompt_length: 256
+      output_length: 64
+
+  parameters:
+    repeat_runs: 1
+    warmup_runs: 1
+    cooldown_seconds: 3
+
+  analysis:
+    descriptive_summary: true       # 描述性总结
+    predictive_modeling: false      # 当前不进行预测建模
+    data_sufficiency_check: true    # 数据充分性检查
+    recommendation: "需要扩展为正交实验设计"
+
+# 实验 4.6：频率切换开销
+experiment_4_6_switching_overhead:
+  enabled: true
+  description: "量化频率切换的性能和能耗开销"
+  configuration:
+    base_workload:
+      batch_size: 1
+      prompt_length: 512
+      output_length: 128
+      phase: "mixed"
+
+  switching_scenarios:
+    - name: "gpu_low_to_high"
+      description: "GPU 从低频切换到高频"
+      before_freq:
+        gpu_freq_mhz: 378
+        cpu_freq_mhz: 1020
+        emc_freq_mhz: 133
+      after_freq:
+        gpu_freq_mhz: 1428
+        cpu_freq_mhz: 2015
+        emc_freq_mhz: 2133
+      overhead_ms: 50
+
+    - name: "gpu_high_to_low"
+      description: "GPU 从高频切换到低频"
+      before_freq:
+        gpu_freq_mhz: 1428
+        cpu_freq_mhz: 2015
+        emc_freq_mhz: 2133
+      after_freq:
+        gpu_freq_mhz: 378
+        cpu_freq_mhz: 1020
+        emc_freq_mhz: 133
+      overhead_ms: 45
+
+    - name: "cpu_low_to_high"
+      description: "CPU 从低频切换到高频"
+      before_freq:
+        gpu_freq_mhz: 846
+        cpu_freq_mhz: 1020
+        emc_freq_mhz: 1600
+      after_freq:
+        gpu_freq_mhz: 846
+        cpu_freq_mhz: 2015
+        emc_freq_mhz: 1600
+      overhead_ms: 20
+
+    - name: "emc_low_to_high"
+      description: "EMC 从低频切换到高频"
+      before_freq:
+        gpu_freq_mhz: 846
+        cpu_freq_mhz: 1479
+        emc_freq_mhz: 133
+      after_freq:
+        gpu_freq_mhz: 846
+        cpu_freq_mhz: 1479
+        emc_freq_mhz: 2133
+      overhead_ms: 80
+
+  parameters:
+    measure_before: true           # 测量切换前性能
+    measure_after: true            # 测量切换后性能
+    repeat_runs: 1
+    cooldown_seconds: 5
+
+  analysis:
+    calculate_delta_metrics: true  # 计算指标变化
+    quantify_overhead: true        # 量化开销
+    data_completeness_check: true  # 数据完整性检查
+
+# 实验 4.7：SLO 约束端到端测试
+experiment_4_7_slo_validation:
+  enabled: true
+  description: "验证 SLO 约束下的配置选择可行性"
+  configuration:
+    base_workload:
+      batch_size: 1
+      prompt_length: 512
+      output_length: 128
+      phase: "mixed"
+
+  # SLO 约束定义（硬约束）
+  slo_constraints:
+    ttft_ms: 1000                # Time to First Token
+    tpot_ms: 80                  # Time Per Output Token
+    max_power_w: 40              # Maximum Power
+    max_temp_c: 80               # Maximum Temperature
+    # 注意：energy_per_token_j 是优化目标，不是 SLO 硬约束
+
+  # 测试配置
+  test_configs:
+    - name: "max_performance"
+      description: "最高性能配置"
+      gpu_freq_mhz: 1428
+      cpu_freq_mhz: 2015
+      emc_freq_mhz: 2133
+
+    - name: "balanced"
+      description: "平衡配置"
+      gpu_freq_mhz: 846
+      cpu_freq_mhz: 1479
+      emc_freq_mhz: 1600
+
+    - name: "energy_efficient"
+      description: "能效优化配置"
+      gpu_freq_mhz: 378
+      cpu_freq_mhz: 1020
+      emc_freq_mhz: 133
+
+  parameters:
+    repeat_runs: 1
+    warmup_runs: 1
+    cooldown_seconds: 3
+
+  analysis:
+    check_slo_compliance: true     # 检查 SLO 合规性
+    calculate_satisfaction_rate: true # 计算 SLO 满足率
+    find_best_under_slo: true     # 找到 SLO 下的最优配置
+    energy_as_optimization_target: true # energy 作为优化目标
+
+# 通用实验参数
+general_parameters:
+  # 数据收集
+  data_collection:
+    save_raw_logs: true
+    save_parsed_logs: true
+    log_format: "json"            # json | csv | parquet
+
+  # 错误处理
+  error_handling:
+    max_retries: 3                # 最大重试次数
+    retry_delay_seconds: 5        # 重试延迟
+    continue_on_failure: false    # 失败时是否继续
+
+  # 资源管理
+  resource_management:
+    max_concurrent_experiments: 1  # 最大并发实验数
+    memory_limit_gb: 8            # 内存限制
+    timeout_minutes: 30           # 超时时间
+
+# Synthetic Benchmark 特定配置
+synthetic_benchmark:
+  enabled: true
+  limitations:
+    gpu_dominant: true           # 主要体现 GPU 频率影响
+    cpu_emc_underestimated: true # CPU/EMC 影响被低估
+    simplified_memory_modeling: true # 简化的内存建模
+    simulated_switching_overhead: true # 模拟的切换开销
+
+  disclaimer: |
+    ⚠️ 重要免责声明：当前实验数据来自 Synthetic Benchmark，
+    不代表真实 Jetson Orin + llama.cpp 的性能。
+    真实硬件实验需要在获取 llama.cpp 账号后重新验证。
+
+# 报告生成
+reporting:
+  include_synthetic_disclaimer: true   # 包含 synthetic 数据免责声明
+  include_data_limitations: true     # 包含数据限制说明
+  include_methodology_validation: true # 包含方法学验证
+  include_recommendations: true       # 包含后续建议
+
+  output_formats:
+    - csv                          # CSV 格式数据
+    - markdown                     # Markdown 报告
+    - json                         # JSON 格式摘要
+    - parquet                      # Parquet 格式数据表

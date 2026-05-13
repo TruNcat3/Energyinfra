@@ -233,7 +233,7 @@ preliminary_experiments:
 
 # Benchmark 命令模板
 benchmark_template:
-  runtime: "tensorrt_llm"
+  runtime: "llama.cpp"
   command_template: "python run_benchmark.py --model {model} --engine {engine_path} --batch-size {batch_size} --input-len {prompt_len} --output-len {output_len} --warmup {warmup_runs} --repeats {repeats} --gpu-freq {gpu_freq} --cpu-freq {cpu_freq} --emc-freq {emc_freq}"
 
   # TensorRT-LLM 特定配置

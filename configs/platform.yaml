@@ -6,8 +6,9 @@ platform:
   name: jetson_orin           # 平台名称: jetson_orin, jetson_xavier
   jetpack_version: "r36.3.0"   # JetPack 版本
   cuda_version: "12.2"          # CUDA 版本
-  tensorrt_version: "8.6"       # TensorRT 版本
-  tensorrt_llm_version: "0.9.0"  # TensorRT-LLM 版本
+  tensorrt_version: "8.6"       # TensorRT 版本 (llama.cpp 不依赖)
+  llama_cpp_version: "b4234"    # llama.cpp 版本
+  primary_runtime: "llama.cpp"    # 主要运行时: llama.cpp, TensorRT-LLM, vLLM
 
 # 电源管理
 power:

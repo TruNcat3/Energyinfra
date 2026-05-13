@@ -1,0 +1,190 @@
+# Rate Table Configuration
+# 能耗汇率表构建配置
+
+# 数据输入路径
+input_data:
+  experiment_dir: "data/experiments_4_1_to_4_7"
+  parsed_data_dir: "data/parsed"
+
+# 数据输出路径
+output_data:
+  rate_table_dir: "data/rate_tables"
+  raw_profile: "profile_raw.parquet"
+  agg_profile: "profile_agg_by_config.parquet"
+  pareto_analysis: "pareto_by_bucket.parquet"
+  selector_table: "selector_table.parquet"
+  quality_report: "rate_table_quality_report.json"
+  summary: "rate_table_summary.md"
+
+# 默认值（用于缺失字段）
+defaults:
+  model: "synthetic_qwen_7b_int4"
+  runtime: "synthetic"
+  concurrency: 1
+  power_source: "synthetic"
+  power_statistics_limited: true
+
+# Workload Bucket 定义
+bucket_definition:
+  key_columns:
+    - model
+    - runtime
+    - batch_size
+    - prompt_length
+    - output_length
+    - phase
+    - concurrency
+
+  default_values:
+    batch_size: 1
+    prompt_length: 512
+    output_length: 128
+    phase: "mixed"
+    concurrency: 1
+
+# 数据聚合参数
+aggregation:
+  # 聚合函数
+  functions:
+    - median      # 中位数（主要指标）
+    - mean        # 平均值
+    - std         # 标准差
+    - count       # 计数
+
+  # CV 计算阈值
+  cv_threshold: 5.0                # CV > 5% 时建议使用 median
+
+  # 重复运行处理
+  duplicate_handling: "median"     # median | mean | trimmed_mean
+
+# Pareto Frontier 计算
+pareto_frontier:
+  # 优化目标（都是最小化）
+  objectives:
+    - energy_per_token_j_median    # 最小能耗 per token
+    - ttft_ms_median               # 最小首 token 延迟
+    - tpot_ms_median               # 最小输出 token 延迟
+    - avg_power_w_median           # 最小平均功耗
+
+  # Pareto 置信度
+  confidence_levels:
+    single_config: "low"           # 单个配置：低置信度
+    multiple_pareto: "high"        # 多个 Pareto：高置信度
+    default: "medium"              # 默认：中等置信度
+
+# SLO 约束应用
+slo_constraints:
+  enabled: true
+  constraints:
+    ttft_ms: 1000
+    tpot_ms: 80
+    max_power_w: 40
+    max_temp_c: 80
+
+  # SLO margin 计算
+  calculate_margins: true
+
+# 阶段化能耗指标
+phase_energy_metrics:
+  prefill_only:
+    primary_metric: "energy_per_input_token_j"
+    fallback_metric: "energy_per_total_token_j"
+
+  decode_only:
+    primary_metric: "energy_per_output_token_j"
+    fallback_metric: "energy_per_total_token_j"
+
+  mixed:
+    primary_metric: "energy_per_output_token_j"
+    secondary_metric: "energy_per_total_token_j"
+
+# 数据质量检查
+quality_checks:
+  # 缺失值检查
+  missing_values:
+    max_missing_ratio: 0.1         # 最大缺失值比例 10%
+
+  # 异常值检测
+  outlier_detection:
+    method: "iqr"                   # iqr | zscore | isolation_forest
+    threshold: 3.0                  # 异常值阈值
+
+  # 一致性检查
+  consistency:
+    check_frequency_ranges: true    # 检查频率范围
+    check_energy_positive: true     # 检查能耗为正
+    check_latency_positive: true    # 检查延迟为正
+
+# 统计信息
+statistics:
+  # 基本统计
+  basic:
+    - count
+    - mean
+    - std
+    - min
+    - max
+    - median
+    - quartiles
+
+  # 高级统计
+  advanced:
+    - cv                          # 变异系数
+    - skewness                   # 偏度
+    - kurtosis                   # 峰度
+    - confidence_interval_95      # 95% 置信区间
+
+# 配置统计
+configuration_stats:
+  count_configs:
+    - num_gpu_freqs
+    - num_cpu_freqs
+    - num_emc_freqs
+    - num_frequency_configs
+    - num_workload_configs
+    - num_total_runs
+
+  estimate_runtime:
+    avg_run_time_seconds: 30      # 平均每次运行时间（秒）
+    warmup_runs: 1               # 预热运行次数
+    measurement_runs: 3          # 测量运行次数
+    cooldown_seconds: 5          # 冷却时间（秒）
+
+# 验证规则
+validation:
+  # 必需字段
+  required_fields:
+    - gpu_freq_mhz
+    - cpu_freq_mhz
+    - emc_freq_mhz
+    - ttft_ms
+    - tpot_ms
+    - energy_per_token_j
+
+  # 数值范围验证
+  value_ranges:
+    gpu_freq_mhz: [378, 1428]     # GPU 频率范围
+    cpu_freq_mhz: [1020, 2015]    # CPU 频率范围
+    emc_freq_mhz: [133, 2133]     # EMC 频率范围
+    ttft_ms: [0, 10000]           # TTFT 范围
+    energy_per_token_j: [0, 10]   # 能耗 per token 范围
+
+  # 逻辑验证
+  logical_checks:
+    - total_time >= ttft_ms       # 总时间 >= TTFT
+    - output_tokens > 0            # 输出 token > 0
+    - energy > 0                  # 能耗 > 0
+
+# 报告生成
+reporting:
+  include_synthetic_disclaimer: true   # 包含 synthetic 数据免责声明
+  include_quality_assessment: true     # 包含质量评估
+  include_limitations: true             # 包含数据限制说明
+  include_recommendations: true         # 包含建议
+
+# 性能优化
+performance:
+  use_parquet: true              # 使用 Parquet 格式（压缩、快速）
+  enable_caching: false           # 启用缓存
+  parallel_processing: false      # 并行处理
+  chunk_size: 10000              # 分块处理大小

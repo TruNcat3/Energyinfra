@@ -132,7 +132,7 @@ class SyntheticBenchmark:
             'prompt_length': prompt_len,
             'output_length': output_len,
             'ttft_ms': ttft_ms,
-            'tpot_ms': np.mean(tpot_times[1:]) if len(tpot_times) > 1 else tpot_ms[0],  # Exclude first token
+            'tpot_ms': np.mean(tpot_times[1:]) if len(tpot_times) > 1 else tpot_times[0],  # Exclude first token
             'total_time_ms': total_decode_time_ms,
             'avg_power_w': avg_power_w,
             'max_power_w': max_power_w,
@@ -184,7 +184,7 @@ class SyntheticBenchmark:
             'batch_size': batch_size,
             'prompt_length': prompt_len,
             'output_length': output_len,
-            'ttft_ms': decode_metrics['ttft_ms'],
+            'ttft_ms': prefill_metrics['prefill_time_ms'] + decode_metrics['ttft_ms'],
             'tpot_ms': decode_metrics['tpot_ms'],
             'total_time_ms': total_time_ms,
             'avg_power_w': (prefill_metrics['avg_power_w'] + decode_metrics['avg_power_w']) / 2,

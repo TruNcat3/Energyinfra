@@ -1,0 +1,17 @@
+scenario,config_type,gpu_freq_mhz,cpu_freq_mhz,emc_freq_mhz,energy_per_token_j,tpot_ms,ttft_ms,tokens_per_second
+prefill,lowest_energy,1428,1479,1600,0.0031902070086484,,,
+prefill,lowest_tpot,378,1479,1600,,0.0,,
+prefill,lowest_ttft,846,1479,1600,,,0.1748287144835372,
+prefill,highest_throughput,846,1479,1600,,,,5719.884190386616
+decode,lowest_energy,846,1479,1600,0.1037363614471104,,,
+decode,lowest_tpot,1428,1479,1600,,4.755384976569325,,
+decode,lowest_ttft,1428,1479,1600,,,8.62320029379547,
+decode,highest_throughput,846,1479,1600,,,,127.97117205354178
+prefill_heavy,lowest_energy,846,1479,1600,0.2692051884979097,,,
+prefill_heavy,lowest_tpot,1428,1479,1600,,4.2659504464106925,,
+prefill_heavy,lowest_ttft,846,1479,1600,,,11.8075696424297,
+prefill_heavy,highest_throughput,846,1479,1600,,,,75.2276373146192
+decode_heavy,lowest_energy,1428,1479,1600,0.0825896369464563,,,
+decode_heavy,lowest_tpot,1428,1479,1600,,4.680822502689414,,
+decode_heavy,lowest_ttft,846,1479,1600,,,8.863887759224603,
+decode_heavy,highest_throughput,846,1479,1600,,,,127.2265291026489

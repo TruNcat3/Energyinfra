@@ -893,7 +893,7 @@ class ExperimentManager:
                 f.write("- Implement Pareto frontier analyzer\n")
                 f.write("- Implement SLO-aware config selector\n")
                 f.write("- Implement online controller\n")
-                f.write("- Integrate with TensorRT-LLM runtime\n\n")
+                f.write("- Integrate with llama.cpp runtime\n\n")
 
                 f.write("## Next Steps\n\n")
                 f.write("1. Design energy rate table structure\n")

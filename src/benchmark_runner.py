@@ -45,7 +45,7 @@ class BenchmarkRunner:
 
         # Benchmark template from config
         self.benchmark_config = config.get('benchmark_template', {})
-        self.runtime = self.benchmark_config.get('runtime', 'tensorrt_llm')
+        self.runtime = self.benchmark_config.get('runtime', 'llama.cpp')
         self.command_template = self.benchmark_config.get('command_template', '')
 
         # TensorRT-LLM specific config

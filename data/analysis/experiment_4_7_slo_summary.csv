@@ -1,0 +1,4 @@
+config_name,gpu_freq_mhz,cpu_freq_mhz,emc_freq_mhz,ttft_ms,ttft_slo,ttft_met,tpot_ms,tpot_slo,tpot_met,avg_power_w,power_slo,power_met,temperature_c,temp_slo,temp_met,energy_per_token_j,all_slo_met,slo_violations
+max_performance,1428,2015,2133,12.449143624445776,1000,True,4.573936818008542,80,True,20.12984822598672,40,True,47.50274065174472,80,True,0.1106686066194103,True,None
+balanced,846,1479,1600,10.715218784076152,1000,True,7.554866822038599,80,True,20.88401337076018,40,True,51.4980014351971,80,True,0.1721960228414194,True,None
+energy_efficient,378,1020,133,11.613376754115915,1000,True,17.09038006576225,80,True,15.875859571853889,40,True,45.55614651141454,80,True,0.1219719795734899,True,None

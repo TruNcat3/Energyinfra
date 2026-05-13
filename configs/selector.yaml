@@ -1,0 +1,67 @@
+# Selector Configuration
+# 配置选择器的参数和策略
+
+# SLO 约束定义（硬约束）
+slo_constraints:
+  ttft_ms: 1000          # Time to First Token (first token latency)
+  tpot_ms: 80            # Time Per Output Token
+  max_power_w: 40        # Maximum average power consumption
+  max_temp_c: 80         # Maximum temperature
+
+# 频率切换开销（毫秒）
+switching_overhead_ms:
+  gpu_low_to_high: 50    # GPU 从低频到高频的切换时间
+  gpu_high_to_low: 45    # GPU 从高频到低频的切换时间
+  cpu_low_to_high: 20    # CPU 从低频到高频的切换时间
+  cpu_high_to_low: 15    # CPU 从高频到低频的切换时间
+  emc_low_to_high: 80    # EMC 从低频到高频的切换时间
+  emc_high_to_low: 75    # EMC 从高频到低频的切换时间
+  phase_boundary: 30     # Phase boundary 切换开销
+
+# Phase-Aware 策略参数
+phase_aware_policy:
+  break_even_tokens: 64              # 启用 phase-aware 的最小输出 token 数
+  slo_margin_threshold_ms: 100       # SLO margin 阈值（毫秒）
+  energy_saving_threshold_j: 0.01    # 最小能量节省阈值（焦耳）
+
+# 距离计算权重（用于 nearest bucket 匹配）
+distance_weights:
+  batch_size: 1.0       # Batch size 距离权重
+  prompt_length: 1.0    # Prompt length 距离权重
+  output_length: 1.0    # Output length 距离权重
+
+# 最大允许距离（用于 nearest bucket 匹配）
+max_nearest_distance: 2.0
+
+# 默认回退配置（已知安全配置）
+fallback_safe_config:
+  gpu_freq_mhz: 846
+  cpu_freq_mhz: 1479
+  emc_freq_mhz: 1600
+
+# 选择策略优先级
+selection_strategy_priority:
+  - exact_min_energy_under_slo      # 1. 精确匹配，SLO 下最小能耗
+  - nearest_min_energy_under_slo    # 2. 最近匹配，SLO 下最小能耗
+  - closest_slo_feasible            # 3. 最近 SLO 可行配置
+  - fallback_known_safe             # 4. 回退到已知安全配置
+
+# 数据源说明
+data_source:
+  type: "synthetic"                 # 当前数据类型：synthetic
+  platform: "Jetson Orin"          # 目标平台
+  runtime: "llama.cpp"              # 目标运行时（可用：llama.cpp, TensorRT-LLM, vLLM）
+  model: "Qwen-7B-Int4"            # 目标模型
+
+# 警告和限制
+warnings:
+  synthetic_data: true              # 数据来自合成测试
+  cpu_emc_limited: true             # CPU/EMC 影响可能被低估
+  switching_overhead_simulated: true # 切换开销是模拟的
+  thermal_effects_simplified: true  # 热效应被简化
+
+# 验收标准
+acceptance_criteria:
+  max_slo_violation_rate: 0.1       # 最大 SLO 违规率 10%
+  max_energy_regret: 0.2           # 最大能量 regret 20%
+  min_pareto_coverage: 0.8         # 最小 Pareto 覆盖率 80%

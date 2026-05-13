@@ -1,0 +1,86 @@
+{
+  "evaluation_time": "2026-05-08T19:26:33.732636",
+  "total_buckets": 7,
+  "strategies_evaluated": 6,
+  "regret_stats": {
+    "maxn_all_high": {
+      "total_buckets": 7,
+      "slo_feasible_buckets": 7,
+      "slo_violation_rate": 0.0,
+      "mean_energy_regret": 0.08205720765384879,
+      "median_energy_regret": 0.0,
+      "p95_energy_regret": 0.341529100392884,
+      "max_energy_regret": 0.4457763454261159,
+      "mean_energy": 0.14646880006833116,
+      "mean_ttft": 9.075336214315723,
+      "mean_tpot": 4.800715394007149,
+      "mean_power": 20.301068036506795
+    },
+    "all_mid": {
+      "total_buckets": 7,
+      "slo_feasible_buckets": 7,
+      "slo_violation_rate": 0.0,
+      "mean_energy_regret": 0.22114544543420037,
+      "median_energy_regret": 0.0,
+      "p95_energy_regret": 0.7143551628013178,
+      "max_energy_regret": 0.8404518096449654,
+      "mean_energy": 0.14708578857518906,
+      "mean_ttft": 9.406723951749731,
+      "mean_tpot": 6.539553027950644,
+      "mean_power": 20.059176607513855
+    },
+    "energy_efficient_all_low": {
+      "total_buckets": 7,
+      "slo_feasible_buckets": 7,
+      "slo_violation_rate": 0.0,
+      "mean_energy_regret": 0.0,
+      "median_energy_regret": 0.0,
+      "p95_energy_regret": 0.0,
+      "max_energy_regret": 0.0,
+      "mean_energy": 0.13711105659714065,
+      "mean_ttft": 9.478339507185888,
+      "mean_tpot": 6.097034547621446,
+      "mean_power": 18.457361951303067
+    },
+    "fixed_best_efficiency": {
+      "total_buckets": 7,
+      "slo_feasible_buckets": 7,
+      "slo_violation_rate": 0.0,
+      "mean_energy_regret": -0.8364914040304098,
+      "median_energy_regret": -0.9717360663345656,
+      "p95_energy_regret": -0.2884118378772516,
+      "max_energy_regret": 0.0,
+      "mean_energy": 0.003190207008648401,
+      "mean_ttft": 0.2080686439910366,
+      "mean_tpot": 0.0,
+      "mean_power": 17.44204807844217
+    },
+    "oracle_best_per_bucket": {
+      "total_buckets": 7,
+      "slo_feasible_buckets": 7,
+      "slo_violation_rate": 0.0,
+      "mean_energy_regret": 0.0,
+      "median_energy_regret": 0.0,
+      "p95_energy_regret": 0.0,
+      "max_energy_regret": 0.0,
+      "mean_energy": 0.13711105659714065,
+      "mean_ttft": 9.478339507185888,
+      "mean_tpot": 6.097034547621446,
+      "mean_power": 18.457361951303067
+    },
+    "ours_slo_aware_selector": {
+      "total_buckets": 7,
+      "slo_feasible_buckets": 7,
+      "slo_violation_rate": 0.0,
+      "mean_energy_regret": 0.0,
+      "median_energy_regret": 0.0,
+      "p95_energy_regret": 0.0,
+      "max_energy_regret": 0.0,
+      "mean_energy": 0.13711105659714065,
+      "mean_ttft": 9.478339507185888,
+      "mean_tpot": 6.097034547621446,
+      "mean_power": 18.457361951303067
+    }
+  },
+  "best_strategy": "fixed_best_efficiency"
+}

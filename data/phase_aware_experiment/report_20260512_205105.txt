@@ -1,0 +1,57 @@
+======================================================================
+Phase-Aware DVFS Validation Experiment Report
+Generated: 2026-05-12 20:51:05
+======================================================================
+
+## Strategy Comparison Summary
+----------------------------------------------------------------------
+Strategy             E/tok(J)   TTFT(ms)   TPOT(ms)   E Save%    SLO%     tok/s     
+----------------------------------------------------------------------
+default              0.1643     121.4      7.6        0.0        82.0%    122.2     
+max_perf             0.1095     123.7      4.5        33.4       42.0%    122.2     
+energy_efficient     0.3259     125.2      16.9       -98.4      92.0%    122.1     
+phase_aware          0.1151     77.2       6.7        30.0       80.0%    123.8     
+oracle               0.1518     123.6      6.9        7.6        76.0%    122.1     
+
+## Key Findings
+----------------------------------------------------------------------
+Phase-Aware vs Default Baseline:
+  Energy reduction:   +30.0%
+  TTFT change:        +36.4%
+  TPOT change:        +11.6%
+  SLO satisfaction:    80.0%
+
+Phase-Aware vs Max Performance:
+  Energy difference:  +0.0056 J/tok
+
+## Per-Workload Analysis
+----------------------------------------------------------------------
+
+  Workload: short_short (prompt=128, output=64)
+    default              E=10.098J  TTFT=35.0ms  TPOT=7.8ms
+    max_perf             E=7.637J  TTFT=37.8ms  TPOT=4.7ms
+    phase_aware          E=10.187J  TTFT=27.3ms  TPOT=7.0ms
+
+  Workload: short_long (prompt=128, output=256)
+    default              E=43.540J  TTFT=36.7ms  TPOT=7.9ms
+    max_perf             E=27.500J  TTFT=37.3ms  TPOT=4.7ms
+    phase_aware          E=29.896J  TTFT=26.4ms  TPOT=7.0ms
+
+  Workload: medium_medium (prompt=512, output=128)
+    default              E=21.246J  TTFT=109.4ms  TPOT=7.6ms
+    max_perf             E=14.910J  TTFT=104.9ms  TPOT=4.5ms
+    phase_aware          E=16.862J  TTFT=73.3ms  TPOT=6.7ms
+
+  Workload: long_medium (prompt=1024, output=128)
+    default              E=20.898J  TTFT=219.7ms  TPOT=7.2ms
+    max_perf             E=15.100J  TTFT=219.3ms  TPOT=4.3ms
+    phase_aware          E=19.021J  TTFT=130.3ms  TPOT=6.4ms
+
+  Workload: long_long (prompt=1024, output=512)
+    default              E=82.941J  TTFT=206.1ms  TPOT=7.2ms
+    max_perf             E=53.961J  TTFT=219.3ms  TPOT=4.3ms
+    phase_aware          E=49.214J  TTFT=128.8ms  TPOT=6.3ms
+
+======================================================================
+End of Report
+======================================================================

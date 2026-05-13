@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+*.so
+
+# Virtual environments
+jetson_llm_env/
+.venv/
+venv/
+
+# Models (large binary files)
+models/gguf/*.gguf
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (can be regenerated)
+data/raw_logs/
+data/frequency_experiment_results/complete_results_*.json
+
+# Claude plans
+.claude/
