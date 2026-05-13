@@ -296,14 +296,17 @@ class RateTableBuilder:
                     if i == j:
                         continue
 
-                    # Check if i is dominated by j
-                    dominates = True
-                    for obj in objectives:
-                        if obj_values.iloc[i][obj] < obj_values.iloc[j][obj]:
-                            dominates = False
-                            break
+                    # Check if j dominates i (strict Pareto: all not worse + at least one strictly better)
+                    all_not_worse = all(
+                        obj_values.iloc[j][obj] <= obj_values.iloc[i][obj]
+                        for obj in objectives
+                    )
+                    any_strictly_better = any(
+                        obj_values.iloc[j][obj] < obj_values.iloc[i][obj]
+                        for obj in objectives
+                    )
 
-                    if dominates:
+                    if all_not_worse and any_strictly_better:
                         is_dominated = True
                         break
 
@@ -378,6 +381,9 @@ class RateTableBuilder:
             'ttft_ms_median': 'ttft_ms_median',
             'tpot_ms_median': 'tpot_ms_median',
             'energy_per_token_j_median': 'energy_per_token_j_median',
+            'energy_per_input_token_j_median': 'energy_per_input_token_j_median',
+            'energy_per_output_token_j_median': 'energy_per_output_token_j_median',
+            'energy_per_total_token_j_median': 'energy_per_total_token_j_median',
             'tokens_per_joule_median': 'tokens_per_joule_median',
             'avg_power_w_median': 'avg_power_w_median',
             'max_power_w_median': 'max_power_w_median',
@@ -402,6 +408,24 @@ class RateTableBuilder:
         available_selector_cols = {k: v for k, v in selector_columns.items() if v in df.columns}
         selector_df = df[list(available_selector_cols.values())].copy()
         selector_df.columns = list(available_selector_cols.keys())
+
+        # Add energy_objective_used column based on phase
+        if 'phase' in selector_df.columns:
+            selector_df['energy_objective_used'] = selector_df['phase'].map({
+                'prefill': 'energy_per_input_token_j_median',
+                'decode': 'energy_per_output_token_j_median',
+                'mixed': 'energy_per_output_token_j_median'
+            }).fillna('energy_per_output_token_j_median')
+        else:
+            selector_df['energy_objective_used'] = 'energy_per_output_token_j_median'
+
+        # Fill missing phase-specific energy columns with fallback
+        for col in ['energy_per_input_token_j_median', 'energy_per_output_token_j_median',
+                     'energy_per_total_token_j_median']:
+            if col not in selector_df.columns:
+                selector_df[col] = selector_df.get('energy_per_token_j_median', 0)
+            else:
+                selector_df[col] = selector_df[col].fillna(selector_df.get('energy_per_token_j_median', 0))
 
         # Add measurement CV as overall CV
         if 'energy_per_token_j_cv' in selector_df.columns:

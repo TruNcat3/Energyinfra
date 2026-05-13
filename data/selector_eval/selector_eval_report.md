@@ -1,6 +1,6 @@
 # Selector Performance Evaluation Report
 
-**Generated**: 2026-05-08 19:26:33
+**Generated**: 2026-05-13 02:44:56
 **Data Source**: Synthetic Benchmark (Phase 3)
 
 ## Strategy Comparison Summary
@@ -10,14 +10,14 @@
 | Maxn All High | 0.00% | 8.21% | 0.00% | 34.15% | 0.1465 | 9.08 | 7/7 |
 | All Mid | 0.00% | 22.11% | 0.00% | 71.44% | 0.1471 | 9.41 | 7/7 |
 | Energy Efficient All Low | 0.00% | 0.00% | 0.00% | 0.00% | 0.1371 | 9.48 | 7/7 |
-| Fixed Best Efficiency | 0.00% | -83.65% | -97.17% | -28.84% | 0.0032 | 0.21 | 7/7 |
+| Fixed Best Efficiency | 0.00% | 1.61% | 0.00% | 6.69% | 0.1396 | 9.87 | 7/7 |
 | Oracle Best Per Bucket | 0.00% | 0.00% | 0.00% | 0.00% | 0.1371 | 9.48 | 7/7 |
 | Ours Slo Aware Selector | 0.00% | 0.00% | 0.00% | 0.00% | 0.1371 | 9.48 | 7/7 |
 
 ## Key Findings
 
-**Best Performing Strategy**: Fixed Best Efficiency
-- Mean Energy Regret: -83.65%
+**Best Performing Strategy**: Energy Efficient All Low
+- Mean Energy Regret: 0.00%
 - SLO Violation Rate: 0.00%
 
 ## Performance vs Baselines
@@ -32,12 +32,16 @@
 - MaxN Regret: 8.21%
 - Improvement: 8.21%
 
+## ✅ No Anomalies
+
+No negative regret detected — oracle regret is correctly 0% for all buckets.
+
 ## ⚠️ Data Limitations
 
 **Important**: This evaluation uses synthetic benchmark data.
 
 **Limitations:
-- Results may not reflect real Jetson Orin + TensorRT-LLM performance
+- Results may not reflect real Jetson Orin + llama.cpp performance
 - CPU/EMC frequency effects may be misrepresented
 - Power and thermal modeling is simplified
 - Switching overhead not included in evaluation

@@ -1,0 +1,102 @@
+# Baseline strategy definitions for Jetson Orin comparison experiments
+# Each baseline represents a real-world system configuration users might run.
+
+baselines:
+  jetson_default:
+    description: "Jetson factory defaults (MAXN mode, no jetson_clocks)"
+    type: system_default
+    apply:
+      nvpmodel: MAXN
+      jetson_clocks: false
+    freq_override: null  # Use system defaults
+
+  nvpmodel_low:
+    description: "nvpmodel low power mode"
+    type: nvpmodel
+    apply:
+      nvpmodel: null  # Detect mode ID at runtime
+      jetson_clocks: false
+    freq_override:
+      gpu_freq_mhz: 378
+      cpu_freq_mhz: 1020
+      emc_freq_mhz: 133
+
+  nvpmodel_mid:
+    description: "nvpmodel medium power mode"
+    type: nvpmodel
+    apply:
+      nvpmodel: null
+      jetson_clocks: false
+    freq_override:
+      gpu_freq_mhz: 846
+      cpu_freq_mhz: 1479
+      emc_freq_mhz: 1600
+
+  nvpmodel_high:
+    description: "nvpmodel high power mode"
+    type: nvpmodel
+    apply:
+      nvpmodel: MAXN
+      jetson_clocks: false
+    freq_override: null
+
+  jetson_clocks:
+    description: "MAXN + jetson_clocks (max performance)"
+    type: jetson_clocks
+    apply:
+      nvpmodel: MAXN
+      jetson_clocks: true
+    freq_override:
+      gpu_freq_mhz: 1300
+      cpu_freq_mhz: 2015
+      emc_freq_mhz: 2133
+
+  manual_min:
+    description: "Manual minimum frequencies (energy focus)"
+    type: manual
+    apply:
+      nvpmodel: MAXN
+      jetson_clocks: false
+    freq_override:
+      gpu_freq_mhz: 378
+      cpu_freq_mhz: 1020
+      emc_freq_mhz: 133
+
+  manual_mid:
+    description: "Manual mid-range frequencies"
+    type: manual
+    apply:
+      nvpmodel: MAXN
+      jetson_clocks: false
+    freq_override:
+      gpu_freq_mhz: 846
+      cpu_freq_mhz: 1479
+      emc_freq_mhz: 1600
+
+  manual_max:
+    description: "Manual maximum frequencies"
+    type: manual
+    apply:
+      nvpmodel: MAXN
+      jetson_clocks: false
+    freq_override:
+      gpu_freq_mhz: 1300
+      cpu_freq_mhz: 2015
+      emc_freq_mhz: 2133
+
+  adaptive_phase_aware:
+    description: "Our adaptive phase-aware DVFS controller"
+    type: adaptive
+    apply:
+      nvpmodel: MAXN
+      jetson_clocks: false
+    freq_override: null  # Controlled by phase_aware_policy
+
+# Cooldown between baselines (seconds)
+cooldown_seconds: 30
+
+# Warmup runs before measurement (per workload)
+warmup_runs: 2
+
+# Measurement repeats per workload
+repeats: 5

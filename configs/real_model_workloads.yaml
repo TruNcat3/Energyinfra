@@ -1,0 +1,61 @@
+# Real model workload definitions for llama.cpp benchmarking on Jetson Orin
+# Uses Phi-3-mini-4k-instruct Q4 GGUF model
+
+model:
+  name: "Phi-3-mini-4k-instruct-Q4"
+  path: "models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
+  format: "gguf"
+  quantization: "Q4"
+  n_ctx: 4096
+  n_gpu_layers: -1  # Offload all layers to GPU
+  n_threads: 4
+
+runtime:
+  engine: "llama.cpp"
+  version: "0.3.22"
+  python_package: "llama-cpp-python"
+
+# Workload matrix: covers diverse prompt/output length combinations
+workloads:
+  short_short:
+    description: "Short prompt, short output (chat round-trip)"
+    prompt_length: 128
+    output_length: 64
+    batch_size: 1
+    template: "Briefly answer: What is machine learning?"
+
+  short_long:
+    description: "Short prompt, long output (explanation request)"
+    prompt_length: 128
+    output_length: 256
+    batch_size: 1
+    template: "Explain in detail: How does a transformer model work?"
+
+  medium_medium:
+    description: "Medium prompt, medium output (document QA)"
+    prompt_length: 512
+    output_length: 128
+    batch_size: 1
+    template: "Based on the following text, summarize the key points:\n\n{text}"
+
+  long_medium:
+    description: "Long prompt, medium output (code review)"
+    prompt_length: 1024
+    output_length: 128
+    batch_size: 1
+    template: "Review the following code and provide feedback:\n\n{code}"
+
+  long_long:
+    description: "Long prompt, long output (essay generation)"
+    prompt_length: 1024
+    output_length: 512
+    batch_size: 1
+    template: "Write a comprehensive analysis on the following topic:\n\n{topic}"
+
+# Experiment settings
+experiment:
+  warmup_runs: 2
+  repeats: 5
+  timeout_seconds: 300
+  cooldown_seconds: 10
+  output_dir: "data/real_baseline_comparison"

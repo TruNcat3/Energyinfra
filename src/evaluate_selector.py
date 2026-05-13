@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import json
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import logging
 import matplotlib.pyplot as plt
 
@@ -47,6 +47,45 @@ class SelectorEvaluator:
             'ours_slo_aware_selector'
         ]
 
+        # Pre-compute per-phase fixed best configs
+        self._phase_best_configs = self._compute_phase_best_configs()
+
+    def _get_energy_column(self, bucket_df: pd.DataFrame) -> str:
+        """Determine the phase-appropriate energy column for a bucket"""
+        if 'energy_objective_used' in bucket_df.columns:
+            obj_col = bucket_df['energy_objective_used'].iloc[0]
+            if obj_col in bucket_df.columns:
+                return obj_col
+        if 'phase' in bucket_df.columns:
+            phase = bucket_df['phase'].iloc[0]
+            phase_col_map = {
+                'prefill': 'energy_per_input_token_j_median',
+                'decode': 'energy_per_output_token_j_median',
+                'mixed': 'energy_per_output_token_j_median'
+            }
+            target_col = phase_col_map.get(phase, 'energy_per_output_token_j_median')
+            if target_col in bucket_df.columns:
+                return target_col
+        return 'energy_per_token_j_median'
+
+    def _compute_phase_best_configs(self) -> Dict:
+        """Pre-compute fixed best config per phase group"""
+        phase_best = {}
+        if self.selector_df.empty or 'phase' not in self.selector_df.columns:
+            # Fallback: global best
+            energy_col = 'energy_per_token_j_median'
+            if not self.selector_df.empty and energy_col in self.selector_df.columns:
+                phase_best['_global'] = self.selector_df.loc[self.selector_df[energy_col].idxmin()]
+            return phase_best
+
+        for phase in self.selector_df['phase'].unique():
+            phase_df = self.selector_df[self.selector_df['phase'] == phase]
+            energy_col = self._get_energy_column(phase_df)
+            if energy_col in phase_df.columns and not phase_df.empty:
+                phase_best[phase] = phase_df.loc[phase_df[energy_col].idxmin()]
+
+        return phase_best
+
     def get_maxn_config(self, bucket_df: pd.DataFrame) -> pd.Series:
         """Get MaxN / all_high configuration (highest frequencies)"""
 
@@ -78,6 +117,7 @@ class SelectorEvaluator:
         target_emc = 1600
 
         # Find closest to medium
+        bucket_df = bucket_df.copy()
         bucket_df['mid_distance'] = (
             abs(bucket_df['gpu_freq_mhz'] - target_gpu) +
             abs(bucket_df['cpu_freq_mhz'] - target_cpu) +
@@ -93,31 +133,73 @@ class SelectorEvaluator:
         if bucket_df.empty:
             return pd.Series()
 
-        # Find configuration with minimum energy per token
-        min_energy_idx = bucket_df['energy_per_token_j_median'].idxmin()
+        energy_col = self._get_energy_column(bucket_df)
+        min_energy_idx = bucket_df[energy_col].idxmin()
         return bucket_df.loc[min_energy_idx]
 
-    def get_fixed_best_efficiency_config(self, bucket_df: pd.DataFrame, global_best: pd.Series) -> pd.Series:
-        """Get fixed best efficiency config (same for all buckets)"""
-
-        # Return the global best config regardless of bucket
-        return global_best
-
-    def get_oracle_best_config(self, bucket_df: pd.DataFrame) -> pd.Series:
-        """Get oracle best config (best energy among SLO-feasible)"""
+    def get_fixed_best_efficiency_config(self, bucket_df: pd.DataFrame) -> pd.Series:
+        """Get fixed best efficiency config (per-phase best, same for all buckets in that phase)"""
 
         if bucket_df.empty:
             return pd.Series()
+
+        # Determine phase for this bucket
+        phase = bucket_df['phase'].iloc[0] if 'phase' in bucket_df.columns else None
+        phase_best = self._phase_best_configs.get(phase) if phase else None
+
+        if phase_best is not None:
+            return phase_best
+
+        # Fallback to global best
+        global_best = self._phase_best_configs.get('_global')
+        if global_best is not None:
+            return global_best
+
+        # Ultimate fallback: pick min energy from bucket
+        energy_col = self._get_energy_column(bucket_df)
+        return bucket_df.loc[bucket_df[energy_col].idxmin()]
+
+    def _lookup_config_in_bucket(self, selected_config: pd.Series,
+                                     bucket_df: pd.DataFrame) -> pd.Series:
+        """Look up the fixed config's actual metrics within the target bucket."""
+        gpu = selected_config['gpu_freq_mhz']
+        cpu = selected_config['cpu_freq_mhz']
+        emc = selected_config['emc_freq_mhz']
+
+        # Find exact match in current bucket
+        match = bucket_df[
+            (bucket_df['gpu_freq_mhz'] == gpu) &
+            (bucket_df['cpu_freq_mhz'] == cpu) &
+            (bucket_df['emc_freq_mhz'] == emc)
+        ]
+
+        if not match.empty:
+            return match.iloc[0]
+
+        # No exact match — find closest frequency combination
+        bucket_df = bucket_df.copy()
+        bucket_df['freq_distance'] = (
+            abs(bucket_df['gpu_freq_mhz'] - gpu) +
+            abs(bucket_df['cpu_freq_mhz'] - cpu) +
+            abs(bucket_df['emc_freq_mhz'] - emc)
+        )
+        return bucket_df.loc[bucket_df['freq_distance'].idxmin()]
+
+    def get_oracle_best_config(self, bucket_df: pd.DataFrame) -> pd.Series:
+        """Get oracle best config (best energy among SLO-feasible, per bucket)"""
+
+        if bucket_df.empty:
+            return pd.Series()
+
+        energy_col = self._get_energy_column(bucket_df)
 
         # Filter SLO-feasible configs
         slo_feasible = bucket_df[bucket_df['slo_all_met'] == True]
 
         if not slo_feasible.empty:
-            # Among SLO-feasible, select minimum energy
-            return slo_feasible.loc[slo_feasible['energy_per_token_j_median'].idxmin()]
+            return slo_feasible.loc[slo_feasible[energy_col].idxmin()]
         else:
-            # No SLO-feasible, select minimum energy overall
-            return bucket_df.loc[bucket_df['energy_per_token_j_median'].idxmin()]
+            return bucket_df.loc[bucket_df[energy_col].idxmin()]
 
     def get_ours_slo_aware_config(self, bucket_df: pd.DataFrame) -> pd.Series:
         """Get our SLO-aware selector config"""
@@ -125,14 +207,14 @@ class SelectorEvaluator:
         if bucket_df.empty:
             return pd.Series()
 
-        # Same logic as oracle - select min energy among SLO-feasible
-        # In real implementation, this would use the select_config.py logic
+        energy_col = self._get_energy_column(bucket_df)
+
         slo_feasible = bucket_df[bucket_df['slo_all_met'] == True]
 
         if not slo_feasible.empty:
-            return slo_feasible.loc[slo_feasible['energy_per_token_j_median'].idxmin()]
+            return slo_feasible.loc[slo_feasible[energy_col].idxmin()]
         else:
-            # Fallback to closest to SLO
+            bucket_df = bucket_df.copy()
             bucket_df['slo_violation_score'] = (
                 (bucket_df['ttft_ms_median'] - 1000).clip(lower=0) * 0.3 +
                 (bucket_df['tpot_ms_median'] - 80).clip(lower=0) * 0.3 +
@@ -149,15 +231,15 @@ class SelectorEvaluator:
 
         results = []
 
-        # Get global best for fixed strategy
-        global_best = self.selector_df.loc[self.selector_df['energy_per_token_j_median'].idxmin()]
-
         # Evaluate per bucket
         for bucket_key in self.selector_df['bucket_key'].unique():
             bucket_df = self.selector_df[self.selector_df['bucket_key'] == bucket_key]
 
             if bucket_df.empty:
                 continue
+
+            # Determine phase-appropriate energy column for this bucket
+            energy_col = self._get_energy_column(bucket_df)
 
             # Select config based on strategy
             if strategy == 'maxn_all_high':
@@ -167,7 +249,7 @@ class SelectorEvaluator:
             elif strategy == 'energy_efficient_all_low':
                 selected = self.get_energy_efficient_config(bucket_df)
             elif strategy == 'fixed_best_efficiency':
-                selected = self.get_fixed_best_efficiency_config(bucket_df, global_best)
+                selected = self.get_fixed_best_efficiency_config(bucket_df)
             elif strategy == 'oracle_best_per_bucket':
                 selected = self.get_oracle_best_config(bucket_df)
             elif strategy == 'ours_slo_aware_selector':
@@ -178,19 +260,27 @@ class SelectorEvaluator:
             if selected.empty:
                 continue
 
+            # For fixed_best, look up the selected config's actual energy in this bucket
+            if strategy == 'fixed_best_efficiency':
+                selected = self._lookup_config_in_bucket(selected, bucket_df)
+                if selected.empty:
+                    continue
+
             # Get oracle for this bucket (for regret calculation)
             oracle = self.get_oracle_best_config(bucket_df)
 
             results.append({
                 'strategy': strategy,
                 'bucket_key': bucket_key,
+                'phase': bucket_df['phase'].iloc[0] if 'phase' in bucket_df.columns else 'unknown',
+                'energy_col_used': energy_col,
                 'selected_config': {
                     'gpu_freq_mhz': int(selected['gpu_freq_mhz']),
                     'cpu_freq_mhz': int(selected['cpu_freq_mhz']),
                     'emc_freq_mhz': int(selected['emc_freq_mhz'])
                 },
-                'energy_per_token_j': float(selected['energy_per_token_j_median']),
-                'oracle_energy': float(oracle['energy_per_token_j_median']),
+                'energy_per_token_j': float(selected[energy_col]),
+                'oracle_energy': float(oracle[energy_col]),
                 'ttft_ms': float(selected['ttft_ms_median']),
                 'tpot_ms': float(selected['tpot_ms_median']),
                 'avg_power_w': float(selected['avg_power_w_median']),
@@ -200,19 +290,38 @@ class SelectorEvaluator:
 
         return pd.DataFrame(results)
 
-    def calculate_regret(self, results_df: pd.DataFrame) -> Dict:
-        """Calculate regret statistics for each strategy"""
+    def calculate_regret(self, results_df: pd.DataFrame) -> Tuple[Dict, List]:
+        """Calculate regret statistics for each strategy, return (stats, anomalies)"""
 
         regret_stats = {}
+        anomalies = []
 
         for strategy in results_df['strategy'].unique():
-            strategy_data = results_df[results_df['strategy'] == strategy]
+            strategy_data = results_df[results_df['strategy'] == strategy].copy()
 
             # Calculate energy regret vs oracle
             strategy_data['energy_regret'] = (
                 (strategy_data['energy_per_token_j'] - strategy_data['oracle_energy']) /
                 strategy_data['oracle_energy']
             )
+
+            # Flag negative regret as anomaly (strategy beats oracle = bug)
+            negative_regret = strategy_data[strategy_data['energy_regret'] < -1e-9]
+            for _, row in negative_regret.iterrows():
+                anomaly_msg = (
+                    f"ANOMALY: {strategy} has negative regret ({row['energy_regret']:.4%}) "
+                    f"in bucket {row['bucket_key']} — strategy beats oracle, "
+                    f"possible cross-phase contamination"
+                )
+                logger.warning(anomaly_msg)
+                anomalies.append({
+                    'strategy': strategy,
+                    'bucket_key': row['bucket_key'],
+                    'phase': row.get('phase', 'unknown'),
+                    'energy_regret': float(row['energy_regret']),
+                    'strategy_energy': float(row['energy_per_token_j']),
+                    'oracle_energy': float(row['oracle_energy'])
+                })
 
             # Handle infeasible buckets
             feasible_data = strategy_data[strategy_data['slo_feasible'] == True]
@@ -221,19 +330,21 @@ class SelectorEvaluator:
                 'total_buckets': len(strategy_data),
                 'slo_feasible_buckets': len(feasible_data),
                 'slo_violation_rate': 1.0 - (len(feasible_data) / len(strategy_data)),
-                'mean_energy_regret': strategy_data['energy_regret'].mean(),
-                'median_energy_regret': strategy_data['energy_regret'].median(),
-                'p95_energy_regret': strategy_data['energy_regret'].quantile(0.95),
-                'max_energy_regret': strategy_data['energy_regret'].max(),
-                'mean_energy': strategy_data['energy_per_token_j'].mean(),
-                'mean_ttft': strategy_data['ttft_ms'].mean(),
-                'mean_tpot': strategy_data['tpot_ms'].mean(),
-                'mean_power': strategy_data['avg_power_w'].mean()
+                'mean_energy_regret': float(strategy_data['energy_regret'].mean()),
+                'median_energy_regret': float(strategy_data['energy_regret'].median()),
+                'p95_energy_regret': float(strategy_data['energy_regret'].quantile(0.95)),
+                'max_energy_regret': float(strategy_data['energy_regret'].max()),
+                'mean_energy': float(strategy_data['energy_per_token_j'].mean()),
+                'mean_ttft': float(strategy_data['ttft_ms'].mean()),
+                'mean_tpot': float(strategy_data['tpot_ms'].mean()),
+                'mean_power': float(strategy_data['avg_power_w'].mean()),
+                'negative_regret_count': len(negative_regret)
             }
 
-        return regret_stats
+        return regret_stats, anomalies
 
-    def generate_comparison_report(self, results_df: pd.DataFrame, regret_stats: Dict) -> str:
+    def generate_comparison_report(self, results_df: pd.DataFrame, regret_stats: Dict,
+                                       anomalies: List = None) -> str:
         """Generate comprehensive comparison report"""
 
         lines = []
@@ -294,6 +405,21 @@ class SelectorEvaluator:
             lines.append(f"- MaxN Regret: {maxn_regret:.2%}")
             improvement = maxn_regret - our_regret
             lines.append(f"- Improvement: {improvement:.2%}")
+
+        # Anomaly section
+        if anomalies:
+            lines.append("\n## ⚠️ Anomalies Detected")
+            lines.append(f"\n**Negative regret count**: {len(anomalies)} (strategy beats oracle)")
+            lines.append("\nThese indicate potential cross-phase energy column contamination:")
+            for a in anomalies[:10]:  # Show first 10
+                lines.append(f"- {a['strategy']} in {a['bucket_key']} (phase={a['phase']}): "
+                           f"regret={a['energy_regret']:.4%}, "
+                           f"strategy={a['strategy_energy']:.6f} vs oracle={a['oracle_energy']:.6f}")
+            if len(anomalies) > 10:
+                lines.append(f"- ... and {len(anomalies) - 10} more")
+        else:
+            lines.append("\n## ✅ No Anomalies")
+            lines.append("\nNo negative regret detected — oracle regret is correctly 0% for all buckets.")
 
         lines.append("\n## ⚠️ Data Limitations")
         lines.append("\n**Important**: This evaluation uses synthetic benchmark data.")
@@ -379,7 +505,7 @@ class SelectorEvaluator:
         combined_results = pd.concat(all_results, ignore_index=True)
 
         # Calculate regret statistics
-        regret_stats = self.calculate_regret(combined_results)
+        regret_stats, anomalies = self.calculate_regret(combined_results)
 
         # Save results
         comparison_path = self.output_dir / 'selector_comparison.csv'
@@ -391,7 +517,7 @@ class SelectorEvaluator:
         logger.info(f"Saved regret statistics to: {regret_path}")
 
         # Generate report
-        report = self.generate_comparison_report(combined_results, regret_stats)
+        report = self.generate_comparison_report(combined_results, regret_stats, anomalies)
         report_path = self.output_dir / 'selector_eval_report.md'
         with open(report_path, 'w') as f:
             f.write(report)
@@ -408,6 +534,7 @@ class SelectorEvaluator:
             'evaluation_time': pd.Timestamp.now().isoformat(),
             'total_buckets': combined_results['bucket_key'].nunique(),
             'strategies_evaluated': len(self.strategies),
+            'anomaly_count': len(anomalies),
             'regret_stats': {k: {kk: float(vv) if isinstance(vv, (np.floating, float)) else vv
                                for kk, vv in v.items()}
                           for k, v in regret_stats.items()},

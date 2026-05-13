@@ -8,7 +8,7 @@
 
 **Platform**: Jetson Orin with llama.cpp runtime (TensorRT-LLM planned)
 
-**Current Phase**: Phase 4 Complete - Phase-Aware DVFS controller validated, advancing to Phase 5
+**Current Phase**: Phase 5 In Progress - P0-P4 code complete, real model experiment pending
 
 ## Key Concepts
 
@@ -46,8 +46,13 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 │   ├── phase_controller.py   # Phase-Aware DVFS online controller
 │   ├── run_phase_aware_experiment.py  # Validation experiment runner
 │   ├── visualize_phase_aware.py       # Comparison visualizations
+│   ├── visualize_phase5_p0.py         # Phase 5 comparison charts
+│   ├── evaluate_selector.py  # Selector evaluation tool
+│   ├── jetson_power_modes.py # Jetson nvpmodel/jetson_clocks management
+│   ├── llama_cpp_runner.py   # llama.cpp inference runner
+│   ├── run_baseline_comparison.py     # Baseline comparison orchestrator
 │   ├── experiment_manager.py # Experiment management framework
-│   └── evaluate_selector.py  # Selector evaluation tool
+│   └── system_monitor.py     # System monitoring
 ├── data/                       # Data output
 │   ├── rate_tables/           # Energy rate tables (Parquet)
 │   ├── experiments_4_1_to_4_7/# 7 preliminary experiment results
@@ -154,8 +159,14 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 - ✅ Key result: **30% energy reduction + 36% TTFT improvement** vs default
 
 ### In Progress (Phase 5)
-- ⏳ Workload-Aware + Pareto multi-objective optimization
-- ⏳ Real model integration (llama.cpp on Jetson)
+- ✅ P0: Evaluation credibility fixes (Pareto, phase-specific energy, fixed_best/oracle/regret)
+- ✅ P1: Jetson baseline infrastructure (jetson_power_modes.py, baselines.yaml)
+- ✅ P2: Real model runner (llama_cpp_runner.py, real_model_workloads.yaml)
+- ✅ P3: Adaptive phase-aware policy connected to controller
+- ✅ P4: Rate table rebuilt, evaluation verified (0 anomalies, 0% negative regret)
+- ✅ Phase 5 comparison visualizations (6 charts)
+- ⏳ Run real model baseline comparison experiment
+- ⏳ Rebuild rate table with real data
 - ⏳ Hybrid intelligent scheduling (rule-based + ML)
 - ⏳ Long-term stability validation
 
@@ -411,8 +422,8 @@ dmesg | tail -n 50
 **Result**: Phase-Aware strategy significantly outperforms fixed strategies
 
 ### Decision 4: Next Optimization Direction
-**Status**: Active
-**Options**: Workload-Aware + Pareto, Hybrid ML scheduling, Real model deployment
+**Status**: Decided - Real model baseline comparison
+**Result**: Infrastructure complete (llama_cpp_runner, jetson_power_modes, baselines.yaml), ready for real hardware experiment
 
 ## Project Dependencies
 
@@ -513,11 +524,11 @@ timestamp  level  module  message
 
 ## Next Immediate Steps
 
-1. **Real model integration** - Replace synthetic benchmark with llama.cpp on Jetson
-2. **Workload-Aware selector** - Build workload feature → config mapping
-3. **Pareto multi-objective optimization** - Energy/latency tradeoff analysis
+1. **Run real model baseline comparison** - 5 workloads x 9 baselines x 5 repeats
+2. **Rebuild rate table with real data** - Compare synthetic vs real conclusions
+3. **Online controller deployment** - Real-time adaptive frequency control
 4. **Long-term stability testing** - Validate over extended runs
-5. **Online controller deployment** - Real-time adaptive frequency control
+5. **Production-grade optimization** - Thermal effects, batching, concurrency
 
 ## Important Notes
 
@@ -529,6 +540,6 @@ timestamp  level  module  message
 
 ---
 
-**Last Updated**: 2026-05-12
-**Documentation Status**: Updated to reflect Phase 4 completion
-**AI Assistant Notes**: Phase 1-4 complete. Phase-Aware DVFS validated with 30% energy reduction. Next: real model integration and multi-objective optimization.
+**Last Updated**: 2026-05-13
+**Documentation Status**: Updated to reflect Phase 5 P0-P4 completion
+**AI Assistant Notes**: Phase 1-4 complete. Phase 5 P0-P4 code complete (evaluation credibility fixes, Jetson baseline infrastructure, real model runner, adaptive policy). Evaluation verified: 0 anomalies, 0% negative regret, oracle regret=0%. Next: run real model baseline comparison experiment.

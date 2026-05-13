@@ -36,7 +36,7 @@ class PhaseController:
     - oracle: offline-optimal per-phase config
     """
 
-    STRATEGIES = ['default', 'max_perf', 'energy_efficient', 'phase_aware', 'oracle']
+    STRATEGIES = ['default', 'max_perf', 'energy_efficient', 'phase_aware', 'adaptive_phase_aware', 'oracle']
 
     def __init__(self, config: Dict, strategy: str = 'phase_aware'):
         self.config = config
@@ -164,8 +164,47 @@ class PhaseController:
             'slo_violations': []
         }
 
-        if self.strategy == 'phase_aware':
-            result = self._run_phase_aware(workload)
+        if self.strategy in ('phase_aware', 'adaptive_phase_aware'):
+            # Check adaptive policy decision
+            policy_workload = {
+                'model': 'synthetic_qwen_7b_int4',
+                'runtime': 'synthetic',
+                'batch_size': batch_size,
+                'prompt_length': prompt_len,
+                'output_length': output_len,
+                'concurrency': 1
+            }
+            adaptive_decision = self.policy.should_enable_phase_aware(policy_workload, self.slo)
+
+            if self.strategy == 'adaptive_phase_aware':
+                switch_enabled = adaptive_decision.get('switch_enabled', False)
+                result['adaptive_decision'] = adaptive_decision
+                result['switch_enabled'] = switch_enabled
+
+                if switch_enabled:
+                    result = self._run_phase_aware(workload)
+                    result['switch_enabled'] = True
+                    result['selection_reason'] = adaptive_decision.get('selection_reason', '')
+                    result['switching_overhead_ms'] = adaptive_decision.get('switching_cost', {}).get('overhead_ms', 0)
+                    result['switching_energy_j'] = adaptive_decision.get('switching_cost', {}).get('energy_overhead_j', 0)
+                    result['expected_energy_saving_j'] = adaptive_decision.get('energy_saving', 0)
+                    result['break_even_tokens'] = adaptive_decision.get('break_even_tokens', 0)
+                else:
+                    # Fall back to single config from policy
+                    single_cfg = adaptive_decision.get('single_config', {})
+                    freq = {
+                        'gpu_freq': single_cfg.get('gpu_freq_mhz', self.freq_presets['gpu']['mid']),
+                        'cpu_freq': single_cfg.get('cpu_freq_mhz', self.freq_presets['cpu']['mid']),
+                        'emc_freq': single_cfg.get('emc_freq_mhz', self.freq_presets['emc']['mid'])
+                    }
+                    result.update(self._run_single_config_with_freq(workload, freq))
+                    result['switch_enabled'] = False
+                    result['selection_reason'] = adaptive_decision.get('selection_reason', '')
+            else:
+                # Original phase_aware: always switch
+                result = self._run_phase_aware(workload)
+                result['switch_enabled'] = True
+                result['adaptive_decision'] = adaptive_decision
         else:
             result = self._run_single_config(workload)
 
@@ -183,11 +222,15 @@ class PhaseController:
 
     def _run_single_config(self, workload: Dict) -> Dict:
         """Run inference with a single fixed config (for non-phase-aware strategies)."""
+        freq = self._get_strategy_config(workload, 'mixed')
+        return self._run_single_config_with_freq(workload, freq)
+
+    def _run_single_config_with_freq(self, workload: Dict, freq: Dict) -> Dict:
+        """Run inference with an explicit frequency config."""
         prompt_len = workload.get('prompt_len', 512)
         output_len = workload.get('output_len', 128)
         batch_size = workload.get('batch_size', 1)
 
-        freq = self._get_strategy_config(workload, 'mixed')
         metrics = self.benchmark.run_benchmark(
             {'prompt_len': prompt_len, 'output_len': output_len,
              'batch_size': batch_size, 'phase': 'mixed'},

@@ -153,22 +153,38 @@ class ConfigSelector:
         return filtered_df
 
     def select_min_energy_config(self, configs_df: pd.DataFrame) -> pd.Series:
-        """Select configuration with minimum energy per token"""
+        """Select configuration with minimum energy per token (phase-aware)"""
 
         if configs_df.empty:
             return pd.Series()
+
+        # Determine which energy column to use based on phase
+        energy_col = 'energy_per_token_j_median'
+        if 'energy_objective_used' in configs_df.columns:
+            obj_col = configs_df['energy_objective_used'].iloc[0]
+            if obj_col in configs_df.columns:
+                energy_col = obj_col
+        elif 'phase' in configs_df.columns:
+            phase = configs_df['phase'].iloc[0]
+            phase_col_map = {
+                'prefill': 'energy_per_input_token_j_median',
+                'decode': 'energy_per_output_token_j_median',
+                'mixed': 'energy_per_output_token_j_median'
+            }
+            target_col = phase_col_map.get(phase, 'energy_per_output_token_j_median')
+            if target_col in configs_df.columns:
+                energy_col = target_col
 
         # Filter to only SLO-feasible configs
         slo_feasible = configs_df[configs_df['slo_all_met'] == True]
 
         if not slo_feasible.empty:
             # Among SLO-feasible, select minimum energy
-            min_energy_idx = slo_feasible['energy_per_token_j_median'].idxmin()
+            min_energy_idx = slo_feasible[energy_col].idxmin()
             return slo_feasible.loc[min_energy_idx]
         else:
-            # No SLO-feasible configs, select one with minimum SLO violations
-            # Use energy as secondary criterion
-            min_energy_idx = configs_df['energy_per_token_j_median'].idxmin()
+            # No SLO-feasible configs, select one with minimum energy
+            min_energy_idx = configs_df[energy_col].idxmin()
             return configs_df.loc[min_energy_idx]
 
     def find_fallback_safe_config(self) -> pd.Series:

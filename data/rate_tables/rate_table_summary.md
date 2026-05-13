@@ -1,6 +1,6 @@
 # Energy Rate Table Build Summary
 
-**Generated**: 2026-05-08T19:26:12.171689
+**Generated**: 2026-05-13T02:34:10.843513
 **Data Source**: data/experiments_4_1_to_4_7
 
 ## Data Overview
@@ -31,7 +31,7 @@
 - Thermal effects simplified in synthetic data
 
 ## Recommendations
-- Validate with real Jetson Orin + TensorRT-LLM experiments
+- Validate with real Jetson Orin + llama.cpp experiments
 - Expand workload matrix for better coverage
 - Add comprehensive power and thermal measurements
 - Measure actual frequency switching overhead

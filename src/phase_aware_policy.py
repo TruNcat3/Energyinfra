@@ -106,8 +106,12 @@ class PhaseAwarePolicy:
                 # Minimize TTFT
                 best_config = phase_bucket.loc[phase_bucket['ttft_ms_median'].idxmin()]
             else:
-                # Minimize energy per token
-                best_config = phase_bucket.loc[phase_bucket['energy_per_token_j_median'].idxmin()]
+                # Use phase-appropriate energy column
+                energy_col = self._get_energy_column(phase_bucket, phase)
+                best_config = phase_bucket.loc[phase_bucket[energy_col].idxmin()]
+
+            # Use phase-appropriate energy for predicted metrics
+            energy_col = self._get_energy_column(phase_bucket, phase)
 
             return {
                 'gpu_freq_mhz': int(best_config['gpu_freq_mhz']),
@@ -116,12 +120,28 @@ class PhaseAwarePolicy:
                 'predicted_metrics': {
                     'ttft_ms': float(best_config['ttft_ms_median']),
                     'tpot_ms': float(best_config['tpot_ms_median']),
-                    'energy_per_token_j': float(best_config['energy_per_token_j_median']),
+                    'energy_per_token_j': float(best_config[energy_col]),
                     'avg_power_w': float(best_config['avg_power_w_median'])
                 }
             }
 
         return None
+
+    def _get_energy_column(self, df: pd.DataFrame, phase: str) -> str:
+        """Determine the phase-appropriate energy column"""
+        phase_col_map = {
+            'prefill': 'energy_per_input_token_j_median',
+            'decode': 'energy_per_output_token_j_median',
+            'mixed': 'energy_per_output_token_j_median'
+        }
+        target_col = phase_col_map.get(phase, 'energy_per_output_token_j_median')
+        if target_col in df.columns:
+            return target_col
+        if 'energy_objective_used' in df.columns:
+            obj_col = df['energy_objective_used'].iloc[0]
+            if obj_col in df.columns:
+                return obj_col
+        return 'energy_per_token_j_median'
 
     def create_bucket_key(self, workload: Dict) -> str:
         """Create bucket key from workload"""
@@ -193,18 +213,19 @@ class PhaseAwarePolicy:
         return switching_cost
 
     def calculate_energy_saving(self, prefill_config: Dict, decode_config: Dict,
-                               single_config: Dict, output_length: int) -> float:
+                               single_config: Dict, output_length: int,
+                               prompt_length: int = 512) -> float:
         """Calculate energy saving from phase-aware vs single config"""
 
         # Phase-aware energy
         phase_aware_energy = (
-            prefill_config['predicted_metrics']['energy_per_token_j'] * 512 +  # Assume 512 input tokens
+            prefill_config['predicted_metrics']['energy_per_token_j'] * prompt_length +
             decode_config['predicted_metrics']['energy_per_token_j'] * output_length
         )
 
         # Single config energy
         single_config_energy = (
-            single_config['predicted_metrics']['energy_per_token_j'] * (512 + output_length)
+            single_config['predicted_metrics']['energy_per_token_j'] * (prompt_length + output_length)
         )
 
         return single_config_energy - phase_aware_energy
@@ -225,13 +246,14 @@ class PhaseAwarePolicy:
             }
 
         output_length = workload.get('output_length', workload.get('output_len', 128))
+        prompt_length = workload.get('prompt_length', workload.get('prompt_len', 512))
 
         # Calculate switching cost
         switching_cost = self.estimate_switching_cost(prefill_config, decode_config)
 
         # Calculate energy saving
         energy_saving = self.calculate_energy_saving(
-            prefill_config, decode_config, single_config, output_length
+            prefill_config, decode_config, single_config, output_length, prompt_length
         )
 
         # Estimate switching energy overhead (simplified)
