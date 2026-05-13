@@ -3,15 +3,15 @@
 ## 🎯 项目完成状态总览
 
 **当前日期**: 2026-05-13
-**总体进度**: 88% 完成
-**当前阶段**: Phase 5 高级优化进行中 (P0-P4代码完成)
+**总体进度**: 90% 完成
+**当前阶段**: Phase 5 高级优化进行中 (P0-P5 完成)
 
 ### 阶段完成情况
 - **Phase 1: 项目基础建设** ✅ 100% 完成
 - **Phase 2: 核心模块实现** ✅ 100% 完成（含合成测试 + 真实硬件测试）
 - **Phase 3: 前置实验验证** ✅ 100% 完成（所有7个实验）
 - **Phase 4: Phase-Aware DVFS** ✅ 100% 完成（控制器 + 验证实验）
-- **Phase 5: 高级优化** 🔄 60% 完成（P0-P4代码完成，真实实验待运行）
+- **Phase 5: 高级优化** 🔄 70% 完成（P0-P5完成，P6 rate table重建待运行）
 
 ### 关键成果
 - ✅ 7个前置实验全部完成（45个数据点）
@@ -25,6 +25,9 @@
 - ✅ 自适应phase-aware策略连接完成（adaptive_phase_aware）
 - ✅ 22个高质量可视化图表（含Phase 5综合仪表盘）
 - ✅ 真实硬件频率控制验证（GPU: 306-1300 MHz）
+- ✅ 真实模型多配置实验完成（180 runs, Phi-3-mini Q4）
+- ✅ 真实模型实验验证：GPU频率无影响(1.01x)，CPU是瓶颈(1.86x)
+- ✅ 27个高质量可视化图表（新增5张真实模型实验图表）
 
 ---
 
@@ -208,6 +211,13 @@
 - [x] 实现 `src/run_baseline_comparison.py` - Baseline 对比实验编排器
 - [x] 创建 `configs/baselines.yaml` - 9种 Jetson baseline 定义
 - [x] 创建 `configs/real_model_workloads.yaml` - 5种真实模型 workload
+- [x] 运行真实模型多配置实验 (4x3x5x3=180 runs) ✅ 2026-05-13
+  - [x] GPU频率: 306/612/918/1300 MHz
+  - [x] CPU频率: 1036/1497/2201 MHz
+  - [x] 5种workload (short_short ~ long_long)
+  - [x] 3次重复
+  - [x] 零token异常分析 (19.4%, 已过滤)
+  - [x] 5张可视化图表
 - [ ] 运行真实模型 baseline 对比实验 (5x9x5=225 runs)
 - [ ] 用 real data 重建 rate table
 - [ ] 实现 `src/online_controller.py` - 完整在线控制器（实时推理）
@@ -650,4 +660,4 @@ def memory_intensive_function():
 ---
 
 **最后更新**：2026-05-13
-**文档状态**：已更新至 Phase 5 P0-P4 完成
+**文档状态**：已更新至 Phase 5 P5 完成（真实模型多配置实验180 runs完成）

@@ -484,6 +484,61 @@ class HybridScheduler:
 
 ## 🎯 关键技术要点
 
+### 真实模型实验验证 (2026-05-13)
+
+> 以下结论基于 Phi-3-mini-4k-instruct-Q4 模型在 Jetson AGX Orin (MAXN mode) 上的 180 次推理实验验证
+
+#### 验证结论 1: GPU 频率对 LLM 推理吞吐量几乎无影响
+
+| GPU 频率 | 平均吞吐量 (tok/s) |
+|----------|-------------------|
+| 306 MHz | 7.0 |
+| 612 MHz | 7.0 |
+| 918 MHz | 6.9 |
+| 1300 MHz | 7.0 |
+
+**GPU频率 4.25x 提升 → 吞吐量仅 1.01x**。这与合成基准实验 4.2 的结论一致（"GPU频率不是主要瓶颈"），但真实模型的效应更加极端——几乎为零影响。
+
+**图表参考**: `figures/real_model_experiment/gpu_freq_effect.png`, `figures/real_model_experiment/scaling_analysis.png`
+
+#### 验证结论 2: CPU 频率是 LLM 推理性能的决定性因素
+
+| CPU 频率 | 平均吞吐量 (tok/s) |
+|----------|-------------------|
+| 1036 MHz | 4.9 |
+| 1497 MHz | 6.9 |
+| 2201 MHz | 9.2 |
+
+**CPU频率 2.12x 提升 → 吞吐量 1.86x**。这说明 llama.cpp 在 Jetson 上的推理主要受 CPU 调度和内存访问限制。
+
+**图表参考**: `figures/real_model_experiment/config_heatmap.png`
+
+#### 验证结论 3: 最优配置并非"全最高频率"
+
+| 配置排名 | GPU (MHz) | CPU (MHz) | TPS |
+|---------|-----------|-----------|-----|
+| 1 | 918 | 2201 | 9.4 |
+| 2 | 1300 | 2201 | 9.2 |
+| 3 | 612 | 2201 | 9.1 |
+| 4 | 306 | 2201 | 9.0 |
+
+**GPU918+CPU2201 是最优配置**，而非 GPU1300+CPU2201。高 GPU 频率无法带来额外性能，但会增加功耗。因此 **GPU 降频节能策略是可行的**。
+
+#### 对调度方法的影响
+
+| 调度方法 | 合成基准结论 | 真实模型验证 | 调整方向 |
+|---------|------------|------------|---------|
+| Phase-Aware DVFS | 30%节能, 36% TTFT改善 | 待real rate table验证 | 需重建real rate table |
+| GPU 降频策略 | 最低频率最能效 | **确认GPU可大幅降频而不影响性能** | GPU 可安全降至 306-612 MHz |
+| CPU 保频策略 | CPU影响显著 | **确认CPU不可降频** | CPU 应保持 2201 MHz |
+| Workload-Aware | 不同workload最优配置不同 | 长prompt需更多warmup | 需处理零token异常 |
+
+**图表参考**: `figures/real_model_experiment/workload_breakdown.png`, `figures/real_model_experiment/real_vs_synthetic.png`
+
+---
+
+## 🎯 关键技术要点 (原始)
+
 ### 1. 频率切换策略
 - **Hysteresis 机制**: 设置最小保持时间，避免频繁切换
 - **边界切换**: 优先在阶段边界（prefill/decode）进行切换
@@ -548,8 +603,8 @@ class HybridScheduler:
 
 ---
 
-**文档版本**: 1.1
-**分析基础**: 7个前置实验设计 + Phase-Aware DVFS 验证结果
-**更新日期**: 2026-05-12
+**文档版本**: 1.2
+**分析基础**: 7个前置实验设计 + Phase-Aware DVFS 验证结果 + 真实模型实验 (180 runs)
+**更新日期**: 2026-05-13
 **作者**: Claude AI Assistant
 **项目**: Jetson LLM Energy Profiling
