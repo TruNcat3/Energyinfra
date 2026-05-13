@@ -1,6 +1,6 @@
 # Jetson LLM Energy Profiling - Project Overview
 
-**项目状态**: Phase 5 (高级优化) 进行中 — P0-P4 代码已完成，真实模型实验待运行
+**项目状态**: Phase 5 (高级优化) 进行中 — 真实模型多配置实验已完成 (180 runs)
 
 ## 项目概览
 
@@ -52,9 +52,11 @@ Energyinfra/
 ├── data/                       # 数据输出
 │   ├── rate_tables/           # 能耗汇率表 (Parquet, 23 configs)
 │   ├── selector_eval/         # 选择器评估结果 (P0 verified)
+│   ├── real_model_experiment/ # 真实模型多配置实验数据 (180 runs)
 │   ├── experiments_4_1_to_4_7/# 7个前置实验数据
 │   └── phase_aware_experiment/# Phase-Aware 验证实验数据
 ├── figures/                    # 可视化输出
+│   ├── real_model_experiment/ # 真实模型实验图表 (5张)
 │   ├── phase5_comparison/     # Phase 5 综合对比图表 (6张)
 │   ├── phase_aware_experiment/# Phase-Aware 对比图表 (5张)
 │   └── phase3_analysis/       # 选择器评估图表
@@ -95,6 +97,24 @@ Energyinfra/
 | MaxN | 8.21% | 0% | 0 |
 | All Mid | 22.11% | 0% | 0 |
 
+### 真实模型多配置实验 (Phi-3-mini Q4, 2026-05-13)
+
+**实验矩阵**: 4 GPU × 3 CPU × 5 workloads × 3 repeats = 180 runs
+
+| GPU Freq | CPU Freq | TTFT (ms) | TPOT (ms) | TPS |
+|----------|----------|-----------|-----------|-----|
+| 306 MHz | 1036 MHz | 878.1 | 196.7 | 5.0 |
+| 306 MHz | 2201 MHz | 773.8 | 107.6 | 9.0 |
+| 918 MHz | 2201 MHz | 430.8 | 105.2 | **9.4** |
+| 1300 MHz | 1036 MHz | 830.7 | 198.4 | 4.9 |
+| 1300 MHz | 2201 MHz | 498.7 | 107.0 | 9.2 |
+
+**关键发现**:
+- **GPU 频率无影响**: 306→1300 MHz 仅 1.01x 吞吐量 (memory-bound 确认)
+- **CPU 频率是瓶颈**: 1036→2201 MHz 达 1.86x 吞吐量
+- **最优配置**: GPU918_CPU2201 = 9.4 tok/s (并非最高 GPU 频率)
+- **TTFT**: CPU 高频可降低 26.2%, GPU 高频无效果
+
 ### 7 个前置实验核心结论
 
 | 实验 | 核心发现 |
@@ -116,7 +136,8 @@ Energyinfra/
 | P2 真实模型 Runner | llama_cpp_runner + 5种 workload | 完成 |
 | P3 自适应策略 | adaptive_phase_aware 连接到控制器 | 完成 |
 | P4 Rate Table 验证 | 重建 + 评估验证 (0 anomaly) | 完成 |
-| P5 真实模型实验 | 5x9x5 baseline 对比矩阵 | 待运行 |
+| P5 真实模型实验 | 4x3x5x3 = 180 runs 多配置实验 | 完成 |
+| P6 Real Rate Table | 用 real data 重建 rate table | 待运行 |
 | P6 Real Rate Table | 用 real data 重建 rate table | 待运行 |
 
 ## 快速开始
@@ -169,6 +190,17 @@ python3 src/evaluate_selector.py
 ### 运行真实模型 Baseline 对比 (需 Jetson 设备 + llama.cpp)
 
 ```bash
+# 多配置实验 (4 GPU × 3 CPU × 5 workloads)
+python3 src/run_real_model_experiment.py
+# 结果输出到 data/real_model_experiment/
+
+# 分析结果
+python3 src/analyze_real_experiment.py
+
+# 生成可视化
+python3 src/visualize_real_experiment.py
+
+# Baseline 对比实验 (9 baselines)
 python3 src/run_baseline_comparison.py \
   --baselines configs/baselines.yaml \
   --workloads configs/real_model_workloads.yaml \
@@ -193,11 +225,12 @@ python3 src/run_baseline_comparison.py \
 - 6 种策略对比验证 (含 adaptive_phase_aware)
 - 可视化分析完成
 
-### Phase 5: 高级优化 (60%)
+### Phase 5: 高级优化 (70%)
 - P0-P4 代码完成: 评估修复 + Baseline 基础设施 + 真实模型 Runner + 自适应策略
-- P5-P6 待运行: 真实模型 baseline 对比 + real rate table
+- P5 真实模型多配置实验完成: 180 runs, GPU无影响, CPU是瓶颈
+- P6 待运行: 用 real data 重建 rate table
 
-**总体进度**: 约 88%
+**总体进度**: 约 90%
 
 ## 文档说明
 
@@ -217,5 +250,5 @@ python3 src/run_baseline_comparison.py \
 ---
 
 **最后更新**: 2026-05-13
-**项目状态**: Phase 5 进行中 (P0-P4 代码完成)
-**总体进度**: 约 88%
+**项目状态**: Phase 5 进行中 (真实模型多配置实验完成)
+**总体进度**: 约 90%

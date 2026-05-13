@@ -74,35 +74,27 @@ class LlamaCppRunner:
 
         prompt = self._generate_prompt(prompt_length)
 
-        # Track per-token timing via callback
-        token_times: List[float] = []
         start_time = time.monotonic()
-
-        # Token generation with callback
-        output_tokens = 0
         first_token_time = None
+        token_times: List[float] = []
+        output_tokens = 0
 
-        def token_callback(token_id, token_text):
-            nonlocal output_tokens, first_token_time
-            now = time.monotonic()
-            token_times.append(now)
-            output_tokens += 1
-            if first_token_time is None:
-                first_token_time = now
-            # Stop at target output length
-            if output_tokens >= output_length:
-                return False
-            return True
-
-        # Run generation
+        # Use streaming to capture per-token timing
         try:
-            self.model.create_completion(
+            for chunk in self.model.create_completion(
                 prompt,
                 max_tokens=output_length,
                 temperature=0.7,
-                stream=False,
+                stream=True,
                 echo=False
-            )
+            ):
+                now = time.monotonic()
+                delta = chunk['choices'][0].get('text', '')
+                if delta:
+                    token_times.append(now)
+                    output_tokens += 1
+                    if first_token_time is None:
+                        first_token_time = now
         except Exception as e:
             logger.error(f"Inference failed: {e}")
             return {

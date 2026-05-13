@@ -8,7 +8,7 @@
 
 **Platform**: Jetson Orin with llama.cpp runtime (TensorRT-LLM planned)
 
-**Current Phase**: Phase 5 In Progress - P0-P4 code complete, real model experiment pending
+**Current Phase**: Phase 5 In Progress - Real model experiment completed (180 runs), P6 rate table rebuild pending
 
 ## Key Concepts
 
@@ -165,7 +165,9 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 - ✅ P3: Adaptive phase-aware policy connected to controller
 - ✅ P4: Rate table rebuilt, evaluation verified (0 anomalies, 0% negative regret)
 - ✅ Phase 5 comparison visualizations (6 charts)
-- ⏳ Run real model baseline comparison experiment
+- ✅ Run real model multi-config experiment (180 runs, 4 GPU × 3 CPU × 5 workloads × 3 repeats)
+- ✅ Real model experiment analysis and visualizations (5 charts)
+- ⏳ Run real model baseline comparison experiment (9 baselines)
 - ⏳ Rebuild rate table with real data
 - ⏳ Hybrid intelligent scheduling (rule-based + ML)
 - ⏳ Long-term stability validation
@@ -178,6 +180,18 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 | Max Performance | 0.110 J | 124 ms | 4.5 ms | 42% |
 | **Phase-Aware** | **0.115 J** | **77 ms** | **6.7 ms** | **80%** |
 | Oracle | 0.152 J | 124 ms | 6.9 ms | 76% |
+
+### Real Model Experiment Results (2026-05-13)
+
+| Metric | Finding |
+|--------|---------|
+| GPU freq scaling | 306→1300 MHz = **1.01x** throughput (no effect) |
+| CPU freq scaling | 1036→2201 MHz = **1.86x** throughput (dominant) |
+| Best config | GPU918_CPU2201 = **9.4 tok/s** |
+| Bottleneck | **CPU-bound** (memory-bound workload confirmed) |
+| Zero-token anomalies | 35/180 (19.4%), filtered in analysis |
+| TTFT CPU effect | 26.2% reduction at high CPU freq |
+| TTFT GPU effect | 0.8% reduction (negligible) |
 
 ## Technical Decisions
 
@@ -541,5 +555,4 @@ timestamp  level  module  message
 ---
 
 **Last Updated**: 2026-05-13
-**Documentation Status**: Updated to reflect Phase 5 P0-P4 completion
-**AI Assistant Notes**: Phase 1-4 complete. Phase 5 P0-P4 code complete (evaluation credibility fixes, Jetson baseline infrastructure, real model runner, adaptive policy). Evaluation verified: 0 anomalies, 0% negative regret, oracle regret=0%. Next: run real model baseline comparison experiment.
+**AI Assistant Notes**: Phase 1-4 complete. Phase 5 P0-P5 complete. Real model experiment (180 runs) confirmed: GPU frequency has NO effect on throughput (memory-bound), CPU frequency is the dominant bottleneck (1.86x scaling). Next: rebuild rate table with real data (P6), baseline comparison experiment.
