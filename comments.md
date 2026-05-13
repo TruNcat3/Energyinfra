@@ -1,3 +1,24 @@
+============================================================
+Phase 5 任务描述 (2026-05-13 当前)
+============================================================
+
+Phase 5 核心任务已完成:
+- P0: 评估可信度修复 (Pareto/phase-energy/fixed_best) — 已验证 0 anomaly
+- P1: Jetson baseline 基础设施 (jetson_power_modes, baselines.yaml)
+- P2: 真实模型 Runner (llama_cpp_runner, real_model_workloads)
+- P3: 自适应 phase-aware 策略连接到控制器
+- P4: Rate table 重建 + 评估验证
+
+待完成:
+- P5: 运行真实模型 baseline 对比实验 (5x9x5)
+- P6: 用 real data 重建 rate table
+
+详细计划: EnergyInfra_Phase5_Task_Plan.md
+
+============================================================
+Phase 3 原始任务描述 (历史记录)
+============================================================
+
 请在 EnergyInfra 工程中实现 Phase 3 的数据分析、能耗汇率表构建与配置选择闭环。当前已有实验数据位于 data/experiments_4_1_to_4_7，其中包含 experiment_4_1 到 experiment_4_7 的 CSV 文件。请不要修改已有实验数据，新增分析脚本、rate table 构建模块、selector 模块和评估模块即可。
 
 当前数据主要来自 SyntheticBenchmark，适合验证分析流程、可视化流程、rate table 构建逻辑和 selector 逻辑，但不能直接作为真实 Jetson Orin + TensorRT-LLM 的最终策略结论。所有报告中需要明确标注 synthetic 数据的限制。后续真实实验数据接入后，应能复用本阶段实现的 rate table、selector 和 evaluation pipeline。

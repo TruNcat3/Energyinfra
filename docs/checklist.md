@@ -2,24 +2,28 @@
 
 ## 🎯 项目完成状态总览
 
-**当前日期**: 2026-05-12
-**总体进度**: 80% 完成
-**当前阶段**: Phase 5 高级优化进行中
+**当前日期**: 2026-05-13
+**总体进度**: 88% 完成
+**当前阶段**: Phase 5 高级优化进行中 (P0-P4代码完成)
 
 ### 阶段完成情况
 - **Phase 1: 项目基础建设** ✅ 100% 完成
 - **Phase 2: 核心模块实现** ✅ 100% 完成（含合成测试 + 真实硬件测试）
 - **Phase 3: 前置实验验证** ✅ 100% 完成（所有7个实验）
 - **Phase 4: Phase-Aware DVFS** ✅ 100% 完成（控制器 + 验证实验）
-- **Phase 5: 高级优化** 🔄 进行中
+- **Phase 5: 高级优化** 🔄 60% 完成（P0-P4代码完成，真实实验待运行）
 
 ### 关键成果
 - ✅ 7个前置实验全部完成（45个数据点）
-- ✅ 能耗汇率表构建完成（23个配置，Parquet格式）
-- ✅ SLO-Aware配置选择器实现
+- ✅ 能耗汇率表构建完成（23个配置，Parquet格式，含phase-specific能量列）
+- ✅ SLO-Aware配置选择器实现（regret=0% vs oracle）
 - ✅ Phase-Aware DVFS控制器实现并验证
 - ✅ **30% 能量节省 + 36% TTFT改善**（vs Default baseline）
-- ✅ 14个高质量可视化图表
+- ✅ 评估可信度修复完成（0 anomaly, 0% 负regret）
+- ✅ Jetson baseline基础设施完成（jetson_power_modes, baselines.yaml）
+- ✅ 真实模型Runner完成（llama_cpp_runner.py）
+- ✅ 自适应phase-aware策略连接完成（adaptive_phase_aware）
+- ✅ 22个高质量可视化图表（含Phase 5综合仪表盘）
 - ✅ 真实硬件频率控制验证（GPU: 306-1300 MHz）
 
 ---
@@ -190,14 +194,22 @@
   - [ ] 实现汇率表自动构建
   - [ ] 实现数据分析管道
 
-### 阶段 6：高级模块实现（Phase 4-5 - 进行中）
-- [x] 实现 `src/build_rate_table.py` - 能耗汇率表构建
-- [x] 实现 `src/select_config.py` - SLO-Aware 配置选择器
-- [x] 实现 `src/phase_aware_policy.py` - Phase-Aware DVFS 策略
-- [x] 实现 `src/phase_controller.py` - Phase-Aware DVFS 在线控制器
+### 阶段 6：高级模块实现（Phase 4-5）
+- [x] 实现 `src/build_rate_table.py` - 能耗汇率表构建 (含 phase-specific 能量列)
+- [x] 实现 `src/select_config.py` - SLO-Aware 配置选择器 (含 phase-aware 能量选择)
+- [x] 实现 `src/phase_aware_policy.py` - Phase-Aware DVFS 策略 (含自适应决策)
+- [x] 实现 `src/phase_controller.py` - Phase-Aware DVFS 在线控制器 (含 adaptive_phase_aware)
 - [x] 实现 `src/run_phase_aware_experiment.py` - 验证实验运行器
 - [x] 实现 `src/visualize_phase_aware.py` - Phase-Aware 可视化
-- [x] 实现 `src/evaluate_selector.py` - 选择器评估工具
+- [x] 实现 `src/visualize_phase5_p0.py` - Phase 5 综合对比可视化 (6张图表)
+- [x] 实现 `src/evaluate_selector.py` - 选择器评估工具 (含 anomaly 检测)
+- [x] 实现 `src/jetson_power_modes.py` - Jetson nvpmodel/jetson_clocks 管理
+- [x] 实现 `src/llama_cpp_runner.py` - llama.cpp 真实推理 Runner
+- [x] 实现 `src/run_baseline_comparison.py` - Baseline 对比实验编排器
+- [x] 创建 `configs/baselines.yaml` - 9种 Jetson baseline 定义
+- [x] 创建 `configs/real_model_workloads.yaml` - 5种真实模型 workload
+- [ ] 运行真实模型 baseline 对比实验 (5x9x5=225 runs)
+- [ ] 用 real data 重建 rate table
 - [ ] 实现 `src/online_controller.py` - 完整在线控制器（实时推理）
 - [ ] 实现 Pareto 多目标优化器
 - [ ] 实现 Workload-Aware 自适应调度
@@ -637,5 +649,5 @@ def memory_intensive_function():
 
 ---
 
-**最后更新**：2026-05-12
-**文档状态**：已更新至 Phase 4 完成
+**最后更新**：2026-05-13
+**文档状态**：已更新至 Phase 5 P0-P4 完成
