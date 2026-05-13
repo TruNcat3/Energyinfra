@@ -25,49 +25,50 @@
 
 ```
 Energyinfra/
+├── src/                        # Python 源代码 (按功能分层)
+│   ├── controller/            # 调频器/调度器 - DVFS控制
+│   │   ├── freq_controller.py       # 频率控制 (sysfs/jetson_clocks)
+│   │   ├── jetson_power_modes.py    # Jetson电源模式管理
+│   │   ├── phase_aware_policy.py    # Phase-Aware DVFS策略
+│   │   ├── phase_controller.py      # DVFS在线控制器
+│   │   └── select_config.py         # SLO-Aware配置选择器
+│   ├── metrics/               # 性能收集器
+│   │   ├── metrics_collector.py     # tegrastats指标采集
+│   │   ├── parse_logs.py            # 日志解析
+│   │   └── system_monitor.py        # 系统监控
+│   ├── benchmark/             # 基准测试框架
+│   │   ├── synthetic_benchmark.py   # 合成基准测试
+│   │   ├── benchmark_runner.py      # 基准运行器
+│   │   ├── sweep_runner.py          # 参数扫描编排
+│   │   └── llama_cpp_runner.py      # llama.cpp推理Runner
+│   ├── ratetable/             # 能耗汇率表
+│   │   ├── build_rate_table.py      # 汇率表构建
+│   │   └── evaluate_selector.py     # 选择器评估
+│   ├── visualization/         # 可视化分析 (10个)
+│   │   ├── visualize_results.py     # 实验结果可视化
+│   │   ├── visualize_phase_aware.py # Phase-Aware可视化
+│   │   ├── visualize_phase5_p0.py   # Phase 5综合对比
+│   │   ├── visualize_real_experiment.py # 真实模型实验图表
+│   │   └── analyze_real_experiment.py   # 实验数据分析
+│   ├── experiments/           # 实验脚本 (9个)
+│   │   ├── run_phase_aware_experiment.py   # Phase-Aware验证
+│   │   ├── run_real_model_experiment.py    # 真实模型多配置实验
+│   │   ├── run_baseline_comparison.py      # Baseline对比
+│   │   └── run_all_prelim_experiments.py   # 前置实验
+│   └── _legacy/               # 归档废弃代码 (5个)
 ├── configs/                    # 配置文件
-│   ├── platform.yaml          # 平台配置
-│   ├── workloads.yaml         # 工作负载配置
-│   ├── selector.yaml          # 配置选择器参数
-│   ├── baselines.yaml         # 9种 Jetson baseline 定义 (Phase 5)
-│   └── real_model_workloads.yaml  # 真实模型 workload 配置 (Phase 5)
-├── src/                        # Python 源代码
-│   ├── freq_controller.py    # 频率控制模块 (sysfs/jetson_clocks)
-│   ├── metrics_collector.py  # 指标采集模块
-│   ├── benchmark_runner.py   # 基准测试运行模块
-│   ├── sweep_runner.py       # 扫描编排模块
-│   ├── synthetic_benchmark.py# 合成基准测试
-│   ├── build_rate_table.py   # 能耗汇率表构建 (含 phase-specific 能量列)
-│   ├── select_config.py      # SLO-Aware 配置选择器
-│   ├── phase_aware_policy.py # Phase-Aware DVFS 策略
-│   ├── phase_controller.py   # Phase-Aware DVFS 在线控制器 (含自适应策略)
-│   ├── evaluate_selector.py  # 选择器评估工具 (含 anomaly 检测)
-│   ├── jetson_power_modes.py # Jetson nvpmodel/jetson_clocks 管理 (Phase 5)
-│   ├── llama_cpp_runner.py   # llama.cpp 真实推理 Runner (Phase 5)
-│   ├── run_baseline_comparison.py # Baseline 对比实验编排器 (Phase 5)
-│   ├── visualize_phase_aware.py   # Phase-Aware 可视化
-│   ├── visualize_phase5_p0.py     # Phase 5 综合对比图表
-│   ├── experiment_manager.py # 实验管理框架
-│   └── system_monitor.py     # 系统监控工具
-├── data/                       # 数据输出
-│   ├── rate_tables/           # 能耗汇率表 (Parquet, 23 configs)
-│   ├── selector_eval/         # 选择器评估结果 (P0 verified)
-│   ├── real_model_experiment/ # 真实模型多配置实验数据 (180 runs)
-│   ├── experiments_4_1_to_4_7/# 7个前置实验数据
-│   └── phase_aware_experiment/# Phase-Aware 验证实验数据
-├── figures/                    # 可视化输出
-│   ├── real_model_experiment/ # 真实模型实验图表 (5张)
-│   ├── phase5_comparison/     # Phase 5 综合对比图表 (6张)
-│   ├── phase_aware_experiment/# Phase-Aware 对比图表 (5张)
-│   └── phase3_analysis/       # 选择器评估图表
-├── docs/                       # 中文文档
-│   ├── 任务书.md              # 项目目标和技术路线
-│   ├── 当前状态.md            # 当前开发状态 (更新至 Phase 5)
-│   ├── checklist.md           # 待办事项和开发指南
-│   └── project_progress_summary.md # 项目进展总结
-├── CLAUDE.md                   # AI 助手文档
-├── EnergyInfra_Phase5_Task_Plan.md # Phase 5 详细任务计划
-└── README.md                   # 本文件
+├── data/                       # 实验数据输出
+├── figures/                    # 可视化图表 (27张)
+├── scripts/
+│   ├── active/                # 活跃脚本 (4个)
+│   └── _legacy/               # 归档脚本 (9个)
+├── docs/                       # 文档 (按类型分层)
+│   ├── 任务书/                # 任务规格书
+│   ├── 开发文档/              # 开发跟踪 (checklist, 进度, 状态)
+│   ├── 说明文档/              # 使用指南 (runtime, setup, integration)
+│   └── 实验文档/              # 实验报告 (PHASE1-5)
+├── README.md
+└── CLAUDE.md
 ```
 
 ## 核心实验结果

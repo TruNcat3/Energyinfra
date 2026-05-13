@@ -28,49 +28,46 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 
 ```
 /home/wt/work/Energyinfra/
+├── src/                        # Python source (organized by function)
+│   ├── controller/            # Frequency/DVFS Control
+│   │   ├── freq_controller.py       # sysfs/jetson_clocks frequency control
+│   │   ├── jetson_power_modes.py    # nvpmodel/jetson_clocks management
+│   │   ├── phase_aware_policy.py    # Phase-Aware DVFS policy
+│   │   ├── phase_controller.py      # DVFS online controller
+│   │   └── select_config.py         # SLO-Aware config selector
+│   ├── metrics/               # Metrics Collection
+│   │   ├── metrics_collector.py     # tegrastats integration
+│   │   ├── parse_logs.py            # Log parsing
+│   │   └── system_monitor.py        # System monitoring
+│   ├── benchmark/             # Benchmark Framework
+│   │   ├── synthetic_benchmark.py   # Synthetic (no real model needed)
+│   │   ├── benchmark_runner.py      # Benchmark execution
+│   │   ├── sweep_runner.py          # Sweep orchestration
+│   │   └── llama_cpp_runner.py      # llama.cpp inference runner
+│   ├── ratetable/             # Rate Table
+│   │   ├── build_rate_table.py      # Energy rate table builder
+│   │   └── evaluate_selector.py     # Selector evaluation tool
+│   ├── visualization/         # Visualization (10 files)
+│   ├── experiments/           # Experiment Scripts (9 files)
+│   └── _legacy/               # Archived code (5 files)
 ├── configs/                    # Configuration files
-│   ├── platform.yaml          # Platform config (Jetson, runtime)
-│   ├── workloads.yaml         # Workload definitions
-│   ├── selector.yaml          # Selector parameters & SLO
-│   └── rate_table.yaml        # Rate table config
-├── src/                        # Python source modules
-│   ├── freq_controller.py    # Frequency control (sysfs/jetson_clocks)
-│   ├── metrics_collector.py  # System metrics collection
-│   ├── benchmark_runner.py   # Benchmark execution
-│   ├── sweep_runner.py       # Sweep orchestration
-│   ├── parse_logs.py         # Log parsing
-│   ├── synthetic_benchmark.py# Synthetic benchmark (no real model needed)
-│   ├── build_rate_table.py   # Energy rate table builder
-│   ├── select_config.py      # SLO-Aware config selector
-│   ├── phase_aware_policy.py # Phase-Aware DVFS policy
-│   ├── phase_controller.py   # Phase-Aware DVFS online controller
-│   ├── run_phase_aware_experiment.py  # Validation experiment runner
-│   ├── visualize_phase_aware.py       # Comparison visualizations
-│   ├── visualize_phase5_p0.py         # Phase 5 comparison charts
-│   ├── evaluate_selector.py  # Selector evaluation tool
-│   ├── jetson_power_modes.py # Jetson nvpmodel/jetson_clocks management
-│   ├── llama_cpp_runner.py   # llama.cpp inference runner
-│   ├── run_baseline_comparison.py     # Baseline comparison orchestrator
-│   ├── experiment_manager.py # Experiment management framework
-│   └── system_monitor.py     # System monitoring
 ├── data/                       # Data output
-│   ├── rate_tables/           # Energy rate tables (Parquet)
-│   ├── experiments_4_1_to_4_7/# 7 preliminary experiment results
-│   ├── phase_aware_experiment/# Phase-Aware validation data
-│   └── analysis/              # Analysis summaries
 ├── figures/                    # Visualization output
-├── docs/                       # Documentation (in Chinese)
-│   ├── 任务书.md              # Project goals and technical roadmap
-│   ├── 当前状态.md            # Current development status
-│   └── checklist.md           # TODO checklist and guidelines
-├── scripts/                    # Shell scripts
-├── CLAUDE.md                   # This file
-└── scheduling_method_analysis.md  # Scheduling method analysis
+├── scripts/
+│   ├── active/                # Active shell scripts
+│   └── _legacy/               # Archived shell scripts
+├── docs/                       # Documentation (categorized)
+│   ├── 任务书/                # Task specifications
+│   ├── 开发文档/              # Development docs
+│   ├── 说明文档/              # User/setup guides
+│   └── 实验文档/              # Experiment reports
+├── README.md
+└── CLAUDE.md
 ```
 
 ## Critical Documentation Files
 
-### 1. docs/任务书.md (Project Goals and Direction)
+### 1. docs/任务书/任务书.md (Project Goals and Direction)
 **Purpose**: Defines project objectives, technical roadmap, and success criteria
 
 **Key Sections**:
@@ -86,7 +83,7 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 - Making architectural decisions
 - Evaluating project progress
 
-### 2. docs/当前状态.md (Current Development Status)
+### 2. docs/开发文档/当前状态.md (Current Development Status)
 **Purpose**: Tracks current development status, unclear parts, and compromises
 
 **Key Sections**:
@@ -104,7 +101,7 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 - Making implementation decisions based on current constraints
 - Planning next steps based on current status
 
-### 3. docs/checklist.md (Checklist and Guidelines)
+### 3. docs/开发文档/checklist.md (Checklist and Guidelines)
 **Purpose**: Comprehensive checklist of TODO items and modification guidelines
 
 **Key Sections**:
