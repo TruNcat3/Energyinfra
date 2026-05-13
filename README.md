@@ -44,6 +44,7 @@
 ### 实验文档
 | 文档 | 说明 |
 |------|------|
+| [docs/实验文档/README.md](docs/实验文档/README.md) | **实验文档首页 — 统一档位术语、图表索引** |
 | [docs/实验文档/PHASE1_COMPLETION_REPORT.md](docs/实验文档/PHASE1_COMPLETION_REPORT.md) | Phase 1 基础建设完成报告 |
 | [docs/实验文档/PHASE2_COMPLETION_REPORT.md](docs/实验文档/PHASE2_COMPLETION_REPORT.md) | Phase 2 核心模块完成报告 |
 | [docs/实验文档/PHASE3_COMPLETION_REPORT.md](docs/实验文档/PHASE3_COMPLETION_REPORT.md) | Phase 3 前置实验报告 |
@@ -57,6 +58,7 @@
 | `data/selector_eval/` | 选择器评估结果 |
 | `figures/real_model_experiment/` | 真实模型实验图表 (5张) |
 | `figures/phase5_comparison/` | Phase 5 综合对比图表 (6张) |
+| `figures/power_mode_comparison/` | Jetson 档位对比图表 (6张) |
 
 ---
 
@@ -103,7 +105,26 @@ Energyinfra/
 
 ## 核心实验结果
 
+> **档位术语说明**: 见 [docs/实验文档/README.md](docs/实验文档/README.md) — MAXN / 50W / 30W (出厂默认) / 15W / GPU-Min/CPU-Max (我们的策略)
+
+### Jetson 档位对比 (真实模型, Phi-3-mini Q4)
+
+| 档位 | GPU 频率 | CPU 频率 | TTFT (ms) | TPOT (ms) | Throughput (tok/s) |
+|------|:---:|:---:|:---:|:---:|:---:|
+| **MAXN** | 1300 MHz | 2201 MHz | 498.7 | 107.0 | 9.2 |
+| **30W** (出厂默认) | 612 MHz | 1497 MHz | 141.6 | 142.5 | 7.0 |
+| **15W** | 306 MHz | 1036 MHz | 878.1 | 196.7 | 5.0 |
+| **GPU-Min/CPU-Max** (我们) | 306 MHz | 2201 MHz | 773.8 | 107.6 | **9.0** |
+
+**关键发现**:
+- **GPU 频率无影响**: 306→1300 MHz 仅 1.01x 吞吐量 (memory-bound 确认)
+- **CPU 频率是瓶颈**: 1036→2201 MHz 达 1.86x 吞吐量
+- **GPU-Min/CPU-Max 以 GPU 最低频率达到接近 MAXN 的吞吐量** (9.0 vs 9.2 tok/s)
+- 最优配置: GPU 918 MHz + CPU 2201 MHz = 9.4 tok/s
+
 ### Phase-Aware DVFS 验证 (合成基准, 2026-05-12)
+
+> **注意**: 此实验使用合成基准，结果中的 GPU 频率效应被高估。真实模型实验已确认 GPU 频率对 LLM 推理无显著影响。
 
 | 策略 | 能量/Token (J) | TTFT (ms) | TPOT (ms) | SLO 满足率 |
 |------|---------------|-----------|-----------|-----------|
@@ -112,28 +133,6 @@ Energyinfra/
 | Energy Efficient | 0.326 | 125 | 16.9 | 92% |
 | **Phase-Aware (Ours)** | **0.115** | **77** | **6.7** | **80%** |
 | Oracle | 0.152 | 124 | 6.9 | 76% |
-
-**关键发现**:
-- Phase-Aware 相比 Default 节省 **30% 能量**
-- Phase-Aware 同时改善 **TTFT 36%** (高频 GPU 加速 prefill)
-- SLO 满足率维持在 80% (Max Performance 仅 42%)
-
-### 真实模型多配置实验 (Phi-3-mini Q4, 2026-05-13)
-
-**实验矩阵**: 4 GPU x 3 CPU x 5 workloads x 3 repeats = 180 runs
-
-| GPU Freq | CPU Freq | TTFT (ms) | TPOT (ms) | TPS |
-|----------|----------|-----------|-----------|-----|
-| 306 MHz | 1036 MHz | 878.1 | 196.7 | 5.0 |
-| 306 MHz | 2201 MHz | 773.8 | 107.6 | 9.0 |
-| 918 MHz | 2201 MHz | 430.8 | 105.2 | **9.4** |
-| 1300 MHz | 1036 MHz | 830.7 | 198.4 | 4.9 |
-| 1300 MHz | 2201 MHz | 498.7 | 107.0 | 9.2 |
-
-**关键发现**:
-- **GPU 频率无影响**: 306->1300 MHz 仅 1.01x 吞吐量 (memory-bound 确认)
-- **CPU 频率是瓶颈**: 1036->2201 MHz 达 1.86x 吞吐量
-- **最优配置**: GPU918+CPU2201 = 9.4 tok/s (并非最高 GPU 频率)
 
 ### 7 个前置实验核心结论
 
@@ -187,6 +186,9 @@ python3 src/visualization/analyze_real_experiment.py
 
 # 生成可视化
 python3 src/visualization/visualize_real_experiment.py
+
+# Jetson 档位对比图表 (6张)
+python3 src/visualization/visualize_power_mode_comparison.py
 ```
 
 ### 使用配置选择器

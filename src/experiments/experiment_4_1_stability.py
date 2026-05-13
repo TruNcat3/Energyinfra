@@ -16,10 +16,9 @@ from datetime import datetime
 import sys
 
 # Add src to path
-sys.path.insert(0, 'src')
 
-from synthetic_benchmark import SyntheticBenchmark
-from freq_controller import FrequencyController
+from src.benchmark.synthetic_benchmark import SyntheticBenchmark
+from src.controller.freq_controller import FrequencyController
 
 # Configure logging
 logging.basicConfig(

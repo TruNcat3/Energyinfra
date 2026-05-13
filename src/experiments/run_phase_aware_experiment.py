@@ -13,9 +13,9 @@ import pandas as pd
 from pathlib import Path
 from datetime import datetime
 
-sys.path.insert(0, str(Path(__file__).parent))
+# sys.path no longer needed
 
-from phase_controller import PhaseController, run_comparison_experiment
+from src.controller.phase_controller import PhaseController, run_comparison_experiment
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,7 +24,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-OUTPUT_DIR = Path(__file__).parent.parent / 'data' / 'phase_aware_experiment'
+OUTPUT_DIR = Path(__file__).parent.parent.parent / 'data' / 'phase_aware_experiment'
 
 
 def get_config() -> dict:

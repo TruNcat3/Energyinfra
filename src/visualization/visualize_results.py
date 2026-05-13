@@ -22,7 +22,7 @@ class ExperimentVisualizer:
 
     def __init__(self, data_dir="data/experiments_4_1_to_4_7"):
         # Use absolute paths to avoid directory issues
-        script_dir = Path(__file__).parent.parent
+        script_dir = Path(__file__).parent.parent.parent
         self.data_dir = script_dir / data_dir
         self.output_dir = script_dir / "figures" / "experiments_4_1_to_4_7"
         self.output_dir.mkdir(parents=True, exist_ok=True)

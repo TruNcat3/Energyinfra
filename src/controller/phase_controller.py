@@ -13,9 +13,9 @@ from typing import Dict, Optional, List
 from pathlib import Path
 from collections import defaultdict
 
-from synthetic_benchmark import SyntheticBenchmark
-from phase_aware_policy import PhaseAwarePolicy
-from select_config import ConfigSelector
+from src.benchmark.synthetic_benchmark import SyntheticBenchmark
+from src.controller.phase_aware_policy import PhaseAwarePolicy
+from src.controller.select_config import ConfigSelector
 
 logging.basicConfig(
     level=logging.INFO,

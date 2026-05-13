@@ -18,8 +18,8 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-FIGURES_DIR = Path(__file__).parent.parent / 'figures' / 'phase_aware_experiment'
-DATA_DIR = Path(__file__).parent.parent / 'data' / 'phase_aware_experiment'
+FIGURES_DIR = Path(__file__).parent.parent.parent / 'figures' / 'phase_aware_experiment'
+DATA_DIR = Path(__file__).parent.parent.parent / 'data' / 'phase_aware_experiment'
 
 STRATEGY_LABELS = {
     'default': 'Default (mid)',

@@ -13,9 +13,9 @@ from pathlib import Path
 import pickle
 from datetime import datetime
 
-from freq_controller import FrequencyController
-from metrics_collector import MetricsCollector
-from benchmark_runner import BenchmarkRunner
+from src.controller.freq_controller import FrequencyController
+from src.metrics.metrics_collector import MetricsCollector
+from src.benchmark.benchmark_runner import BenchmarkRunner
 
 # Configure logging
 logging.basicConfig(

@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from datetime import datetime
 
-from jetson_power_modes import (
+from src.controller.jetson_power_modes import (
     record_current_power_state,
     restore_power_state,
     apply_baseline_config,
@@ -66,7 +66,7 @@ class BaselineComparison:
 
     def _init_runner(self):
         """Initialize llama.cpp runner."""
-        from llama_cpp_runner import LlamaCppRunner
+        from src.benchmark.llama_cpp_runner import LlamaCppRunner
         self.runner = LlamaCppRunner(
             model_path=self.model_config['path'],
             n_gpu_layers=self.model_config.get('n_gpu_layers', -1),

@@ -99,7 +99,7 @@ def run_experiment():
     output_dir = Path('data/real_model_experiment')
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    from llama_cpp_runner import LlamaCppRunner
+    from src.benchmark.llama_cpp_runner import LlamaCppRunner
 
     # Load model once
     logger.info("Loading model...")

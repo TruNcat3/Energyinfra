@@ -13,9 +13,8 @@ from datetime import datetime
 import os
 import sys
 
-sys.path.insert(0, 'src')
 
-from synthetic_benchmark import SyntheticBenchmark
+from src.benchmark.synthetic_benchmark import SyntheticBenchmark
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

@@ -15,9 +15,9 @@ import time
 import subprocess
 import yaml
 
-from sweep_runner import SweepRunner
-from parse_logs import LogParser
-from plot_results import VisualizationGenerator
+from src.benchmark.sweep_runner import SweepRunner
+from src.metrics.parse_logs import LogParser
+from src.visualization.plot_results import VisualizationGenerator
 
 # Configure logging
 logging.basicConfig(
