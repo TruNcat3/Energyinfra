@@ -1,6 +1,7 @@
 # Jetson LLM Energy Profiling - Project Overview
 
 **项目状态**: Phase 5 (高级优化) 进行中 — 真实模型多配置实验已完成 (180 runs)
+**总体进度**: 约 90%
 
 ## 项目概览
 
@@ -12,14 +13,52 @@
 2. **自适应配置选择**: 设计 SLO-aware 的配置选择器 (完成)
 3. **在线控制系统**: 实现可离线建表、在线查表、自动选频的系统 (进行中)
 
-### 技术特点
+---
 
-- **目标平台**: Jetson Orin (可扩展到其他 Jetson 设备)
-- **主要运行时**: llama.cpp (已验证), TensorRT-LLM (设计中)
-- **优化策略**: GPU/CPU/EMC 频率自适应调节
-- **分阶段优化**: Prefill/Decode 分阶段 DVFS 策略 (已验证)
-- **自适应决策**: 根据负载特征自动决定是否启用 Phase-Aware 切换 (已实现)
-- **SLO约束**: 在满足 TTFT、TPOT、功耗、温度约束下优化能效
+## 文档导航
+
+### 任务规格书
+| 文档 | 说明 |
+|------|------|
+| [docs/任务书/任务书.md](docs/任务书/任务书.md) | 项目目标、技术路线、成功标准 |
+| [docs/任务书/jetson_llm_energy_rate_table_task_doc.md](docs/任务书/jetson_llm_energy_rate_table_task_doc.md) | 技术任务详述 |
+
+### 开发文档
+| 文档 | 说明 |
+|------|------|
+| [docs/开发文档/当前状态.md](docs/开发文档/当前状态.md) | 当前开发状态、模块进度、技术风险 |
+| [docs/开发文档/checklist.md](docs/开发文档/checklist.md) | 待办事项清单、开发规范、检查清单 |
+| [docs/开发文档/project_progress_summary.md](docs/开发文档/project_progress_summary.md) | 项目进展总结 (Phase 1-5) |
+| [docs/开发文档/EnergyInfra_Phase5_Task_Plan.md](docs/开发文档/EnergyInfra_Phase5_Task_Plan.md) | Phase 5 详细任务计划 |
+| [docs/开发文档/scheduling_method_analysis.md](docs/开发文档/scheduling_method_analysis.md) | 调度方法分析与优化方向 |
+| [CLAUDE.md](CLAUDE.md) | AI 助手项目上下文 (英文) |
+
+### 说明文档
+| 文档 | 说明 |
+|------|------|
+| [docs/说明文档/LLAMACPP_INTEGRATION.md](docs/说明文档/LLAMACPP_INTEGRATION.md) | llama.cpp 集成指南 |
+| [docs/说明文档/quick_experiment_guide.md](docs/说明文档/quick_experiment_guide.md) | 快速实验指南 |
+| [docs/说明文档/runtime_setup_guide.md](docs/说明文档/runtime_setup_guide.md) | 运行时环境配置 |
+| [docs/说明文档/DOCKER_MODEL_SETUP.md](docs/说明文档/DOCKER_MODEL_SETUP.md) | Docker 模型部署 |
+
+### 实验文档
+| 文档 | 说明 |
+|------|------|
+| [docs/实验文档/PHASE1_COMPLETION_REPORT.md](docs/实验文档/PHASE1_COMPLETION_REPORT.md) | Phase 1 基础建设完成报告 |
+| [docs/实验文档/PHASE2_COMPLETION_REPORT.md](docs/实验文档/PHASE2_COMPLETION_REPORT.md) | Phase 2 核心模块完成报告 |
+| [docs/实验文档/PHASE3_COMPLETION_REPORT.md](docs/实验文档/PHASE3_COMPLETION_REPORT.md) | Phase 3 前置实验报告 |
+| [docs/实验文档/PHASE2_ANALYSIS_REPORT.md](docs/实验文档/PHASE2_ANALYSIS_REPORT.md) | Phase 2 分析报告 |
+
+### 实验数据与图表
+| 路径 | 说明 |
+|------|------|
+| `data/real_model_experiment/` | 真实模型多配置实验数据 (180 runs) |
+| `data/rate_tables/` | 能耗汇率表 (Parquet, 23 configs) |
+| `data/selector_eval/` | 选择器评估结果 |
+| `figures/real_model_experiment/` | 真实模型实验图表 (5张) |
+| `figures/phase5_comparison/` | Phase 5 综合对比图表 (6张) |
+
+---
 
 ## 项目结构
 
@@ -45,16 +84,7 @@ Energyinfra/
 │   │   ├── build_rate_table.py      # 汇率表构建
 │   │   └── evaluate_selector.py     # 选择器评估
 │   ├── visualization/         # 可视化分析 (10个)
-│   │   ├── visualize_results.py     # 实验结果可视化
-│   │   ├── visualize_phase_aware.py # Phase-Aware可视化
-│   │   ├── visualize_phase5_p0.py   # Phase 5综合对比
-│   │   ├── visualize_real_experiment.py # 真实模型实验图表
-│   │   └── analyze_real_experiment.py   # 实验数据分析
 │   ├── experiments/           # 实验脚本 (9个)
-│   │   ├── run_phase_aware_experiment.py   # Phase-Aware验证
-│   │   ├── run_real_model_experiment.py    # 真实模型多配置实验
-│   │   ├── run_baseline_comparison.py      # Baseline对比
-│   │   └── run_all_prelim_experiments.py   # 前置实验
 │   └── _legacy/               # 归档废弃代码 (5个)
 ├── configs/                    # 配置文件
 ├── data/                       # 实验数据输出
@@ -64,9 +94,9 @@ Energyinfra/
 │   └── _legacy/               # 归档脚本 (9个)
 ├── docs/                       # 文档 (按类型分层)
 │   ├── 任务书/                # 任务规格书
-│   ├── 开发文档/              # 开发跟踪 (checklist, 进度, 状态)
-│   ├── 说明文档/              # 使用指南 (runtime, setup, integration)
-│   └── 实验文档/              # 实验报告 (PHASE1-5)
+│   ├── 开发文档/              # 开发跟踪
+│   ├── 说明文档/              # 使用指南
+│   └── 实验文档/              # 实验报告
 ├── README.md
 └── CLAUDE.md
 ```
@@ -88,19 +118,9 @@ Energyinfra/
 - Phase-Aware 同时改善 **TTFT 36%** (高频 GPU 加速 prefill)
 - SLO 满足率维持在 80% (Max Performance 仅 42%)
 
-### Selector 评估 (P0 修复后, 2026-05-13)
-
-| 策略 | Mean Regret vs Oracle | SLO Violation | Anomalies |
-|------|----------------------|---------------|-----------|
-| Oracle | 0.00% | 0% | 0 |
-| Ours (SLO-Aware) | 0.00% | 0% | 0 |
-| Fixed Best | 1.61% | 0% | 0 |
-| MaxN | 8.21% | 0% | 0 |
-| All Mid | 22.11% | 0% | 0 |
-
 ### 真实模型多配置实验 (Phi-3-mini Q4, 2026-05-13)
 
-**实验矩阵**: 4 GPU × 3 CPU × 5 workloads × 3 repeats = 180 runs
+**实验矩阵**: 4 GPU x 3 CPU x 5 workloads x 3 repeats = 180 runs
 
 | GPU Freq | CPU Freq | TTFT (ms) | TPOT (ms) | TPS |
 |----------|----------|-----------|-----------|-----|
@@ -111,10 +131,9 @@ Energyinfra/
 | 1300 MHz | 2201 MHz | 498.7 | 107.0 | 9.2 |
 
 **关键发现**:
-- **GPU 频率无影响**: 306→1300 MHz 仅 1.01x 吞吐量 (memory-bound 确认)
-- **CPU 频率是瓶颈**: 1036→2201 MHz 达 1.86x 吞吐量
-- **最优配置**: GPU918_CPU2201 = 9.4 tok/s (并非最高 GPU 频率)
-- **TTFT**: CPU 高频可降低 26.2%, GPU 高频无效果
+- **GPU 频率无影响**: 306->1300 MHz 仅 1.01x 吞吐量 (memory-bound 确认)
+- **CPU 频率是瓶颈**: 1036->2201 MHz 达 1.86x 吞吐量
+- **最优配置**: GPU918+CPU2201 = 9.4 tok/s (并非最高 GPU 频率)
 
 ### 7 个前置实验核心结论
 
@@ -127,19 +146,6 @@ Energyinfra/
 | 4.5 负载可预测性 | workload 特征可预测最优配置 |
 | 4.6 切换开销 | GPU 切换 50ms, 可隐藏于 phase boundary |
 | 4.7 SLO 端到端 | 67% 配置满足 SLO, 能效优先可行 |
-
-## Phase 5 完成情况
-
-| 任务 | 内容 | 状态 |
-|------|------|------|
-| P0 评估可信度 | Pareto/phase-energy/fixed_best 修复 | 完成 |
-| P1 Jetson Baseline | jetson_power_modes + 9种 baseline 定义 | 完成 |
-| P2 真实模型 Runner | llama_cpp_runner + 5种 workload | 完成 |
-| P3 自适应策略 | adaptive_phase_aware 连接到控制器 | 完成 |
-| P4 Rate Table 验证 | 重建 + 评估验证 (0 anomaly) | 完成 |
-| P5 真实模型实验 | 4x3x5x3 = 180 runs 多配置实验 | 完成 |
-| P6 Real Rate Table | 用 real data 重建 rate table | 待运行 |
-| P6 Real Rate Table | 用 real data 重建 rate table | 待运行 |
 
 ## 快速开始
 
@@ -155,101 +161,50 @@ Energyinfra/
 pip3 install pyyaml pandas numpy pyarrow matplotlib seaborn scipy scikit-learn
 ```
 
-### 运行 Phase-Aware 验证实验
+### 运行合成基准实验 (无需真实模型)
 
 ```bash
-# 使用合成基准测试 (无需真实模型)
-python3 src/run_phase_aware_experiment.py
+cd /home/wt/work/Energyinfra
+
+# Phase-Aware 验证实验
+python3 src/experiments/run_phase_aware_experiment.py
 
 # 生成可视化图表
-python3 src/visualize_phase_aware.py
+python3 src/visualization/visualize_phase_aware.py
+python3 src/visualization/visualize_phase5_p0.py
+```
 
-# Phase 5 综合对比图表
-python3 src/visualize_phase5_p0.py
+### 运行真实模型实验 (需 Jetson + llama.cpp)
 
-# 查看结果
-cat data/phase_aware_experiment/report_*.txt
+```bash
+source jetson_llm_env/bin/activate
+
+# 多配置实验 (4 GPU x 3 CPU x 5 workloads x 3 repeats = 180 runs)
+python3 src/experiments/run_real_model_experiment.py
+
+# 分析结果
+python3 src/visualization/analyze_real_experiment.py
+
+# 生成可视化
+python3 src/visualization/visualize_real_experiment.py
 ```
 
 ### 使用配置选择器
 
 ```bash
-# 使用示例查询
-python3 src/select_config.py --example
-
-# 使用自定义 workload 查询
-python3 src/select_config.py --workload my_workload.json --output result.json
+python3 src/controller/select_config.py --example
 ```
-
-### 运行选择器评估
-
-```bash
-python3 src/evaluate_selector.py
-# 结果输出到 data/selector_eval/
-```
-
-### 运行真实模型 Baseline 对比 (需 Jetson 设备 + llama.cpp)
-
-```bash
-# 多配置实验 (4 GPU × 3 CPU × 5 workloads)
-python3 src/run_real_model_experiment.py
-# 结果输出到 data/real_model_experiment/
-
-# 分析结果
-python3 src/analyze_real_experiment.py
-
-# 生成可视化
-python3 src/visualize_real_experiment.py
-
-# Baseline 对比实验 (9 baselines)
-python3 src/run_baseline_comparison.py \
-  --baselines configs/baselines.yaml \
-  --workloads configs/real_model_workloads.yaml \
-  --output-dir data/real_baseline_comparison
-```
-
-## 项目阶段完成情况
-
-### Phase 1: 项目基础建设 (100%)
-- 项目结构、文档、配置文件
-
-### Phase 2: 核心模块实现 (100%)
-- 频率控制器、指标采集、基准测试、扫描编排、日志解析
-
-### Phase 3: 前置实验验证 (100%)
-- 7 个前置实验全部完成 (45 个数据点)
-- 能耗汇率表构建完成 (23 个配置)
-- Phase-Aware DVFS 策略得到验证
-
-### Phase 4: Phase-Aware DVFS (100%)
-- 在线控制器实现
-- 6 种策略对比验证 (含 adaptive_phase_aware)
-- 可视化分析完成
-
-### Phase 5: 高级优化 (70%)
-- P0-P4 代码完成: 评估修复 + Baseline 基础设施 + 真实模型 Runner + 自适应策略
-- P5 真实模型多配置实验完成: 180 runs, GPU无影响, CPU是瓶颈
-- P6 待运行: 用 real data 重建 rate table
-
-**总体进度**: 约 90%
-
-## 文档说明
-
-### 核心文档
-- **[CLAUDE.md](CLAUDE.md)** - AI 助手项目上下文 (英文)
-- **[EnergyInfra_Phase5_Task_Plan.md](EnergyInfra_Phase5_Task_Plan.md)** - Phase 5 详细任务计划
-- **[scheduling_method_analysis.md](scheduling_method_analysis.md)** - 调度方法分析
-- **[docs/任务书.md](docs/任务书.md)** - 项目目标和技术路线
-- **[docs/checklist.md](docs/checklist.md)** - 待办事项和开发指南
-
-### 实验报告
-- **[docs/project_progress_summary.md](docs/project_progress_summary.md)** - 项目进展总结 (更新至 Phase 5)
-- **[docs/当前状态.md](docs/当前状态.md)** - 当前开发状态
-- **[docs/PHASE3_COMPLETION_REPORT.md](docs/PHASE3_COMPLETION_REPORT.md)** - Phase 3 完成报告
-- **[docs/frequency_experiment_analysis.md](docs/frequency_experiment_analysis.md)** - 频率实验分析
 
 ---
 
+## 项目阶段
+
+| Phase | 描述 | 进度 |
+|-------|------|------|
+| Phase 1 | 项目基础建设 | 100% |
+| Phase 2 | 核心模块实现 | 100% |
+| Phase 3 | 前置实验验证 (7个) | 100% |
+| Phase 4 | Phase-Aware DVFS | 100% |
+| Phase 5 | 高级优化 | 70% |
+
 **最后更新**: 2026-05-13
-**项目状态**: Phase 5 进行中 (真实模型多配置实验完成)
-**总体进度**: 约 90%

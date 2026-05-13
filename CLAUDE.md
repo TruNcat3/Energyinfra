@@ -67,6 +67,45 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 
 ## Critical Documentation Files
 
+### Task Specifications (docs/任务书/)
+| File | Purpose |
+|------|---------|
+| `docs/任务书/任务书.md` | Project goals, technical roadmap, success criteria |
+| `docs/任务书/jetson_llm_energy_rate_table_task_doc.md` | Detailed technical task specification |
+
+### Development Docs (docs/开发文档/)
+| File | Purpose |
+|------|---------|
+| `docs/开发文档/当前状态.md` | Current status, module progress, risks, next steps |
+| `docs/开发文档/checklist.md` | TODO checklist, code quality guidelines |
+| `docs/开发文档/project_progress_summary.md` | Full progress summary (Phase 1-5) |
+| `docs/开发文档/EnergyInfra_Phase5_Task_Plan.md` | Phase 5 detailed task plan |
+| `docs/开发文档/scheduling_method_analysis.md` | Scheduling method analysis + real model validation |
+
+### User Guides (docs/说明文档/)
+| File | Purpose |
+|------|---------|
+| `docs/说明文档/LLAMACPP_INTEGRATION.md` | llama.cpp integration guide |
+| `docs/说明文档/runtime_setup_guide.md` | Runtime environment setup |
+| `docs/说明文档/quick_experiment_guide.md` | Quick experiment guide |
+
+### Experiment Reports (docs/实验文档/)
+| File | Purpose |
+|------|---------|
+| `docs/实验文档/PHASE1_COMPLETION_REPORT.md` | Phase 1 foundation completion |
+| `docs/实验文档/PHASE2_COMPLETION_REPORT.md` | Phase 2 core modules completion |
+| `docs/实验文档/PHASE3_COMPLETION_REPORT.md` | Phase 3 preliminary experiments |
+
+### Key Data & Figures
+| Path | Content |
+|------|---------|
+| `data/real_model_experiment/` | 180-run real model experiment CSV + report |
+| `data/rate_tables/selector_table.parquet` | Energy rate table (23 configs) |
+| `figures/real_model_experiment/` | 5 real model experiment charts |
+| `figures/phase5_comparison/` | 6 Phase 5 comparison charts |
+
+---
+
 ### 1. docs/任务书/任务书.md (Project Goals and Direction)
 **Purpose**: Defines project objectives, technical roadmap, and success criteria
 
