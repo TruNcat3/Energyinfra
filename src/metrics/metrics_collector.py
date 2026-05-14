@@ -2,8 +2,15 @@
 """
 Metrics Collector for Jetson Devices
 Manages tegrastats process for collecting power, temperature, and frequency metrics.
+
+Actual tegrastats output format (JetPack r36.x, Jetson AGX Orin):
+  05-13-2026 18:21:47 RAM 16226/62841MB (lfb 44x4MB) SWAP 142/31420MB (cached 0MB)
+  CPU [3%@1036,0%@1036,...] GR3D_FREQ 0%
+  cpu@49.25C soc2@44.468C soc0@46.125C tj@49.25C soc1@45.468C
+  VDD_GPU_SOC 3194mW/3194mW VDD_CPU_CV 399mW/399mW VIN_SYS_5V0 4206mW/4206mW
 """
 
+import re
 import subprocess
 import logging
 import time
@@ -11,501 +18,225 @@ import signal
 import pandas as pd
 from typing import Optional, Dict, List
 from pathlib import Path
-import threading
-import queue
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
 class MetricsCollector:
-    """
-    Collector for system metrics using tegrastats on Jetson devices.
+    """Collect system metrics via tegrastats on Jetson devices."""
 
-    Collects:
-    - Power consumption (GPU, CPU, total)
-    - Temperature (GPU, CPU, SoC)
-    - Frequency (GPU, CPU, EMC)
-    - Memory usage (RAM, GPU)
-    - CPU utilization
-    """
-
-    def __init__(self, interval_ms: int = 1000, output_dir: str = "data/raw_logs"):
-        """
-        Initialize metrics collector.
-
-        Args:
-            interval_ms: Sampling interval in milliseconds (default: 1000ms)
-            output_dir: Directory to save log files
-        """
+    def __init__(self, interval_ms: int = 500, output_dir: str = "data/raw_logs"):
         self.interval_ms = interval_ms
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Process management
         self.process = None
         self.log_file = None
         self.is_collecting = False
-        self.data_queue = queue.Queue()
 
-        # Tegrastats path
         self.tegrastats_path = self._find_tegrastats()
-
-        if not self.tegrastats_path:
-            logger.error("tegrastats not found. Please ensure JetPack is installed.")
-
-        # Metrics storage
-        self.metrics_data = []
-
-        # Thread for parsing output
-        self.parse_thread = None
+        self._samples: List[Dict] = []
 
     def _find_tegrastats(self) -> Optional[str]:
-        """
-        Find tegrastats executable.
-
-        Returns:
-            Path to tegrastats, or None if not found
-        """
-        possible_paths = [
-            '/usr/bin/tegrastats',
-            '/usr/local/bin/tegrastats',
-            'tegrastats'  # Try system PATH
-        ]
-
-        for path in possible_paths:
+        for path in ['/usr/bin/tegrastats', 'tegrastats']:
             try:
-                result = subprocess.run(
-                    [path, '--help'],
-                    capture_output=True,
-                    timeout=5
-                )
-                if result.returncode == 0:
-                    logger.info(f"Found tegrastats at: {path}")
-                    return path
+                subprocess.run([path, '--help'], capture_output=True, timeout=5)
+                return path
             except (subprocess.TimeoutExpired, FileNotFoundError):
                 continue
-
         return None
 
-    def start_collection(self, log_filename: Optional[str] = None) -> Optional[str]:
-        """
-        Start collecting metrics in background.
+    # ── Parsing ──────────────────────────────────────────────────────────
 
-        Args:
-            log_filename: Optional filename for log output. If None, auto-generate.
+    @staticmethod
+    def parse_tegrastats_line(line: str) -> Optional[Dict]:
+        """Parse one line of tegrastats output into a metrics dict."""
+        line = line.strip()
+        if not line or 'RAM' not in line:
+            return None
 
-        Returns:
-            Path to log file, or None if failed
-        """
+        m: Dict = {}
+
+        # RAM: RAM 16226/62841MB
+        ram = re.search(r'RAM\s+(\d+)/(\d+)MB', line)
+        if ram:
+            m['ram_used_mb'] = int(ram.group(1))
+            m['ram_total_mb'] = int(ram.group(2))
+
+        # SWAP: SWAP 142/31420MB
+        swap = re.search(r'SWAP\s+(\d+)/(\d+)MB', line)
+        if swap:
+            m['swap_used_mb'] = int(swap.group(1))
+            m['swap_total_mb'] = int(swap.group(2))
+
+        # CPU: [3%@1036,0%@1036,...]  → per-core util% and freq
+        cpu_block = re.search(r'CPU\s+\[([^\]]+)\]', line)
+        if cpu_block:
+            cores = cpu_block.group(1).split(',')
+            m['cpu_cores_online'] = len(cores)
+            freqs = []
+            utils = []
+            for c in cores:
+                parts = c.strip().split('@')
+                try:
+                    utils.append(float(parts[0].replace('%', '')))
+                    freqs.append(int(parts[1]))
+                except (IndexError, ValueError):
+                    pass
+            if freqs:
+                m['cpu_freq_mhz'] = freqs[0]  # All cores same freq on Orin
+                m['cpu_util_avg'] = sum(utils) / len(utils)
+
+        # GPU freq: GR3D_FREQ 0%
+        gpu_freq = re.search(r'GR3D_FREQ\s+(\d+)%', line)
+        if gpu_freq:
+            m['gpu_util_pct'] = int(gpu_freq.group(1))
+
+        # Temperature: cpu@49.25C  soc2@44.468C  tj@49.25C  etc.
+        for match in re.finditer(r'(\w+)@([\d.]+)C', line):
+            name, temp = match.group(1), float(match.group(2))
+            if name == 'cpu' or name == 'tj':
+                m[f'temp_{name}_c'] = temp
+            else:
+                m[f'temp_{name}_c'] = temp
+
+        # Power: VDD_GPU_SOC 3194mW/3194mW  VDD_CPU_CV 399mW/399mW  VIN_SYS_5V0 4206mW/4206mW
+        power_total = 0
+        for match in re.finditer(r'(VDD_\w+|VIN_\w+)\s+(\d+)mW/(\d+)mW', line):
+            rail, avg_mw, _ = match.group(1), int(match.group(2)), int(match.group(3))
+            m[f'power_{rail}_mw'] = avg_mw
+            power_total += avg_mw
+        m['power_total_mw'] = power_total
+        m['power_total_w'] = power_total / 1000.0
+
+        return m if m else None
+
+    # ── Collection Control ───────────────────────────────────────────────
+
+    def start_collection(self, tag: str = "") -> Optional[str]:
+        """Start tegrastats in background. Returns log file path."""
         if not self.tegrastats_path:
-            logger.error("Cannot start collection: tegrastats not found")
+            logger.error("tegrastats not found")
             return None
-
         if self.is_collecting:
-            logger.warning("Collection already in progress")
             return str(self.log_file)
 
-        # Generate log filename if not provided
-        if log_filename is None:
-            timestamp = int(time.time())
-            log_filename = f"tegrastats_{timestamp}.log"
+        ts = int(time.time())
+        fname = f"tegrastats_{tag}_{ts}.log" if tag else f"tegrastats_{ts}.log"
+        self.log_file = self.output_dir / fname
+        self._samples = []
 
-        self.log_file = self.output_dir / log_filename
-
-        try:
-            # Start tegrastats process
-            cmd = [
-                self.tegrastats,
-                '--interval', str(self.interval_ms),
-                '--logfile', str(self.log_file)
-            ]
-
-            logger.info(f"Starting tegrastats with interval {self.interval_ms}ms")
-            logger.info(f"Logging to: {self.log_file}")
-
-            self.process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                bufsize=1,
-                universal_newlines=True
-            )
-
-            self.is_collecting = True
-
-            # Start parsing thread
-            self.parse_thread = threading.Thread(
-                target=self._parse_output,
-                daemon=True
-            )
-            self.parse_thread.start()
-
-            logger.info("Metrics collection started successfully")
-            return str(self.log_file)
-
-        except Exception as e:
-            logger.error(f"Failed to start metrics collection: {e}")
-            return None
-
-    def _parse_output(self):
-        """
-        Parse tegrastats output and store in queue.
-        """
-        if not self.process:
-            return
-
-        try:
-            for line in self.process.stdout:
-                try:
-                    metrics = self.parse_line(line)
-                    if metrics:
-                        timestamp = time.time()
-                        metrics['timestamp'] = timestamp
-                        self.data_queue.put(metrics)
-                except Exception as e:
-                    logger.warning(f"Error parsing line: {e}, line: {line}")
-
-        except Exception as e:
-            logger.error(f"Error in parsing thread: {e}")
-
-    def parse_line(self, line: str) -> Optional[Dict]:
-        """
-        Parse a single line of tegrastats output.
-
-        Args:
-            line: Single line from tegrastats output
-
-        Returns:
-            Dictionary of parsed metrics, or None if parsing failed
-        """
-        try:
-            # Remove leading/trailing whitespace
-            line = line.strip()
-
-            if not line or line.startswith('tegrastats'):
-                return None
-
-            metrics = {}
-
-            # Parse different metric types based on tegrastats format
-            # This is a generic parser - may need adjustment for different JetPack versions
-
-            # RAM usage: RAM 1234/15518MB
-            if 'RAM' in line:
-                ram_parts = [p for p in line.split() if 'RAM' in p or 'MB' in p]
-                if ram_parts:
-                    ram_str = ram_parts[0].replace('RAM', '').replace('MB', '')
-                    if '/' in ram_str:
-                        used, total = map(int, ram_str.split('/'))
-                        metrics['ram_used_mb'] = used
-                        metrics['ram_total_mb'] = total
-                        metrics['ram_usage_percent'] = (used / total) * 100 if total > 0 else 0
-
-            # Power: Power 12345/12345mW
-            if 'Power' in line:
-                power_parts = [p for p in line.split() if 'Power' in p or 'mW' in p]
-                if power_parts:
-                    power_str = power_parts[0].replace('Power', '').replace('mW', '')
-                    if '/' in power_str:
-                        # Try to extract different power values
-                        values = [int(v) for v in power_str.split('/') if v.isdigit()]
-                        if values:
-                            metrics['total_power_mw'] = values[0]
-                            if len(values) > 1:
-                                metrics['cpu_power_mw'] = values[0]
-                                metrics['gpu_power_mw'] = values[1]
-
-            # Temperature: CPU 12345C ... GPU 12345C ... AO 12345C ... thermal
-            temp_parts = [p for p in line.split() if 'C' in p]
-            for part in temp_parts:
-                temp_str = part.replace('C', '')
-                try:
-                    temp_value = int(temp_str)
-                    if 'CPU' in part:
-                        metrics['cpu_temp_c'] = temp_value
-                    elif 'GPU' in part:
-                        metrics['gpu_temp_c'] = temp_value
-                    elif 'thermal' in part or 'temp' in part:
-                        metrics['soc_temp_c'] = temp_value
-                except ValueError:
-                    pass
-
-            # Frequency: GPU 12345MHz ... CPU 12345MHz ... EMC 12345MHz
-            freq_parts = [p for p in line.split() if 'MHz' in p]
-            for part in freq_parts:
-                freq_str = part.replace('MHz', '')
-                try:
-                    freq_value = int(freq_str)
-                    if 'GPU' in part:
-                        metrics['gpu_freq_mhz'] = freq_value
-                    elif 'CPU' in part:
-                        metrics['cpu_freq_mhz'] = freq_value
-                    elif 'EMC' in part or 'emc' in part:
-                        metrics['emc_freq_mhz'] = freq_value
-                except ValueError:
-                    pass
-
-            # CPU usage: CPU 12% 23% ...
-            cpu_usage_parts = [p for p in line.split() if '%' in p and 'CPU' in line.split(p)[0]]
-            if cpu_usage_parts:
-                try:
-                    cpu_usage = int(cpu_usage_parts[0].replace('%', ''))
-                    metrics['cpu_usage_percent'] = cpu_usage
-                except ValueError:
-                    pass
-
-            return metrics if metrics else None
-
-        except Exception as e:
-            logger.warning(f"Error parsing tegrastats line: {e}")
-            return None
-
-    def get_metrics(self) -> List[Dict]:
-        """
-        Get all collected metrics.
-
-        Returns:
-            List of metric dictionaries
-        """
-        metrics_list = []
-
-        while not self.data_queue.empty():
-            try:
-                metrics = self.data_queue.get_nowait()
-                metrics_list.append(metrics)
-            except queue.Empty:
-                break
-
-        self.metrics_data.extend(metrics_list)
-        return metrics_list
-
-    def get_metrics_dataframe(self) -> pd.DataFrame:
-        """
-        Get collected metrics as pandas DataFrame.
-
-        Returns:
-            DataFrame with all collected metrics
-        """
-        self.get_metrics()  # Update from queue
-
-        if not self.metrics_data:
-            return pd.DataFrame()
-
-        df = pd.DataFrame(self.metrics_data)
-
-        # Ensure timestamp is the first column
-        if 'timestamp' in df.columns:
-            df = df.set_index('timestamp')
-
-        return df
+        cmd = [self.tegrastats_path, '--interval', str(self.interval_ms),
+               '--logfile', str(self.log_file)]
+        self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.is_collecting = True
+        time.sleep(0.3)  # Let first sample arrive
+        logger.info(f"tegrastats started: interval={self.interval_ms}ms, log={self.log_file}")
+        return str(self.log_file)
 
     def stop_collection(self) -> bool:
-        """
-        Stop metrics collection and cleanup.
-
-        Returns:
-            True if successful, False otherwise
-        """
-        if not self.is_collecting:
-            logger.warning("Collection not in progress")
+        """Stop tegrastats and parse the log file."""
+        if not self.is_collecting or not self.process:
             return False
 
+        self.process.send_signal(signal.SIGTERM)
         try:
-            logger.info("Stopping metrics collection...")
+            self.process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            self.process.kill()
+            self.process.wait()
 
-            # Send SIGTERM to tegrastats process
-            if self.process:
-                self.process.send_signal(signal.SIGTERM)
-                try:
-                    self.process.wait(timeout=10)
-                except subprocess.TimeoutExpired:
-                    logger.warning("tegrastats did not terminate gracefully, killing...")
-                    self.process.kill()
-                    self.process.wait()
+        self.is_collecting = False
+        time.sleep(0.2)
 
-            # Wait for parsing thread to finish
-            if self.parse_thread:
-                self.parse_thread.join(timeout=5)
+        # Parse the log file
+        if self.log_file and self.log_file.exists():
+            self._parse_log_file(self.log_file)
 
-            self.is_collecting = False
+        logger.info(f"tegrastats stopped. Parsed {len(self._samples)} samples from {self.log_file}")
+        return True
 
-            logger.info("Metrics collection stopped")
-            logger.info(f"Collected {len(self.metrics_data)} data points")
-            logger.info(f"Log file saved to: {self.log_file}")
+    def _parse_log_file(self, path: Path):
+        """Parse tegrastats log file into self._samples."""
+        with open(path) as f:
+            for line in f:
+                parsed = self.parse_tegrastats_line(line)
+                if parsed:
+                    self._samples.append(parsed)
 
-            return True
+    def get_samples_df(self) -> pd.DataFrame:
+        """Return all parsed samples as DataFrame."""
+        if not self._samples:
+            return pd.DataFrame()
+        return pd.DataFrame(self._samples)
 
-        except Exception as e:
-            logger.error(f"Error stopping metrics collection: {e}")
-            return False
+    # ── Energy Calculation ───────────────────────────────────────────────
 
-    def get_summary_statistics(self) -> Dict:
+    def compute_energy(self) -> Dict:
         """
-        Get summary statistics for collected metrics.
+        Compute energy metrics from collected samples.
 
-        Returns:
-            Dictionary with summary statistics
+        Returns dict with:
+            avg_power_w, max_power_w, total_energy_j,
+            energy_per_second, gpu_power_w, cpu_power_w,
+            temp_cpu_c, temp_tj_c, n_samples
         """
-        df = self.get_metrics_dataframe()
-
+        df = self.get_samples_df()
         if df.empty:
             return {}
 
-        summary = {}
+        n = len(df)
+        duration = n * (self.interval_ms / 1000.0)
 
-        # Temperature statistics
-        temp_columns = ['cpu_temp_c', 'gpu_temp_c', 'soc_temp_c']
-        for col in temp_columns:
+        result = {'n_samples': n, 'duration_s': round(duration, 2)}
+
+        # Total power
+        if 'power_total_mw' in df.columns:
+            result['avg_power_w'] = round(df['power_total_mw'].mean() / 1000.0, 3)
+            result['max_power_w'] = round(df['power_total_mw'].max() / 1000.0, 3)
+            result['total_energy_j'] = round(df['power_total_mw'].mean() * duration / 1000.0, 3)
+
+        # Per-rail power
+        for rail in ['VDD_GPU_SOC', 'VDD_CPU_CV', 'VIN_SYS_5V0']:
+            col = f'power_{rail}_mw'
             if col in df.columns:
-                summary[f'{col}_mean'] = df[col].mean()
-                summary[f'{col}_max'] = df[col].max()
-                summary[f'{col}_min'] = df[col].min()
+                short = rail.replace('VDD_', '').replace('VIN_', '').lower()
+                result[f'avg_{short}_w'] = round(df[col].mean() / 1000.0, 3)
 
-        # Power statistics
-        power_columns = ['total_power_mw', 'cpu_power_mw', 'gpu_power_mw']
-        for col in power_columns:
-            if col in df.columns:
-                summary[f'{col}_mean'] = df[col].mean()
-                summary[f'{col}_max'] = df[col].max()
-                summary[f'{col}_min'] = df[col].min()
+        # Temperature
+        for tcol in ['temp_cpu_c', 'temp_tj_c']:
+            if tcol in df.columns:
+                result[f'avg_{tcol}'] = round(df[tcol].mean(), 1)
+                result[f'max_{tcol}'] = round(df[tcol].max(), 1)
 
-        # Frequency statistics
-        freq_columns = ['gpu_freq_mhz', 'cpu_freq_mhz', 'emc_freq_mhz']
-        for col in freq_columns:
-            if col in df.columns:
-                summary[f'{col}_mean'] = df[col].mean()
-                summary[f'{col}_std'] = df[col].std()
-
-        return summary
-
-    def save_metrics(self, filename: Optional[str] = None) -> Optional[str]:
-        """
-        Save collected metrics to file.
-
-        Args:
-            filename: Optional filename for saved metrics. If None, auto-generate.
-
-        Returns:
-            Path to saved file, or None if failed
-        """
-        df = self.get_metrics_dataframe()
-
-        if df.empty:
-            logger.warning("No metrics data to save")
-            return None
-
-        if filename is None:
-            timestamp = int(time.time())
-            filename = f"metrics_{timestamp}.parquet"
-
-        output_path = self.output_dir / filename
-
-        try:
-            # Save as Parquet for efficient storage
-            df.to_parquet(output_path)
-            logger.info(f"Metrics saved to: {output_path}")
-            return str(output_path)
-        except Exception as e:
-            logger.error(f"Failed to save metrics: {e}")
-            return None
-
-    def calculate_energy_consumption(self, start_time: Optional[float] = None,
-                                   end_time: Optional[float] = None) -> Dict:
-        """
-        Calculate energy consumption from collected metrics.
-
-        Args:
-            start_time: Start timestamp (if None, use first data point)
-            end_time: End timestamp (if None, use last data point)
-
-        Returns:
-            Dictionary with energy consumption metrics
-        """
-        df = self.get_metrics_dataframe()
-
-        if df.empty or 'total_power_mw' not in df.columns:
-            return {}
-
-        # Filter by time range
-        if start_time is not None or end_time is not None:
-            if start_time is not None and end_time is not None:
-                df = df[(df.index >= start_time) & (df.index <= end_time)]
-            elif start_time is not None:
-                df = df[df.index >= start_time]
-            elif end_time is not None:
-                df = df[df.index <= end_time]
-
-        if df.empty:
-            return {}
-
-        # Calculate duration
-        if len(df) > 1:
-            duration_sec = (df.index[-1] - df.index[0])
-        else:
-            duration_sec = self.interval_ms / 1000.0
-
-        # Calculate total energy: Power (mW) * Time (s) / 1000 = Energy (mJ)
-        total_power_mw = df['total_power_mw'].mean()
-        energy_mj = total_power_mw * duration_sec
-        energy_j = energy_mj / 1000.0  # Convert to Joules
-
-        return {
-            'duration_sec': duration_sec,
-            'avg_power_mw': total_power_mw,
-            'avg_power_w': total_power_mw / 1000.0,
-            'total_energy_j': energy_j,
-            'total_energy_mj': energy_mj
-        }
+        return result
 
     def __enter__(self):
-        """Context manager entry."""
         self.start_collection()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit."""
+    def __exit__(self, *args):
         self.stop_collection()
 
 
 def main():
-    """
-    Test function for metrics collector.
-    """
-    # Create collector with 1 second interval
-    collector = MetricsCollector(interval_ms=1000)
+    """Quick test: collect for 5 seconds and print energy."""
+    mc = MetricsCollector(interval_ms=500)
+    mc.start_collection(tag="test")
+    logger.info("Collecting for 5 seconds...")
+    time.sleep(5)
+    mc.stop_collection()
 
-    try:
-        # Start collection for 10 seconds
-        logger.info("Starting 10-second test collection...")
+    energy = mc.compute_energy()
+    print("\nEnergy Metrics:")
+    for k, v in energy.items():
+        print(f"  {k}: {v}")
 
-        with collector:
-            time.sleep(10)
-
-            # Get summary statistics
-            summary = collector.get_summary_statistics()
-            logger.info(f"Summary statistics: {summary}")
-
-            # Calculate energy consumption
-            energy = collector.calculate_energy_consumption()
-            logger.info(f"Energy consumption: {energy}")
-
-            # Save metrics
-            saved_file = collector.save_metrics()
-            if saved_file:
-                logger.info(f"Metrics saved to: {saved_file}")
-
-        logger.info("Test completed successfully")
-
-    except KeyboardInterrupt:
-        logger.info("Test interrupted by user")
-    except Exception as e:
-        logger.error(f"Test failed: {e}")
+    df = mc.get_samples_df()
+    if not df.empty:
+        print(f"\nFirst 3 samples:")
+        print(df.head(3).to_string())
 
 
 if __name__ == "__main__":
