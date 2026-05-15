@@ -1,0 +1,881 @@
+{
+  "timestamp": "20260515_045753",
+  "model": "Phi-3-mini-4k-instruct-Q4",
+  "platform": "Jetson AGX Orin",
+  "optimal_configs": {
+    "p1024_o128_decode": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 0.9476302083333333,
+      "best_energy_tps": 32.753161959925364,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 41.59648554897099,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 25.288500590249896,
+      "num_configs": 8
+    },
+    "p1024_o128_mixed": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 1.0462304687500001,
+      "best_energy_tps": 31.50275437606851,
+      "best_tps_config": "GPU918_CPU1497",
+      "best_tps": 39.838042326842526,
+      "best_ttft_config": "GPU918_CPU1497",
+      "best_ttft": 30.458362074568868,
+      "num_configs": 8
+    },
+    "p1024_o32_decode": {
+      "best_energy_config": "GPU612_CPU1036",
+      "best_energy_ept": 0.9292083333333334,
+      "best_energy_tps": 23.20252353132871,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 41.554517739463755,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 26.364294346421957,
+      "num_configs": 8
+    },
+    "p1024_o32_mixed": {
+      "best_energy_config": "GPU1300_CPU1497",
+      "best_energy_ept": 1.0911718750000001,
+      "best_energy_tps": 40.17336869323018,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 40.17336869323018,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 30.410871957428753,
+      "num_configs": 8
+    },
+    "p512_o512_decode": {
+      "best_energy_config": "GPU612_CPU1036",
+      "best_energy_ept": 1.0429637305699482,
+      "best_energy_tps": 22.07139238970817,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 38.72153426984153,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 27.56455005146563,
+      "num_configs": 8
+    },
+    "p512_o512_mixed": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 1.050078017639789,
+      "best_energy_tps": 30.149795736463062,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 38.52083565177911,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 30.80307401251048,
+      "num_configs": 8
+    },
+    "p512_o128_decode": {
+      "best_energy_config": "GPU612_CPU1036",
+      "best_energy_ept": 0.9732395833333333,
+      "best_energy_tps": 23.426819425601668,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 41.380756535370665,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 25.42721899226308,
+      "num_configs": 8
+    },
+    "p512_o128_mixed": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 1.0496835317460316,
+      "best_energy_tps": 29.37595605473207,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 37.66814156654829,
+      "best_ttft_config": "GPU918_CPU1497",
+      "best_ttft": 29.200936551205814,
+      "num_configs": 8
+    },
+    "p512_o32_decode": {
+      "best_energy_config": "GPU612_CPU1036",
+      "best_energy_ept": 0.9282291666666667,
+      "best_energy_tps": 23.150726429946882,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 41.420450997810654,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 26.311137713491917,
+      "num_configs": 8
+    },
+    "p512_o32_mixed": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 1.1329895833333332,
+      "best_energy_tps": 27.509786204799056,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 35.35436996196023,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 93.89527460249762,
+      "num_configs": 8
+    },
+    "p128_o256_decode": {
+      "best_energy_config": "GPU612_CPU1036",
+      "best_energy_ept": 0.9888177083333334,
+      "best_energy_tps": 23.22412630652717,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 40.961615010064726,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 27.260226663202047,
+      "num_configs": 8
+    },
+    "p128_o256_mixed": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 1.0171953125,
+      "best_energy_tps": 31.42390325297373,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 40.23359857462849,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 27.688098372891545,
+      "num_configs": 8
+    },
+    "p128_o64_decode": {
+      "best_energy_config": "GPU612_CPU1036",
+      "best_energy_ept": 1.0188072916666668,
+      "best_energy_tps": 23.450924356314857,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 41.70008031807988,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 25.21057294992109,
+      "num_configs": 8
+    },
+    "p128_o64_mixed": {
+      "best_energy_config": "GPU612_CPU1036",
+      "best_energy_ept": 1.0184427083333334,
+      "best_energy_tps": 23.530542994292826,
+      "best_tps_config": "GPU918_CPU1497",
+      "best_tps": 41.68332371157336,
+      "best_ttft_config": "GPU918_CPU1497",
+      "best_ttft": 25.629453205813963,
+      "num_configs": 8
+    },
+    "p128_o32_decode": {
+      "best_energy_config": "GPU612_CPU1036",
+      "best_energy_ept": 0.93134375,
+      "best_energy_tps": 23.218758924166192,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 41.55086803635331,
+      "best_ttft_config": "GPU918_CPU1497",
+      "best_ttft": 26.222684032594163,
+      "num_configs": 8
+    },
+    "p128_o32_mixed": {
+      "best_energy_config": "GPU612_CPU1036",
+      "best_energy_ept": 1.0223020833333334,
+      "best_energy_tps": 23.098324391463155,
+      "best_tps_config": "GPU918_CPU1497",
+      "best_tps": 40.930682790592975,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 36.93663771264255,
+      "num_configs": 8
+    },
+    "p32_o512_decode": {
+      "best_energy_config": "GPU612_CPU1497",
+      "best_energy_ept": 1.0519680989583333,
+      "best_energy_tps": 22.161382064031045,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 38.739288597348256,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 27.269371319562197,
+      "num_configs": 8
+    },
+    "p32_o512_mixed": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 1.028025390625,
+      "best_energy_tps": 30.447731972521698,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 38.719425633624645,
+      "best_ttft_config": "GPU918_CPU1497",
+      "best_ttft": 27.41891626889507,
+      "num_configs": 8
+    },
+    "p32_o128_decode": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 0.9462734375,
+      "best_energy_tps": 32.79972131657726,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 41.57425890234899,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 25.34232521429658,
+      "num_configs": 8
+    },
+    "p32_o128_mixed": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 0.94390625,
+      "best_energy_tps": 32.63631486690835,
+      "best_tps_config": "GPU918_CPU1497",
+      "best_tps": 41.573406045875785,
+      "best_ttft_config": "GPU918_CPU1497",
+      "best_ttft": 25.38362906003992,
+      "num_configs": 8
+    },
+    "p32_o32_decode": {
+      "best_energy_config": "GPU612_CPU1036",
+      "best_energy_ept": 0.9303020833333333,
+      "best_energy_tps": 23.178273309588793,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 41.57760185611158,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 26.49710172166427,
+      "num_configs": 8
+    },
+    "p32_o32_mixed": {
+      "best_energy_config": "GPU612_CPU1036",
+      "best_energy_ept": 0.9670104166666667,
+      "best_energy_tps": 23.536995324136996,
+      "best_tps_config": "GPU918_CPU1497",
+      "best_tps": 41.74352622602864,
+      "best_ttft_config": "GPU918_CPU1497",
+      "best_ttft": 25.252775677169364,
+      "num_configs": 8
+    },
+    "p2048_o512_decode": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 1.02974609375,
+      "best_energy_tps": 30.50259967419529,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 38.74412124748317,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 27.405109023675323,
+      "num_configs": 8
+    },
+    "p2048_o512_mixed": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 1.118701958465137,
+      "best_energy_tps": 29.301628157451233,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 36.83405875500708,
+      "best_ttft_config": "GPU918_CPU1497",
+      "best_ttft": 36.44451196305454,
+      "num_configs": 8
+    },
+    "p2048_o128_decode": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 0.9477578124999999,
+      "best_energy_tps": 32.82484020749794,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 41.571392249544175,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 25.25054127909243,
+      "num_configs": 8
+    },
+    "p2048_o128_mixed": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 1.0861093750000002,
+      "best_energy_tps": 29.46108793123125,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 36.82048870684577,
+      "best_ttft_config": "GPU918_CPU1497",
+      "best_ttft": 34.169947961345315,
+      "num_configs": 8
+    },
+    "p2048_o64_decode": {
+      "best_energy_config": "GPU612_CPU1036",
+      "best_energy_ept": 1.0274114583333334,
+      "best_energy_tps": 23.348833425632396,
+      "best_tps_config": "GPU1300_CPU1497",
+      "best_tps": 41.751467062198536,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 25.203694589436054,
+      "num_configs": 8
+    },
+    "p2048_o64_mixed": {
+      "best_energy_config": "GPU918_CPU1036",
+      "best_energy_ept": 1.243125,
+      "best_energy_tps": 26.488191673871167,
+      "best_tps_config": "GPU918_CPU1497",
+      "best_tps": 33.39937934626622,
+      "best_ttft_config": "GPU1300_CPU1497",
+      "best_ttft": 262.01657159253955,
+      "num_configs": 8
+    }
+  },
+  "gpu_scaling": {
+    "decode": {
+      "306": {
+        "avg_ttft_ms": 83.85628285828889,
+        "avg_tpot_ms": 81.76115329641559,
+        "avg_ept_j": 1.403669478970112,
+        "avg_power_w": 16.22732142857143,
+        "avg_gpu_soc_w": 8.413059523809524
+      },
+      "612": {
+        "avg_ttft_ms": 46.13138960086784,
+        "avg_tpot_ms": 43.29805974291815,
+        "avg_ept_j": 0.9930734579779257,
+        "avg_power_w": 22.014345238095235,
+        "avg_gpu_soc_w": 13.257642857142857
+      },
+      "918": {
+        "avg_ttft_ms": 35.16580655594313,
+        "avg_tpot_ms": 33.30489144966807,
+        "avg_ept_j": 1.0634656139629766,
+        "avg_power_w": 27.829404761904758,
+        "avg_gpu_soc_w": 18.52797619047619
+      },
+      "1300": {
+        "avg_ttft_ms": 30.827071711731453,
+        "avg_tpot_ms": 30.193192661375015,
+        "avg_ept_j": 1.1820412506004843,
+        "avg_power_w": 37.01058730158731,
+        "avg_gpu_soc_w": 27.089055555555557
+      }
+    },
+    "mixed": {
+      "306": {
+        "avg_ttft_ms": 216.40168454559034,
+        "avg_tpot_ms": 87.50291431459083,
+        "avg_ept_j": 1.5327529340511528,
+        "avg_power_w": 16.28097023809524,
+        "avg_gpu_soc_w": 8.52067857142857
+      },
+      "612": {
+        "avg_ttft_ms": 110.90515975818217,
+        "avg_tpot_ms": 44.19682974303836,
+        "avg_ept_j": 1.1003489841625862,
+        "avg_power_w": 22.60285714285715,
+        "avg_gpu_soc_w": 13.79414285714286
+      },
+      "918": {
+        "avg_ttft_ms": 76.52682058202724,
+        "avg_tpot_ms": 32.31065043676352,
+        "avg_ept_j": 1.0792100515280445,
+        "avg_power_w": 28.256809523809526,
+        "avg_gpu_soc_w": 19.04914285714286
+      },
+      "1300": {
+        "avg_ttft_ms": 65.82592609005846,
+        "avg_tpot_ms": 35.41803910004381,
+        "avg_ept_j": 1.343156561763531,
+        "avg_power_w": 36.9028253968254,
+        "avg_gpu_soc_w": 27.319900793650792
+      }
+    }
+  },
+  "workload_scaling": {
+    "decode": {
+      "32": {
+        "32": {
+          "ttft_ms": 46.479335986077785,
+          "tpot_ms": 42.97798936585746,
+          "ept_j": 0.944609375,
+          "power_w": 20.151666666666667
+        },
+        "128": {
+          "ttft_ms": 44.92065294956167,
+          "tpot_ms": 42.436221565591694,
+          "ept_j": 0.9848307291666667,
+          "power_w": 22.91983333333333
+        },
+        "512": {
+          "ttft_ms": 47.75864522283276,
+          "tpot_ms": 45.90809253088652,
+          "ept_j": 1.058837424103164,
+          "power_w": 23.037333333333333
+        }
+      },
+      "128": {
+        "32": {
+          "ttft_ms": 46.252173371613026,
+          "tpot_ms": 42.906643000371275,
+          "ept_j": 0.939921875,
+          "power_w": 20.051833333333335
+        },
+        "64": {
+          "ttft_ms": 44.79604051448405,
+          "tpot_ms": 42.49903553463618,
+          "ept_j": 1.0241770833333335,
+          "power_w": 21.849333333333334
+        },
+        "256": {
+          "ttft_ms": 47.46835760306567,
+          "tpot_ms": 42.91144920607384,
+          "ept_j": 1.0001295572916669,
+          "power_w": 23.275666666666666
+        }
+      },
+      "512": {
+        "32": {
+          "ttft_ms": 46.26884982765962,
+          "tpot_ms": 43.01793709202039,
+          "ept_j": 0.9373229166666666,
+          "power_w": 19.996166666666667
+        },
+        "128": {
+          "ttft_ms": 45.04250552660476,
+          "tpot_ms": 42.56715930282111,
+          "ept_j": 0.9824778645833333,
+          "power_w": 22.864833333333333
+        },
+        "512": {
+          "ttft_ms": 47.64816207656016,
+          "tpot_ms": 45.04000411093931,
+          "ept_j": 1.0445438360960257,
+          "power_w": 23.122166666666665
+        }
+      },
+      "1024": {
+        "32": {
+          "ttft_ms": 46.16858926601708,
+          "tpot_ms": 42.937754440592016,
+          "ept_j": 0.9378124999999999,
+          "power_w": 20.006666666666668
+        },
+        "128": {
+          "ttft_ms": 45.16470203331361,
+          "tpot_ms": 42.6215972134775,
+          "ept_j": 0.9868307291666667,
+          "power_w": 22.96633333333333
+        }
+      },
+      "2048": {
+        "64": {
+          "ttft_ms": 45.023714463847384,
+          "tpot_ms": 42.67716066660507,
+          "ept_j": 1.0296276041666665,
+          "power_w": 21.965166666666665
+        },
+        "128": {
+          "ttft_ms": 45.07219054115315,
+          "tpot_ms": 42.570316175602656,
+          "ept_j": 0.9837734375,
+          "power_w": 22.895000000000003
+        },
+        "512": {
+          "ttft_ms": 47.77553502935916,
+          "tpot_ms": 45.101476195379135,
+          "ept_j": 1.0481334796167694,
+          "power_w": 23.09883333333333
+        }
+      }
+    },
+    "mixed": {
+      "32": {
+        "32": {
+          "ttft_ms": 44.41816177374373,
+          "tpot_ms": 42.52077533953613,
+          "ept_j": 0.9743697916666667,
+          "power_w": 20.7865
+        },
+        "128": {
+          "ttft_ms": 44.3773529259488,
+          "tpot_ms": 42.48219016228076,
+          "ept_j": 0.986984375,
+          "power_w": 22.96966666666667
+        },
+        "512": {
+          "ttft_ms": 47.51424627223362,
+          "tpot_ms": 45.091451638519594,
+          "ept_j": 1.0444293957995128,
+          "power_w": 23.177666666666667
+        }
+      },
+      "128": {
+        "32": {
+          "ttft_ms": 68.76786064822227,
+          "tpot_ms": 42.66977435984319,
+          "ept_j": 1.0247447916666668,
+          "power_w": 19.775
+        },
+        "64": {
+          "ttft_ms": 45.18416702436904,
+          "tpot_ms": 42.42906290926926,
+          "ept_j": 1.0243619791666667,
+          "power_w": 21.853
+        },
+        "256": {
+          "ttft_ms": 47.93375183362514,
+          "tpot_ms": 44.15694912408594,
+          "ept_j": 1.0393020833333333,
+          "power_w": 23.135666666666665
+        }
+      },
+      "512": {
+        "32": {
+          "ttft_ms": 180.84085495987284,
+          "tpot_ms": 47.20538136829692,
+          "ept_j": 1.2290052083333332,
+          "power_w": 19.664166666666667
+        },
+        "128": {
+          "ttft_ms": 70.54925232660025,
+          "tpot_ms": 42.479970092731435,
+          "ept_j": 1.0958058976715686,
+          "power_w": 28.07
+        },
+        "512": {
+          "ttft_ms": 46.62288713734597,
+          "tpot_ms": 42.00854002815742,
+          "ept_j": 1.1340107421875,
+          "power_w": 26.407500000000002
+        }
+      },
+      "1024": {
+        "32": {
+          "ttft_ms": 298.63153006105375,
+          "tpot_ms": 43.393417362308995,
+          "ept_j": 1.1739322916666666,
+          "power_w": 19.793
+        },
+        "128": {
+          "ttft_ms": 51.73940537497401,
+          "tpot_ms": 43.759760856591754,
+          "ept_j": 1.0694296875,
+          "power_w": 22.814500000000002
+        }
+      },
+      "2048": {
+        "64": {
+          "ttft_ms": 489.98175297553337,
+          "tpot_ms": 46.80625413342443,
+          "ept_j": 1.2901250000000002,
+          "power_w": 21.558500000000002
+        },
+        "128": {
+          "ttft_ms": 56.601606464634344,
+          "tpot_ms": 46.928277961612736,
+          "ept_j": 1.1824230034722223,
+          "power_w": 22.259999999999998
+        },
+        "512": {
+          "ttft_ms": 59.509406836392984,
+          "tpot_ms": 46.823811065878566,
+          "ept_j": 1.1359615308120667,
+          "power_w": 24.174833333333332
+        }
+      }
+    }
+  },
+  "dvfs_rules": [
+    {
+      "phase": "decode",
+      "prompt_length": 32,
+      "output_length": 32,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU612_CPU1036",
+      "ept_j": 0.9303020833333333,
+      "ttft_ms": 47.00331902131438,
+      "tpot_ms": 43.01539816272756,
+      "power_w": 19.846333333333334
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 32,
+      "output_length": 128,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 0.9462734375,
+      "ttft_ms": 31.91378596238792,
+      "tpot_ms": 30.47320984237952,
+      "power_w": 30.281000000000002
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 32,
+      "output_length": 512,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1497,
+      "optimal_config": "GPU612_CPU1497",
+      "ept_j": 1.0519680989583333,
+      "ttft_ms": 47.248296750088535,
+      "tpot_ms": 45.116746497740856,
+      "power_w": 23.417666666666666
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 128,
+      "output_length": 32,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU612_CPU1036",
+      "ept_j": 0.93134375,
+      "ttft_ms": 46.55763631065687,
+      "tpot_ms": 42.952212485014115,
+      "power_w": 19.868666666666666
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 128,
+      "output_length": 64,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU612_CPU1036",
+      "ept_j": 1.0188072916666668,
+      "ttft_ms": 45.13984204580387,
+      "tpot_ms": 42.59851418075856,
+      "power_w": 21.73466666666667
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 128,
+      "output_length": 256,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU612_CPU1036",
+      "ept_j": 0.9888177083333334,
+      "ttft_ms": 47.77827695943415,
+      "tpot_ms": 43.03657392319901,
+      "power_w": 23.012333333333334
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 512,
+      "output_length": 32,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU612_CPU1036",
+      "ept_j": 0.9282291666666667,
+      "ttft_ms": 46.67262469107906,
+      "tpot_ms": 43.078803998087686,
+      "power_w": 19.802000000000003
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 512,
+      "output_length": 128,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU612_CPU1036",
+      "ept_j": 0.9732395833333333,
+      "ttft_ms": 45.07591133005917,
+      "tpot_ms": 42.66338378711655,
+      "power_w": 22.649666666666665
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 512,
+      "output_length": 512,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU612_CPU1036",
+      "ept_j": 1.0429637305699482,
+      "ttft_ms": 47.95345508803924,
+      "tpot_ms": 45.260409682581866,
+      "power_w": 22.816333333333336
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 1024,
+      "output_length": 32,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU612_CPU1036",
+      "ept_j": 0.9292083333333334,
+      "ttft_ms": 46.45984099867443,
+      "tpot_ms": 42.98591591237533,
+      "power_w": 19.823333333333334
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 1024,
+      "output_length": 128,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 0.9476302083333333,
+      "ttft_ms": 31.947317998856306,
+      "tpot_ms": 30.516488354755783,
+      "power_w": 30.324
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 2048,
+      "output_length": 64,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU612_CPU1036",
+      "ept_j": 1.0274114583333334,
+      "ttft_ms": 45.222532004117966,
+      "tpot_ms": 42.786558137753254,
+      "power_w": 21.917666666666666
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 2048,
+      "output_length": 128,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 0.9477578124999999,
+      "ttft_ms": 31.882423364246886,
+      "tpot_ms": 30.449741480265818,
+      "power_w": 30.328333333333333
+    },
+    {
+      "phase": "decode",
+      "prompt_length": 2048,
+      "output_length": 512,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 1.02974609375,
+      "ttft_ms": 34.46881636045873,
+      "tpot_ms": 32.77709578414218,
+      "power_w": 31.013666666666666
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 32,
+      "output_length": 32,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU612_CPU1036",
+      "ept_j": 0.9670104166666667,
+      "ttft_ms": 44.00313560230037,
+      "tpot_ms": 42.432748474761524,
+      "power_w": 20.62966666666667
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 32,
+      "output_length": 128,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 0.94390625,
+      "ttft_ms": 32.22856430026392,
+      "tpot_ms": 30.624558214767983,
+      "power_w": 30.204666666666668
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 32,
+      "output_length": 512,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 1.028025390625,
+      "ttft_ms": 34.59901867123941,
+      "tpot_ms": 32.836068220514335,
+      "power_w": 30.962
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 128,
+      "output_length": 32,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU612_CPU1036",
+      "ept_j": 1.0223020833333334,
+      "ttft_ms": 68.98621298993628,
+      "tpot_ms": 42.49114048497011,
+      "power_w": 19.731666666666666
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 128,
+      "output_length": 64,
+      "optimal_gpu_freq": 612,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU612_CPU1036",
+      "ept_j": 1.0184427083333334,
+      "ttft_ms": 45.382136634240545,
+      "tpot_ms": 42.44795822163936,
+      "power_w": 21.72666666666667
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 128,
+      "output_length": 256,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 1.0171953125,
+      "ttft_ms": 34.9746469873935,
+      "tpot_ms": 31.806958051021,
+      "power_w": 30.635333333333335
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 512,
+      "output_length": 32,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 1.1329895833333332,
+      "ttft_ms": 126.81119601863126,
+      "tpot_ms": 33.85288952549379,
+      "power_w": 24.169999999999998
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 512,
+      "output_length": 128,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 1.0496835317460316,
+      "ttft_ms": 37.284804857335985,
+      "tpot_ms": 33.8776130606457,
+      "power_w": 29.6245
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 512,
+      "output_length": 512,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 1.050078017639789,
+      "ttft_ms": 39.70221298125883,
+      "tpot_ms": 33.06291678958619,
+      "power_w": 31.066999999999997
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 1024,
+      "output_length": 32,
+      "optimal_gpu_freq": 1300,
+      "optimal_cpu_freq": 1497,
+      "optimal_config": "GPU1300_CPU1497",
+      "ept_j": 1.0911718750000001,
+      "ttft_ms": 30.410871957428753,
+      "tpot_ms": 24.710526907696355,
+      "power_w": 34.917500000000004
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 1024,
+      "output_length": 128,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 1.0462304687500001,
+      "ttft_ms": 39.128878503106534,
+      "tpot_ms": 31.681228842490945,
+      "power_w": 29.759500000000003
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 2048,
+      "output_length": 64,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 1.243125,
+      "ttft_ms": 348.5801349549244,
+      "tpot_ms": 33.88231082587803,
+      "power_w": 28.176666666666666
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 2048,
+      "output_length": 128,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 1.0861093750000002,
+      "ttft_ms": 43.9120017302533,
+      "tpot_ms": 33.860432702725326,
+      "power_w": 30.893666666666665
+    },
+    {
+      "phase": "mixed",
+      "prompt_length": 2048,
+      "output_length": 512,
+      "optimal_gpu_freq": 918,
+      "optimal_cpu_freq": 1036,
+      "optimal_config": "GPU918_CPU1036",
+      "ept_j": 1.118701958465137,
+      "ttft_ms": 45.22332440440854,
+      "tpot_ms": 33.95188261003355,
+      "power_w": 31.947666666666667
+    }
+  ]
+}
