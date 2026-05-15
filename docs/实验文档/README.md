@@ -19,7 +19,7 @@
 
 | 配置名称 | GPU 频率 | CPU 频率 | 说明 |
 |----------|:---:|:---:|------|
-| **GPU-Min/CPU-Max** | 306 MHz | 2201 MHz | GPU 最低频 + CPU 最高频 (我们的策略) |
+| **GPU-Min/CPU-Max** | 306 MHz | 2201 MHz | GPU 最低频 + CPU 最高频 |
 | **Energy-Focus** | 306 MHz | 1497 MHz | GPU 最低频 + CPU 中等频 |
 
 ### 文档用词规范
@@ -30,7 +30,6 @@
 | 30W 档位 | 30W (出厂默认) | mid, MODE_30W, default, 平衡 |
 | 15W 档位 | 15W | low, MODE_15W, 低功耗, energy_efficient |
 | 50W 档位 | 50W | high-mid, MODE_50W |
-| 我们的策略 | GPU-Min/CPU-Max | 我们的配置, GPU306_CPU2201 |
 | 首 Token 延迟 | TTFT | 首词延迟, Time To First Token |
 | 每 Token 延迟 | TPOT | 解码延迟, Time Per Output Token |
 | 吞吐量 | Throughput (tok/s) | tokens/s, tps |
@@ -38,7 +37,22 @@
 
 ---
 
-## 实验报告列表
+## 实验文档结构
+
+### 总览文档
+
+| 文档 | 内容 |
+|------|------|
+| [实验总览](实验总览.md) | 实验环境、频率配置空间、功耗采集方法、实验设计矩阵 |
+
+### 分实验报告
+
+| 文档 | 阶段 | 数据 | 核心结论 |
+|------|------|------|---------|
+| [实验1-混合阶段能耗分析](实验1-混合阶段能耗分析.md) | Mixed Phase | 170 runs | GPU 612MHz 是全局能效最优点 (0.84 tok/J)；功耗主体在 CPU 和系统域 |
+| [实验2-分阶段能耗分析](实验2-分阶段能耗分析.md) | Prefill + Decode | 345 runs | Decode 功耗是 prefill 的 2.8×；GPU 612MHz 是两阶段共同最优频率 |
+
+### 历史归档
 
 | 报告 | 阶段 | 日期 | 核心内容 |
 |------|------|------|---------|
@@ -48,41 +62,33 @@
 | [Phase 3 完成报告](PHASE3_COMPLETION_REPORT.md) | 前置实验 | 2026-05-10 | 7 个前置实验验证 |
 | [方案总结](FINAL_SOLUTIONS_SUMMARY.md) | 运行时方案 | 2026-05-09 | TensorRT-LLM / llama.cpp 方案对比 |
 
-## 核心实验发现
-
-### 真实模型多配置实验 (Phi-3-mini Q4, 2026-05-13)
-
-**实验矩阵**: 4 GPU x 3 CPU x 5 workloads x 3 repeats = 180 runs
-
-| 关键发现 | 数据 |
-|---------|------|
-| GPU 频率对吞吐量无影响 | 306→1300 MHz 仅 1.01x (p=0.64) |
-| CPU 频率是性能瓶颈 | 1036→2201 MHz 达 1.86x |
-| LLM 推理为 memory-bound | GPU 计算 not bottleneck |
-| 最优配置 | GPU 918 MHz + CPU 2201 MHz = 9.4 tok/s |
-
-### 对比档位性能摘要
-
-| 档位 | TTFT (ms) | TPOT (ms) | Throughput (tok/s) |
-|------|:---------:|:---------:|:------------------:|
-| MAXN | 498.7 | 107.0 | 9.2 |
-| 30W (出厂默认) | 141.6 | 142.5 | 7.0 |
-| 15W | 878.1 | 196.7 | 5.0 |
-| GPU-Min/CPU-Max (我们) | 773.8 | 107.6 | 9.0 |
-
-> 关键结论：GPU-Min/CPU-Max 策略以 GPU 最低频率达到接近 MAXN 的吞吐量 (9.0 vs 9.2 tok/s)，可大幅降低 GPU 功耗。
+> **重要说明**：2026-05-13 的实验数据因 llama-cpp-python 未编译 CUDA 支持，所有推理实际运行在 CPU 上。
+> 该问题已于 2026-05-14 修复。详见 [实验总览](实验总览.md) 中的历史说明。
 
 ---
 
-## 图表索引
+## 核心实验结论 (GPU 推理, 2026-05-14)
 
-| 图表 | 路径 | 说明 |
-|------|------|------|
-| 档位吞吐量对比 | `figures/power_mode_comparison/throughput_comparison.png` | 4 个核心档位吞吐量柱状图 |
-| TTFT vs TPOT 散点图 | `figures/power_mode_comparison/ttft_tpot_scatter.png` | 全部配置的延迟分布 |
-| CPU/GPU 频率效应 | `figures/power_mode_comparison/cpu_gpu_effect.png` | CPU 和 GPU 对吞吐量的独立影响 |
-| 负载分档位对比 | `figures/power_mode_comparison/workload_by_mode.png` | 按 workload 分组的档位对比 |
-| 能效代理图 | `figures/power_mode_comparison/energy_efficiency_proxy.png` | throughput/GPU_freq 效率对比 |
-| 综合仪表盘 | `figures/power_mode_comparison/power_mode_dashboard.png` | 4 合 1 综合对比 |
-| 真实模型分析 | `figures/real_model_experiment/` | 5 张真实模型分析图 |
-| Phase 5 对比 | `figures/phase5_comparison/` | 6 张 Phase 5 对比图 |
+### 全局最优配置
+
+| 场景 | 最优配置 | 吞吐 (tok/s) | 功耗 (W) | E/token (J) | tok/J |
+|------|---------|:---:|:---:|:---:|:---:|
+| 混合推理 (Mixed) | GPU612 + CPU1036 | 38.6 | 42.2 | **1.187** | **0.84** |
+| Prefill 阶段 | GPU612 + CPU1497 | — | 14.1 | 5.87* | — |
+| Decode 阶段 | GPU612 + CPU1036 | 40.4 | 41.3 | **1.113** | **0.88** |
+
+\* Prefill E/token 因仅输出 1 token 而偏高，应以 TTFT 为主要指标
+
+### Phase-Aware DVFS 策略
+
+| 阶段 | GPU 频率 | CPU 频率 | 理由 |
+|------|:---:|:---:|------|
+| Prefill | 612 MHz | 1497 MHz | 避免调度瓶颈，最小化 TTFT |
+| Decode | 612 MHz | 1036 MHz | 低 CPU 功耗，最优 E/token |
+
+### 关键规律
+
+1. **GPU 612MHz 是两个阶段的共同饱和点**：prefill TTFT 和 decode TPOT 均在此频率饱和
+2. **Decode 是功耗主体**：占推理总功耗 73%，GPU SoC 贡献 83% 的阶段间功耗差异
+3. **CPU 1497MHz 是通用甜点**：避免调度瓶颈，更高 CPU 频率仅增加功耗
+4. **功耗域分布**：GPU SoC ~32W (decode), CPU CV ~1W, SYS 5V0 ~9.4W
