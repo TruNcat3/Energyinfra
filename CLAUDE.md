@@ -194,40 +194,37 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 - ✅ Comparison visualizations (5 charts)
 - ✅ Key result: **30% energy reduction + 36% TTFT improvement** vs default
 
-### In Progress (Phase 5)
-- ✅ P0: Evaluation credibility fixes (Pareto, phase-specific energy, fixed_best/oracle/regret)
-- ✅ P1: Jetson baseline infrastructure (jetson_power_modes.py, baselines.yaml)
-- ✅ P2: Real model runner (llama_cpp_runner.py, real_model_workloads.yaml)
-- ✅ P3: Adaptive phase-aware policy connected to controller
-- ✅ P4: Rate table rebuilt, evaluation verified (0 anomalies, 0% negative regret)
-- ✅ Phase 5 comparison visualizations (6 charts)
-- ✅ Run real model multi-config experiment (180 runs, 4 GPU × 3 CPU × 5 workloads × 3 repeats)
-- ✅ Real model experiment analysis and visualizations (5 charts)
-- ⏳ Run real model baseline comparison experiment (9 baselines)
-- ⏳ Rebuild rate table with real data
-- ⏳ Hybrid intelligent scheduling (rule-based + ML)
-- ⏳ Long-term stability validation
+### Completed (Phase 5)
+- ✅ P0-P4: Evaluation, Jetson baseline, real model runner, phase-aware policy, rate table
+- ✅ Real model multi-config experiment (180 runs, initial)
+- ✅ GPU frequency control bug found and fixed (userspace→performance governor)
+- ✅ Expanded profiling experiment (672 runs, 14 workloads, corrected governor)
+- ✅ Rate table rebuilt from corrected GPU data (28 buckets, DVFS rules mined)
 
-### Key Experimental Results
+### In Progress (Phase 6)
+- ⏳ Phase-Aware DVFS online controller validation with corrected rate table
+- ⏳ End-to-end energy savings measurement
 
-| Strategy | Energy/Token | TTFT | TPOT | SLO Rate |
-|----------|-------------|------|------|----------|
-| Default (mid) | 0.164 J | 121 ms | 7.6 ms | 82% |
-| Max Performance | 0.110 J | 124 ms | 4.5 ms | 42% |
-| **Phase-Aware** | **0.115 J** | **77 ms** | **6.7 ms** | **80%** |
-| Oracle | 0.152 J | 124 ms | 6.9 ms | 76% |
+### Key Experimental Results (Corrected, 2026-05-15)
 
-### Real Model Experiment Results (2026-05-13)
+> **Important correction (2026-05-15)**: Early experiments used `userspace` GPU governor which
+> failed to lock frequency under load (GPU jumped to 1300MHz). All "GPU has no effect" conclusions
+> were artifacts of this bug. Corrected data below uses `performance` governor.
 
-| Metric | Finding |
-|--------|---------|
-| GPU freq scaling | 306→1300 MHz = **1.01x** throughput (no effect) |
-| CPU freq scaling | 1036→2201 MHz = **1.86x** throughput (dominant) |
-| Best config | GPU918_CPU2201 = **9.4 tok/s** |
-| Bottleneck | **CPU-bound** (memory-bound workload confirmed) |
-| Zero-token anomalies | 35/180 (19.4%), filtered in analysis |
-| TTFT CPU effect | 26.2% reduction at high CPU freq |
-| TTFT GPU effect | 0.8% reduction (negligible) |
+| Phase | Optimal GPU | Optimal CPU | E/token (J) | TPS |
+|-------|:---:|:---:|:---:|:---:|
+| Mixed (output≤64) | 612 MHz | 1036 MHz | ~0.95 | ~23 |
+| Mixed (output≥128) | 918 MHz | 1036 MHz | ~1.05 | ~31 |
+| Decode (output≤64) | 612 MHz | 1036 MHz | ~0.93 | ~23 |
+| Decode (output≥128) | 918 MHz | 1036 MHz | ~0.94 | ~31 |
+
+**GPU frequency scaling (decode, CPU=1036MHz):**
+- GPU 306→612: TPS 12→23 (1.9×), GPU SoC 8→13W
+- GPU 612→918: TPS 23→30 (1.3×), GPU SoC 13→19W
+- GPU 918→1300: TPS 30→41 (1.4×), GPU SoC 19→30W
+
+**Data files**: `data/energy_profiling/expanded_profiling_20260515_031015.csv`
+**Rate table**: `data/rate_tables/dvfs_rules_20260515_045753.json`
 
 ## Technical Decisions
 
@@ -256,7 +253,7 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 ### 1. Frequency Control
 **Challenge**: Setting GPU/CPU/EMC frequencies reliably
 **Status**: ✅ Implemented (hybrid sysfs + jetson_clocks)
-**Key finding**: GPU frequency 4.25x increase → only 8.3% performance gain (memory-bound)
+**Key finding**: GPU devfreq `userspace` governor fails under load (GPU jumps to max freq). Must use `performance` governor for reliable locking. Corrected data shows GPU 306→918 MHz yields 2.5× throughput improvement.
 
 ### 2. Metrics Collection
 **Challenge**: Parsing tegrastats output reliably
@@ -574,11 +571,10 @@ timestamp  level  module  message
 
 ## Next Immediate Steps
 
-1. **Run real model baseline comparison** - 5 workloads x 9 baselines x 5 repeats
-2. **Rebuild rate table with real data** - Compare synthetic vs real conclusions
-3. **Online controller deployment** - Real-time adaptive frequency control
-4. **Long-term stability testing** - Validate over extended runs
-5. **Production-grade optimization** - Thermal effects, batching, concurrency
+1. **Phase-Aware DVFS online controller validation** - Use corrected rate table for real-time control
+2. **End-to-end energy savings measurement** - Quantify adaptive DVFS gains with corrected GPU data
+3. **Long-term stability testing** - Validate over extended runs
+4. **Baseline comparison experiment** - 9 baselines × corrected data
 
 ## Important Notes
 
@@ -590,5 +586,5 @@ timestamp  level  module  message
 
 ---
 
-**Last Updated**: 2026-05-13
-**AI Assistant Notes**: Phase 1-4 complete. Phase 5 P0-P5 complete. Real model experiment (180 runs) confirmed: GPU frequency has NO effect on throughput (memory-bound), CPU frequency is the dominant bottleneck (1.86x scaling). Next: rebuild rate table with real data (P6), baseline comparison experiment.
+**Last Updated**: 2026-05-15
+**AI Assistant Notes**: Phase 1-5 complete. Phase 6 in progress. GPU governor bug fixed (userspace→performance). Corrected data shows GPU frequency DOES affect performance (306→918 MHz: 2.5× TPS). Rate table rebuilt with 28 buckets and DVFS rules. Next: Phase-Aware DVFS validation with corrected rate table.

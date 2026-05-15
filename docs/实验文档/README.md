@@ -49,8 +49,9 @@
 
 | 文档 | 阶段 | 数据 | 核心结论 |
 |------|------|------|---------|
-| [实验1-混合阶段能耗分析](实验1-混合阶段能耗分析.md) | Mixed Phase | 170 runs | GPU 612MHz 是全局能效最优点 (0.84 tok/J)；功耗主体在 CPU 和系统域 |
-| [实验2-分阶段能耗分析](实验2-分阶段能耗分析.md) | Prefill + Decode | 345 runs | Decode 功耗是 prefill 的 2.8×；GPU 612MHz 是两阶段共同最优频率 |
+| [实验1-混合阶段能耗分析](实验1-混合阶段能耗分析.md) | Mixed Phase | 170 runs | ⚠️ GPU governor bug — 结论已过时，见下方修正 |
+| [实验2-分阶段能耗分析](实验2-分阶段能耗分析.md) | Prefill + Decode | 345 runs | ⚠️ GPU governor bug — 结论已过时，见下方修正 |
+| [实验3-扩展负载汇率表](实验3-扩展负载汇率表.md) | Mixed + Decode | 672 runs | GPU 918MHz 最优 (10/14 workloads)；28 DVFS rules |
 
 ### 历史归档
 
@@ -67,28 +68,34 @@
 
 ---
 
-## 核心实验结论 (GPU 推理, 2026-05-14)
+## 核心实验结论 (修正后, 2026-05-15)
 
-### 全局最优配置
+> **重要修正 (2026-05-15)**：实验 1 和实验 2 使用的 `userspace` GPU governor 无法在推理负载下锁定频率，
+> GPU 会自发跳频至 1300MHz，导致 "GPU 频率无影响" 的错误结论。修正后使用 `performance` governor，
+> 数据来自扩展实验 (672 runs, 14 workloads)。
 
-| 场景 | 最优配置 | 吞吐 (tok/s) | 功耗 (W) | E/token (J) | tok/J |
-|------|---------|:---:|:---:|:---:|:---:|
-| 混合推理 (Mixed) | GPU612 + CPU1036 | 38.6 | 42.2 | **1.187** | **0.84** |
-| Prefill 阶段 | GPU612 + CPU1497 | — | 14.1 | 5.87* | — |
-| Decode 阶段 | GPU612 + CPU1036 | 40.4 | 41.3 | **1.113** | **0.88** |
+### GPU 频率确实影响性能
 
-\* Prefill E/token 因仅输出 1 token 而偏高，应以 TTFT 为主要指标
+| GPU 频率 | Decode TPS (CPU=1036) | GPU SoC 功耗 |
+|:---:|:---:|:---:|
+| 306 MHz | ~12 tok/s | ~8 W |
+| 612 MHz | ~23 tok/s | ~13 W |
+| 918 MHz | ~30 tok/s | ~19 W |
+| 1300 MHz | ~41 tok/s | ~30 W |
 
-### Phase-Aware DVFS 策略
+### DVFS 最优配置 (修正后)
 
-| 阶段 | GPU 频率 | CPU 频率 | 理由 |
-|------|:---:|:---:|------|
-| Prefill | 612 MHz | 1497 MHz | 避免调度瓶颈，最小化 TTFT |
-| Decode | 612 MHz | 1036 MHz | 低 CPU 功耗，最优 E/token |
+| 阶段 | 负载特征 | 最优 GPU | 最优 CPU | 理由 |
+|------|---------|:---:|:---:|------|
+| Mixed | output ≤ 64 tokens | 612 MHz | 1036 MHz | 低功耗即可满足短输出 |
+| Mixed | output ≥ 128 tokens | 918 MHz | 1036 MHz | 高吞吐摊薄功耗 |
+| Decode | output ≤ 64 tokens | 612 MHz | 1036 MHz | 能效最优 |
+| Decode | output ≥ 128 tokens | 918 MHz | 1036 MHz | 吞吐优先 |
 
-### 关键规律
+### 关键规律 (修正后)
 
-1. **GPU 612MHz 是两个阶段的共同饱和点**：prefill TTFT 和 decode TPOT 均在此频率饱和
-2. **Decode 是功耗主体**：占推理总功耗 73%，GPU SoC 贡献 83% 的阶段间功耗差异
-3. **CPU 1497MHz 是通用甜点**：避免调度瓶颈，更高 CPU 频率仅增加功耗
-4. **功耗域分布**：GPU SoC ~32W (decode), CPU CV ~1W, SYS 5V0 ~9.4W
+1. **GPU 频率显著影响性能**：306→918 MHz 吞吐提升 2.5×，之前的"无影响"结论是 governor bug 所致
+2. **GPU 612MHz 适合短输出**：低功耗下吞吐量已足够，能效最优
+3. **GPU 918MHz 适合长输出**：在 14 个负载中 10 个的最优配置为 GPU 918MHz
+4. **Decode 仍是功耗主体**：占推理总功耗 ~73%
+5. **数据来源**：`data/energy_profiling/expanded_profiling_20260515_031015.csv`

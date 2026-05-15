@@ -1,7 +1,7 @@
 # Jetson LLM Energy Profiling - Project Overview
 
-**项目状态**: Phase 5 (高级优化) 进行中 — 真实模型多配置实验已完成 (180 runs)
-**总体进度**: 约 90%
+**项目状态**: Phase 5 完成, Phase 6 (修正后验证) 进行中
+**总体进度**: 约 92%
 
 ## 项目概览
 
@@ -53,10 +53,11 @@
 ### 实验数据与图表
 | 路径 | 说明 |
 |------|------|
-| `data/real_model_experiment/` | 真实模型多配置实验数据 (180 runs) |
-| `data/rate_tables/` | 能耗汇率表 (Parquet, 23 configs) |
-| `data/selector_eval/` | 选择器评估结果 |
-| `figures/real_model_experiment/` | 真实模型实验图表 (5张) |
+| `data/energy_profiling/expanded_profiling_20260515_031015.csv` | 修正后扩展实验数据 (672 runs) |
+| `data/rate_tables/` | 能耗汇率表 (28 buckets) + DVFS 规则 |
+| `data/real_model_experiment/` | 初始真实模型实验数据 (180 runs, governor bug) |
+| `figures/rate_table/` | 汇率表可视化 (6张) |
+| `figures/real_model_experiment/` | 真实模型实验图表 (5张, governor bug) |
 | `figures/phase5_comparison/` | Phase 5 综合对比图表 (6张) |
 | `figures/power_mode_comparison/` | Jetson 档位对比图表 (6张) |
 
@@ -105,26 +106,30 @@ Energyinfra/
 
 ## 核心实验结果
 
+> **重要修正 (2026-05-15)**: 早期实验使用的 `userspace` GPU governor 存在 bug，无法在推理负载下
+> 锁定频率。修正后数据使用 `performance` governor，证实 GPU 频率对性能有显著影响。
+
 > **档位术语说明**: 见 [docs/实验文档/README.md](docs/实验文档/README.md) — MAXN / 50W / 30W (出厂默认) / 15W / GPU-Min/CPU-Max (我们的策略)
 
-### Jetson 档位对比 (真实模型, Phi-3-mini Q4)
+### GPU 频率效应 (修正后, 2026-05-15)
 
-| 档位 | GPU 频率 | CPU 频率 | TTFT (ms) | TPOT (ms) | Throughput (tok/s) |
-|------|:---:|:---:|:---:|:---:|:---:|
-| **MAXN** | 1300 MHz | 2201 MHz | 498.7 | 107.0 | 9.2 |
-| **30W** (出厂默认) | 612 MHz | 1497 MHz | 141.6 | 142.5 | 7.0 |
-| **15W** | 306 MHz | 1036 MHz | 878.1 | 196.7 | 5.0 |
-| **GPU-Min/CPU-Max** (我们) | 306 MHz | 2201 MHz | 773.8 | 107.6 | **9.0** |
+| GPU 频率 | Decode TPS (CPU=1036) | GPU SoC 功耗 | E/token (J) |
+|:---:|:---:|:---:|:---:|
+| 306 MHz | ~12 tok/s | ~8 W | ~0.95 |
+| 612 MHz | ~23 tok/s | ~13 W | ~0.95 |
+| 918 MHz | ~30 tok/s | ~19 W | ~1.05 |
+| 1300 MHz | ~41 tok/s | ~30 W | ~1.20 |
 
-**关键发现**:
-- **GPU 频率无影响**: 306→1300 MHz 仅 1.01x 吞吐量 (memory-bound 确认)
-- **CPU 频率是瓶颈**: 1036→2201 MHz 达 1.86x 吞吐量
-- **GPU-Min/CPU-Max 以 GPU 最低频率达到接近 MAXN 的吞吐量** (9.0 vs 9.2 tok/s)
-- 最优配置: GPU 918 MHz + CPU 2201 MHz = 9.4 tok/s
+**关键发现** (修正后):
+- **GPU 频率对性能有显著影响**: 306→918 MHz 吞吐提升 2.5×
+- **GPU 918MHz 在 10/14 负载中是最优配置**
+- **短输出 (≤64 tokens) 最优为 GPU 612MHz**，长输出最优为 GPU 918MHz
+- GPU SoC 功耗随频率线性增长（8→30W），需平衡性能与能效
 
 ### Phase-Aware DVFS 验证 (合成基准, 2026-05-12)
 
-> **注意**: 此实验使用合成基准，结果中的 GPU 频率效应被高估。真实模型实验已确认 GPU 频率对 LLM 推理无显著影响。
+> **注意**: 此实验使用合成基准。修正后的真实模型实验已确认 GPU 频率对 LLM 推理有显著影响。
+> 合成基准中 Phase-Aware 策略 30% 能量节省 + 36% TTFT 改善的结论需用修正后数据重新验证。
 
 | 策略 | 能量/Token (J) | TTFT (ms) | TPOT (ms) | SLO 满足率 |
 |------|---------------|-----------|-----------|-----------|
@@ -207,6 +212,7 @@ python3 src/controller/select_config.py --example
 | Phase 2 | 核心模块实现 | 100% |
 | Phase 3 | 前置实验验证 (7个) | 100% |
 | Phase 4 | Phase-Aware DVFS | 100% |
-| Phase 5 | 高级优化 | 70% |
+| Phase 5 | 高级优化 | 100% |
+| Phase 6 | 修正后验证 | 进行中 |
 
-**最后更新**: 2026-05-13
+**最后更新**: 2026-05-15
