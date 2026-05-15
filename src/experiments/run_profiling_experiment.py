@@ -56,12 +56,19 @@ TEGRASTATS_INTERVAL_MS = 500
 
 def set_gpu_freq(mhz: int) -> int:
     target_hz = GPU_SYSFS[mhz]
+    # Use performance governor for reliable frequency locking
+    # (userspace governor allows GPU to jump to max freq under load)
+    with open(f'{GPU_SYSFS_PATH}/governor', 'w') as f:
+        f.write('performance')
     with open(f'{GPU_SYSFS_PATH}/max_freq', 'w') as f:
         f.write(str(target_hz))
     with open(f'{GPU_SYSFS_PATH}/min_freq', 'w') as f:
         f.write(str(target_hz))
-    time.sleep(0.1)
-    return int(open(f'{GPU_SYSFS_PATH}/cur_freq').read().strip()) // 1000000
+    time.sleep(0.3)
+    actual = int(open(f'{GPU_SYSFS_PATH}/cur_freq').read().strip()) // 1000000
+    if actual != mhz:
+        logger.warning(f"GPU freq mismatch: target={mhz}MHz, actual={actual}MHz")
+    return actual
 
 
 def set_cpu_freq(mhz: int) -> int:
