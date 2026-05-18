@@ -45,7 +45,8 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 │   │   ├── sweep_runner.py          # Sweep orchestration
 │   │   └── llama_cpp_runner.py      # llama.cpp inference runner
 │   ├── ratetable/             # Rate Table
-│   │   ├── build_rate_table.py      # Energy rate table builder
+│   │   ├── build_rate_table.py      # Energy rate table builder (synthetic)
+│   │   ├── build_rate_table_finegrained.py  # Fine-grained GPU×EMC rate table builder
 │   │   └── evaluate_selector.py     # Selector evaluation tool
 │   ├── visualization/         # Visualization (10 files)
 │   ├── experiments/           # Experiment Scripts (9 files)
@@ -99,10 +100,13 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 ### Key Data & Figures
 | Path | Content |
 |------|---------|
-| `data/real_model_experiment/` | 180-run real model experiment CSV + report |
-| `data/rate_tables/selector_table.parquet` | Energy rate table (23 configs) |
-| `figures/real_model_experiment/` | 5 real model experiment charts |
-| `figures/phase5_comparison/` | 6 Phase 5 comparison charts |
+| `data/energy_profiling/finegrained_combined_20260516.csv` | 1320-run fine-grained GPU×EMC profiling |
+| `data/energy_profiling/e2e_benchmark_finegrained_20260517.csv` | 225-run E2E benchmark with alpha sweep |
+| `data/rate_tables/finegrained_selector_table_20260516_071238.parquet` | Rate table (31 configs, 10 buckets) |
+| `data/rate_tables/finegrained_dvfs_rules_20260516_071238.json` | 30 DVFS rules |
+| `figures/e2e_benchmark_finegrained/` | 5 E2E benchmark charts |
+| `figures/finegrained_profiling/` | 5 fine-grained profiling charts |
+| `data/_archived_invalid/` | Archived incorrect data (4 categories) |
 
 ---
 
@@ -201,30 +205,33 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 - ✅ Expanded profiling experiment (672 runs, 14 workloads, corrected governor)
 - ✅ Rate table rebuilt from corrected GPU data (28 buckets, DVFS rules mined)
 
-### In Progress (Phase 6)
-- ⏳ Phase-Aware DVFS online controller validation with corrected rate table
-- ⏳ End-to-end energy savings measurement
+### Completed (Phase 6) - Fine-Grained GPU×EMC DVFS
+- ✅ EMC frequency control via DebugFS (204/665/2133/3199 MHz)
+- ✅ Fine-grained profiling: 11 GPU × 4 EMC × 5 workloads × 2 phases × 3 repeats = **1320 runs**
+- ✅ Rate table rebuilt: 10 buckets, 31 GPU×EMC configs, 101 Pareto-optimal, 30 DVFS rules
+- ✅ WeightedSelector upgraded to 3D (GPU×EMC×CPU) with alpha knob
+- ✅ E2E benchmark: 225 runs (6 alpha × 2 strategies + 3 baselines), 5 visualizations
 
-### Key Experimental Results (Corrected, 2026-05-15)
+### Key Experimental Results (Fine-Grained, 2026-05-16)
 
-> **Important correction (2026-05-15)**: Early experiments used `userspace` GPU governor which
-> failed to lock frequency under load (GPU jumped to 1300MHz). All "GPU has no effect" conclusions
-> were artifacts of this bug. Corrected data below uses `performance` governor.
+> **Fine-grained profiling** expands from 4 GPU configs to 11 GPU × 4 EMC = 44 configs.
+> EMC controlled via `/sys/kernel/debug/emc/min_rate` and `max_rate` (requires root).
 
-| Phase | Optimal GPU | Optimal CPU | E/token (J) | TPS |
-|-------|:---:|:---:|:---:|:---:|
-| Mixed (output≤64) | 612 MHz | 1036 MHz | ~0.95 | ~23 |
-| Mixed (output≥128) | 918 MHz | 1036 MHz | ~1.05 | ~31 |
-| Decode (output≤64) | 612 MHz | 1036 MHz | ~0.93 | ~23 |
-| Decode (output≥128) | 918 MHz | 1036 MHz | ~0.94 | ~31 |
+| GPU (MHz) | E/tok (J) | TPOT (ms) | TPS | Power (W) |
+|:---:|:---:|:---:|:---:|:---:|
+| 306 | 1.33 | 81.8 | 12.2 | 16.2 |
+| 612 | 1.00 | 43.4 | 23.1 | 22.6 |
+| 816 | 0.94 | 33.3 | 30.1 | 28.9 |
+| 1300 | 1.15 | 24.8 | 40.3 | 42.1 |
 
-**GPU frequency scaling (decode, CPU=1036MHz):**
-- GPU 306→612: TPS 12→23 (1.9×), GPU SoC 8→13W
-- GPU 612→918: TPS 23→30 (1.3×), GPU SoC 13→19W
-- GPU 918→1300: TPS 30→41 (1.4×), GPU SoC 19→30W
+**Key findings**:
+- GPU612 and GPU816 are energy efficiency sweet spots (W-shaped curve)
+- EMC 204 MHz is most energy-efficient (memory bandwidth not bottleneck for 3.8B model)
+- Best config: **GPU816 + EMC204** (E/tok ≈ 0.97J, TPOT ≈ 33ms)
 
-**Data files**: `data/energy_profiling/expanded_profiling_20260515_031015.csv`
-**Rate table**: `data/rate_tables/dvfs_rules_20260515_045753.json`
+**Data files**: `data/energy_profiling/finegrained_combined_20260516.csv`
+**Rate table**: `data/rate_tables/finegrained_selector_table_20260516_071238.parquet`
+**E2E benchmark**: `data/energy_profiling/e2e_benchmark_finegrained_20260517.csv`
 
 ## Technical Decisions
 
@@ -571,10 +578,10 @@ timestamp  level  module  message
 
 ## Next Immediate Steps
 
-1. **Phase-Aware DVFS online controller validation** - Use corrected rate table for real-time control
-2. **End-to-end energy savings measurement** - Quantify adaptive DVFS gains with corrected GPU data
-3. **Long-term stability testing** - Validate over extended runs
-4. **Baseline comparison experiment** - 9 baselines × corrected data
+1. **Larger model validation** - Test with Llama-3-8B or larger models for more DVFS headroom
+2. **Online controller deployment** - Phase-aware DVFS real-time controller with fine-grained rate table
+3. **Long-term stability testing** - Validate over extended runs with thermal monitoring
+4. **Multi-model rate table** - Extend to different quantization levels and architectures
 
 ## Important Notes
 
@@ -586,5 +593,5 @@ timestamp  level  module  message
 
 ---
 
-**Last Updated**: 2026-05-15
-**AI Assistant Notes**: Phase 1-5 complete. Phase 6 in progress. GPU governor bug fixed (userspace→performance). Corrected data shows GPU frequency DOES affect performance (306→918 MHz: 2.5× TPS). Rate table rebuilt with 28 buckets and DVFS rules. Next: Phase-Aware DVFS validation with corrected rate table.
+**Last Updated**: 2026-05-17
+**AI Assistant Notes**: Phase 1-6 complete. Fine-grained GPU×EMC profiling done (1320 runs, 44 configs). Rate table rebuilt with 31 GPU×EMC configs, 10 buckets, 30 DVFS rules. WeightedSelector supports 3D config space with alpha knob. E2E benchmark (225 runs) validates alpha-weighted DVFS. Next: larger model validation, online controller deployment.

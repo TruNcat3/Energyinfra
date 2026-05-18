@@ -2,11 +2,14 @@
 """
 Weighted Multi-Objective Config Selector
 
-Selects GPU/CPU frequency configs from the energy rate table using a
+Selects GPU/CPU/EMC frequency configs from the energy rate table using a
 single knob `alpha` that trades off energy efficiency vs. latency:
 
   alpha = 0.0  → pure energy optimization (lowest frequency)
   alpha = 1.0  → pure latency optimization (highest frequency)
+
+Supports both legacy rate tables (GPU×CPU only) and fine-grained rate tables
+(GPU×EMC×CPU). Auto-detects column suffixes (_mean or _median).
 
 For phase-aware DVFS, prefill and decode configs are selected independently
 using phase-appropriate metrics (TTFT for prefill, TPOT+E/token for decode).
@@ -25,7 +28,25 @@ class WeightedSelector:
     """Select configs from rate table with adjustable energy/latency trade-off."""
 
     def __init__(self, rate_table_path: str):
+        self.rate_table_path = rate_table_path
         self.rate_table = pd.read_parquet(rate_table_path)
+        self._suffix = self._detect_suffix()
+        self._has_emc = 'emc_freq_mhz' in self.rate_table.columns
+        logger.info(f"WeightedSelector: loaded {len(self.rate_table)} rows "
+                     f"(suffix={self._suffix}, has_emc={self._has_emc})")
+
+    def _detect_suffix(self) -> str:
+        """Auto-detect whether rate table uses _mean or _median suffixes."""
+        for col in self.rate_table.columns:
+            if col == 'energy_per_token_j_mean':
+                return '_mean'
+            if col == 'energy_per_token_j_median':
+                return '_median'
+        return '_median'
+
+    def _col(self, base: str) -> str:
+        """Get the suffixed column name."""
+        return f'{base}{self._suffix}'
 
     def _normalize(self, series: pd.Series) -> pd.Series:
         """Min-max normalize a series to [0, 1]."""
@@ -39,6 +60,36 @@ class WeightedSelector:
         """Compute weighted score for each config. Lower is better."""
         return alpha * self._normalize(bucket_df[latency_col]) + \
                (1 - alpha) * self._normalize(bucket_df[energy_col])
+
+    def _config_dict(self, row: pd.Series, alpha: float, phase: str,
+                     score: float) -> Dict:
+        """Build a config result dict from a rate table row."""
+        result = {
+            'gpu_freq_mhz': int(row['gpu_freq_mhz']),
+            'cpu_freq_mhz': int(row['cpu_freq_mhz']),
+            'alpha': alpha,
+            'phase': phase,
+            'score': float(score),
+            'pred_ttft_ms': float(row[self._col('ttft_ms')]),
+            'pred_tpot_ms': float(row[self._col('tpot_ms')]),
+            'pred_tps': float(row[self._col('tokens_per_second')]),
+            'pred_energy_per_token_j': float(row[self._col('energy_per_token_j')]),
+            'pred_avg_power_w': float(row[self._col('avg_power_w')]),
+        }
+        if self._has_emc:
+            result['emc_freq_mhz'] = int(row['emc_freq_mhz'])
+        if 'config_name' in row.index:
+            result['config_name'] = row['config_name']
+        elif self._has_emc:
+            result['config_name'] = (
+                f"GPU{int(row['gpu_freq_mhz'])}_EMC{int(row['emc_freq_mhz'])}"
+                f"_CPU{int(row['cpu_freq_mhz'])}"
+            )
+        else:
+            result['config_name'] = (
+                f"GPU{int(row['gpu_freq_mhz'])}_CPU{int(row['cpu_freq_mhz'])}"
+            )
+        return result
 
     def select_config(self, prompt_length: int, output_length: int,
                       phase: str, alpha: float) -> Optional[Dict]:
@@ -58,24 +109,13 @@ class WeightedSelector:
         if bucket_df.empty:
             return None
 
-        scores = self._score(bucket_df, alpha,
-                             'energy_per_token_j_mean', 'tpot_ms_mean')
+        e_col = self._col('energy_per_token_j')
+        l_col = self._col('tpot_ms')
+        scores = self._score(bucket_df, alpha, e_col, l_col)
         best_idx = scores.idxmin()
         best = bucket_df.loc[best_idx]
 
-        return {
-            'config_name': best['config_name'],
-            'gpu_freq_mhz': int(best['gpu_freq_mhz']),
-            'cpu_freq_mhz': int(best['cpu_freq_mhz']),
-            'alpha': alpha,
-            'phase': phase,
-            'score': float(scores[best_idx]),
-            'pred_ttft_ms': float(best['ttft_ms_mean']),
-            'pred_tpot_ms': float(best['tpot_ms_mean']),
-            'pred_tps': float(best['tokens_per_second_mean']),
-            'pred_energy_per_token_j': float(best['energy_per_token_j_mean']),
-            'pred_avg_power_w': float(best['avg_power_w_mean']),
-        }
+        return self._config_dict(best, alpha, phase, float(scores[best_idx]))
 
     def select_phase_aware_configs(self, prompt_length: int, output_length: int,
                                    alpha: float) -> Optional[Dict]:
@@ -92,37 +132,55 @@ class WeightedSelector:
         if prefill_df.empty or decode_df.empty:
             return None
 
-        prefill_scores = self._score(prefill_df, alpha,
-                                     'avg_power_w_mean', 'ttft_ms_mean')
+        power_col = self._col('avg_power_w')
+        ttft_col = self._col('ttft_ms')
+        tpot_col = self._col('tpot_ms')
+        e_col = self._col('energy_per_token_j')
+
+        prefill_scores = self._score(prefill_df, alpha, power_col, ttft_col)
         prefill_best = prefill_df.loc[prefill_scores.idxmin()]
 
-        decode_scores = self._score(decode_df, alpha,
-                                    'energy_per_token_j_mean', 'tpot_ms_mean')
+        decode_scores = self._score(decode_df, alpha, e_col, tpot_col)
         decode_best = decode_df.loc[decode_scores.idxmin()]
+
+        prefill_cfg = {
+            'gpu_freq_mhz': int(prefill_best['gpu_freq_mhz']),
+            'cpu_freq_mhz': int(prefill_best['cpu_freq_mhz']),
+        }
+        decode_cfg = {
+            'gpu_freq_mhz': int(decode_best['gpu_freq_mhz']),
+            'cpu_freq_mhz': int(decode_best['cpu_freq_mhz']),
+        }
+        if self._has_emc:
+            prefill_cfg['emc_freq_mhz'] = int(prefill_best['emc_freq_mhz'])
+            decode_cfg['emc_freq_mhz'] = int(decode_best['emc_freq_mhz'])
+
+        prefill_name = (
+            f"GPU{prefill_cfg['gpu_freq_mhz']}"
+            + (f"_EMC{prefill_cfg['emc_freq_mhz']}" if 'emc_freq_mhz' in prefill_cfg else "")
+            + f"_CPU{prefill_cfg['cpu_freq_mhz']}"
+        )
+        decode_name = (
+            f"GPU{decode_cfg['gpu_freq_mhz']}"
+            + (f"_EMC{decode_cfg['emc_freq_mhz']}" if 'emc_freq_mhz' in decode_cfg else "")
+            + f"_CPU{decode_cfg['cpu_freq_mhz']}"
+        )
 
         return {
             'alpha': alpha,
-            'prefill_config': {
-                'config_name': prefill_best['config_name'],
-                'gpu_freq_mhz': int(prefill_best['gpu_freq_mhz']),
-                'cpu_freq_mhz': int(prefill_best['cpu_freq_mhz']),
-            },
-            'decode_config': {
-                'config_name': decode_best['config_name'],
-                'gpu_freq_mhz': int(decode_best['gpu_freq_mhz']),
-                'cpu_freq_mhz': int(decode_best['cpu_freq_mhz']),
-            },
-            'pred_ttft_ms': float(prefill_best['ttft_ms_mean']),
-            'pred_tpot_ms': float(decode_best['tpot_ms_mean']),
-            'pred_energy_per_token_j': float(decode_best['energy_per_token_j_mean']),
-            'pred_avg_power_w': float(decode_best['avg_power_w_mean']),
-            'phase_switch': prefill_best['config_name'] != decode_best['config_name'],
+            'prefill_config': prefill_cfg,
+            'decode_config': decode_cfg,
+            'pred_ttft_ms': float(prefill_best[ttft_col]),
+            'pred_tpot_ms': float(decode_best[tpot_col]),
+            'pred_energy_per_token_j': float(decode_best[e_col]),
+            'pred_avg_power_w': float(prefill_best[power_col]),
+            'phase_switch': prefill_name != decode_name,
         }
 
     def sweep_alpha(self, prompt_length: int, output_length: int,
                     phase: str = 'mixed',
                     alphas: Optional[List[float]] = None) -> List[Dict]:
-        """Sweep alpha values for offline Pareto analysis (no real inference)."""
+        """Sweep alpha values for offline Pareto analysis."""
         if alphas is None:
             alphas = [round(a * 0.1, 1) for a in range(11)]
         results = []

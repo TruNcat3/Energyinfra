@@ -45,8 +45,15 @@ class FrequencyController:
         # Frequency paths for sysfs method (corrected for actual Jetson paths)
         self.freq_paths = {
             'gpu': '/sys/class/devfreq/17000000.gpu',
-            'cpu': '/sys/devices/system/cpu/cpu0/cpufreq',  # Use cpu0 direct path
-            'emc': '/sys/class/devfreq/17000000.emc'  # May not exist, will fallback to jetson_clocks
+            'cpu': '/sys/devices/system/cpu/cpu0/cpufreq',
+            'emc': '/sys/class/devfreq/17000000.emc',
+        }
+        # EMC debugfs paths (primary interface on Jetson Orin)
+        self.emc_debugfs = {
+            'rate': '/sys/kernel/debug/clk/emc/clk_rate',
+            'min_rate': '/sys/kernel/debug/emc/min_rate',
+            'max_rate': '/sys/kernel/debug/emc/max_rate',
+            'available_rates': '/sys/kernel/debug/emc/available_rates',
         }
 
         # Default frequency storage
@@ -126,7 +133,7 @@ class FrequencyController:
 
     def _get_frequency_sysfs(self, target: str) -> int:
         """
-        Get frequency using sysfs interface.
+        Get frequency using sysfs/debugfs interface.
 
         Args:
             target: Target device ('gpu', 'cpu', 'emc')
@@ -135,7 +142,9 @@ class FrequencyController:
             Current frequency in MHz
         """
         try:
-            if target == 'cpu':
+            if target == 'emc':
+                return self._get_emc_freq_debugfs()
+            elif target == 'cpu':
                 freq_file = f"{self.freq_paths[target]}/scaling_cur_freq"
             else:
                 freq_file = f"{self.freq_paths[target]}/cur_freq"
@@ -151,6 +160,11 @@ class FrequencyController:
         except Exception as e:
             logger.error(f"Failed to read frequency from sysfs: {e}")
             return -1
+
+    def _get_emc_freq_debugfs(self) -> int:
+        """Get EMC frequency via debugfs."""
+        with open(self.emc_debugfs['rate']) as f:
+            return int(f.read().strip()) // 1000000  # Hz to MHz
 
     def _parse_jetson_clocks_output(self, output: str, target: str) -> int:
         """
@@ -272,7 +286,7 @@ class FrequencyController:
 
     def _set_frequency_sysfs(self, target: str, frequency: int) -> bool:
         """
-        Set frequency using sysfs interface.
+        Set frequency using sysfs/debugfs interface.
 
         Args:
             target: Target device ('gpu', 'cpu', 'emc')
@@ -286,6 +300,9 @@ class FrequencyController:
             if self.default_frequencies[target] is None:
                 self.default_frequencies[target] = self.get_frequency(target)
                 logger.info(f"Saved default {target} frequency: {self.default_frequencies[target]} MHz")
+
+            if target == 'emc':
+                return self._set_emc_freq_debugfs(frequency)
 
             # Convert MHz to Hz for sysfs
             freq_hz = frequency * 1000
@@ -323,6 +340,34 @@ class FrequencyController:
             return False
         except Exception as e:
             logger.error(f"Failed to set {target} frequency via sysfs: {e}")
+            return False
+
+    def _set_emc_freq_debugfs(self, frequency_mhz: int) -> bool:
+        """Set EMC frequency via debugfs min_rate/max_rate. Requires root."""
+        try:
+            freq_hz = frequency_mhz * 1000000
+            # Widen range first to avoid max < min constraint
+            with open(self.emc_debugfs['max_rate'], 'w') as f:
+                f.write('3199000000')
+            with open(self.emc_debugfs['min_rate'], 'w') as f:
+                f.write('204000000')
+            # Now set to target
+            with open(self.emc_debugfs['min_rate'], 'w') as f:
+                f.write(str(freq_hz))
+            with open(self.emc_debugfs['max_rate'], 'w') as f:
+                f.write(str(freq_hz))
+            time.sleep(0.3)
+            actual = self._get_emc_freq_debugfs()
+            if abs(actual - frequency_mhz) > 5:
+                logger.warning(f"EMC set to {frequency_mhz} MHz but actual is {actual} MHz")
+                return False
+            logger.info(f"EMC frequency set to {actual} MHz")
+            return True
+        except PermissionError:
+            logger.error("EMC debugfs requires root. Run with sudo.")
+            return False
+        except Exception as e:
+            logger.error(f"Failed to set EMC frequency: {e}")
             return False
 
     def set_frequency_preset(self, target: str, preset: str) -> bool:
