@@ -146,6 +146,118 @@ class LlamaCppRunner:
 
         return result
 
+    def run_phase_split_inference(self, prompt_length: int = 512,
+                                   output_length: int = 128,
+                                   phase_switch_callback=None) -> Dict:
+        """
+        Run inference with phase boundary detection and optional frequency switch.
+
+        After the first token (end of prefill), calls phase_switch_callback()
+        which can switch GPU/EMC/CPU frequencies. Returns separate metrics
+        for prefill and decode phases.
+
+        Args:
+            prompt_length: Target prompt token count
+            output_length: Target output token count
+            phase_switch_callback: Callable invoked at prefill→decode boundary.
+                Receives dict with 'prefill_time_ms', 'prompt_tokens'.
+
+        Returns:
+            Dict with prefill_* and decode_* metrics plus combined totals.
+        """
+        if self.model is None:
+            raise RuntimeError("Model not loaded")
+
+        prompt = self._generate_prompt(prompt_length)
+
+        start_time = time.monotonic()
+        first_token_time = None
+        token_times: List[float] = []
+        output_tokens = 0
+        switch_done = False
+        switch_overhead_ms = 0.0
+
+        try:
+            for chunk in self.model.create_completion(
+                prompt,
+                max_tokens=output_length,
+                temperature=0.7,
+                stream=True,
+                echo=False
+            ):
+                now = time.monotonic()
+                delta = chunk['choices'][0].get('text', '')
+                if delta:
+                    if first_token_time is None:
+                        first_token_time = now
+                        # Phase boundary: prefill complete
+                        if phase_switch_callback and not switch_done:
+                            preflight_info = {
+                                'prefill_time_ms': (now - start_time) * 1000,
+                                'prompt_tokens': len(prompt) // 4,
+                            }
+                            switch_start = time.monotonic()
+                            phase_switch_callback(preflight_info)
+                            switch_overhead_ms = (time.monotonic() - switch_start) * 1000
+                            switch_done = True
+                    token_times.append(now)
+                    output_tokens += 1
+        except Exception as e:
+            logger.error(f"Phase-split inference failed: {e}")
+            return {
+                'ttft_ms': 0, 'tpot_ms': 0, 'total_time_ms': 0,
+                'tokens_per_second': 0, 'output_tokens': 0,
+                'prefill_time_ms': 0, 'decode_time_ms': 0,
+                'switch_overhead_ms': 0, 'error': str(e)
+            }
+
+        end_time = time.monotonic()
+
+        # Calculate combined metrics
+        total_time_ms = (end_time - start_time) * 1000
+        ttft_ms = (first_token_time - start_time) * 1000 if first_token_time else total_time_ms
+
+        if len(token_times) >= 2:
+            inter_token_times = [
+                (token_times[i+1] - token_times[i]) * 1000
+                for i in range(len(token_times) - 1)
+            ]
+            tpot_ms = np.mean(inter_token_times)
+        else:
+            tpot_ms = total_time_ms / max(output_tokens, 1)
+
+        tokens_per_second = output_tokens / (total_time_ms / 1000) if total_time_ms > 0 else 0
+
+        # Decode phase metrics (tokens after first)
+        decode_start = first_token_time if first_token_time else start_time
+        decode_time_ms = (end_time - decode_start) * 1000
+        decode_tpot_ms = tpot_ms  # Same as combined since only decode tokens
+
+        result = {
+            'ttft_ms': float(ttft_ms),
+            'tpot_ms': float(tpot_ms),
+            'total_time_ms': float(total_time_ms),
+            'tokens_per_second': float(tokens_per_second),
+            'output_tokens': output_tokens,
+            'prompt_tokens': len(prompt) // 4,
+            # Phase-split metrics
+            'prefill_time_ms': float(ttft_ms),
+            'decode_time_ms': float(decode_time_ms),
+            'decode_tokens': output_tokens - 1 if output_tokens > 1 else 0,
+            'switch_overhead_ms': float(switch_overhead_ms),
+            # Energy fields filled by caller
+            'total_energy_j': 0.0,
+            'prefill_energy_j': 0.0,
+            'decode_energy_j': 0.0,
+            'avg_power_w': 0.0,
+            'max_power_w': 0.0,
+            'temperature_c': 0.0
+        }
+
+        logger.info(f"Phase-split: TTFT={ttft_ms:.1f}ms, TPOT={tpot_ms:.1f}ms, "
+                    f"switch={switch_overhead_ms:.1f}ms, tokens={output_tokens}")
+        return result
+
     def run_with_metrics(self, prompt_length: int, output_length: int,
                          metrics_collector=None) -> Dict:
         """Run inference with optional tegrastats energy measurement."""
