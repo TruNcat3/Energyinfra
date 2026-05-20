@@ -61,32 +61,54 @@ class LlamaCppRunner:
         return prompt
 
     def run_single_inference(self, prompt_length: int = 512,
-                             output_length: int = 128) -> Dict:
+                             output_length: int = 128,
+                             benchmark_mode: bool = False) -> Dict:
         """
         Run a single inference and capture detailed timing.
 
-        Returns dict compatible with SyntheticBenchmark.run_benchmark() format:
+        Args:
+            prompt_length: Target prompt token count
+            output_length: Target output token count
+            benchmark_mode: If True, use deterministic generation (temp=0,
+                repeat_penalty=1.0) and suppress EOS via logit_bias to ensure
+                the model generates exactly output_length tokens.
+
+        Returns dict with:
             ttft_ms, tpot_ms, total_time_ms, tokens_per_second, output_tokens,
-            total_energy_j, avg_power_w, max_power_w, temperature_c
+            total_energy_j, avg_power_w, max_power_w, temperature_c,
+            benchmark_mode, is_complete_output, completion_ratio
         """
         if self.model is None:
             raise RuntimeError("Model not loaded")
 
         prompt = self._generate_prompt(prompt_length)
 
+        # Generation params
+        if benchmark_mode:
+            gen_params = {
+                'temperature': 0.0,
+                'top_p': 1.0,
+                'repeat_penalty': 1.0,
+                'stop': [],
+                'logit_bias': {self.model.token_eos(): -100},
+            }
+        else:
+            gen_params = {
+                'temperature': 0.7,
+            }
+
         start_time = time.monotonic()
         first_token_time = None
         token_times: List[float] = []
         output_tokens = 0
 
-        # Use streaming to capture per-token timing
         try:
             for chunk in self.model.create_completion(
                 prompt,
                 max_tokens=output_length,
-                temperature=0.7,
                 stream=True,
-                echo=False
+                echo=False,
+                **gen_params
             ):
                 now = time.monotonic()
                 delta = chunk['choices'][0].get('text', '')
@@ -134,6 +156,9 @@ class LlamaCppRunner:
             'tokens_per_second': float(tokens_per_second),
             'output_tokens': output_tokens,
             'prompt_tokens': len(prompt) // 4,  # Approximate
+            'benchmark_mode': benchmark_mode,
+            'is_complete_output': output_tokens >= output_length * 0.9,
+            'completion_ratio': output_tokens / output_length if output_length > 0 else 0,
             # Energy fields filled by MetricsCollector integration
             'total_energy_j': 0.0,
             'avg_power_w': 0.0,
@@ -142,7 +167,8 @@ class LlamaCppRunner:
         }
 
         logger.info(f"Inference: TTFT={ttft_ms:.1f}ms, TPOT={tpot_ms:.1f}ms, "
-                    f"tokens={output_tokens}, tps={tokens_per_second:.1f}")
+                    f"tokens={output_tokens}/{output_length}, tps={tokens_per_second:.1f}"
+                    f"{' [BM]' if benchmark_mode else ''}")
 
         return result
 
