@@ -97,8 +97,11 @@ class CapController:
                 gpu_min_mhz: int = MIN_GPU_MHZ, emc_min_mhz: int = MIN_EMC_MHZ,
                 cpu_min_mhz: int = MIN_CPU_MHZ) -> Dict:
         """
-        Set frequency upper bounds while keeping dynamic governors.
-        Actual frequency may be lower than cap — this is intended.
+        Set frequency upper bounds.
+        Note: Jetson GPU devfreq simple_ondemand does NOT respect max_freq under
+        load, so GPU uses performance governor + max_freq=cap. This means GPU
+        actually runs AT the cap frequency (not dynamically below it).
+        For EMC and CPU, the cap sets max_freq with min_freq left at minimum.
         """
         t0 = time.monotonic()
         actual_gpu = self._cap_gpu(gpu_cap_mhz, gpu_min_mhz)
@@ -173,14 +176,16 @@ class CapController:
         return self._read_gpu_freq()
 
     def _cap_gpu(self, cap_mhz: int, min_mhz: int) -> int:
+        """
+        Set GPU frequency cap. Uses performance governor with max_freq=cap
+        because simple_ondemand does NOT respect max_freq under GPU load on Jetson.
+        The governor will run at max_freq (the cap), not dynamically below it.
+        """
         cap_hz = GPU_FREQS_HZ.get(cap_mhz, cap_mhz * 1000000)
         min_hz = GPU_FREQS_HZ.get(min_mhz, min_mhz * 1000000)
-        try:
-            self._write(f'{GPU_PATH}/governor', 'simple_ondemand')
-        except OSError:
-            self._write(f'{GPU_PATH}/governor', 'performance')
-        self._write(f'{GPU_PATH}/min_freq', str(min_hz))
+        self._write(f'{GPU_PATH}/governor', 'performance')
         self._write(f'{GPU_PATH}/max_freq', str(cap_hz))
+        self._write(f'{GPU_PATH}/min_freq', str(min_hz))
         return self._read_gpu_freq()
 
     def _restore_gpu_dynamic(self):
