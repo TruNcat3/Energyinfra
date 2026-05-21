@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/home/wt/work/Energyinfra/jetson_llm_env/bin/python3
 """
 Fine-Grained GPU×EMC Energy Profiling Experiment
 

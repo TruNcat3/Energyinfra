@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/home/wt/work/Energyinfra/jetson_llm_env/bin/python3
 """
 Cap Profiling Experiment (Phase 10)
 

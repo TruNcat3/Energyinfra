@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/home/wt/work/Energyinfra/jetson_llm_env/bin/python3
 """
 Real Model Multi-Configuration Experiment
 Runs llama.cpp inference under different GPU/CPU frequency settings on Jetson Orin.

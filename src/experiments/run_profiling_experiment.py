@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/home/wt/work/Energyinfra/jetson_llm_env/bin/python3
 """
 Real Model Energy Profiling Experiment
 Runs llama.cpp inference with tegrastats power measurement under different frequency settings.
