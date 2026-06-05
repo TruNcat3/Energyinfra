@@ -8,7 +8,7 @@
 
 **Platform**: Jetson Orin with llama.cpp runtime (TensorRT-LLM planned)
 
-**Current Phase**: Phase 5 In Progress - Real model experiment completed (180 runs), P6 rate table rebuild pending
+**Current Phase**: Phase 12 Complete — Multi-objective Pareto DVFS + E2E validation (378 runs, 3 models)
 
 ## Key Concepts
 
@@ -232,6 +232,24 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 **Data files**: `data/energy_profiling/finegrained_combined_20260516.csv`
 **Rate table**: `data/rate_tables/finegrained_selector_table_20260516_071238.parquet`
 **E2E benchmark**: `data/energy_profiling/e2e_benchmark_finegrained_20260517.csv`
+
+### Completed (Phase 11) ✅ — Workload-Aware Rate Tables + Multi-Objective Pareto
+
+- ✅ Multi-model profiling: 7B/8B/14B, each 792 rows lock + 216 rows cap
+- ✅ Rate tables built for all 3 models (lock + cap + DVFS rules)
+- ✅ Cross-model DVFS comparison: 7B compute-bound (36% DVFS space), 8B memory-flat (17%), 14B compute-bound (23%)
+- ✅ Multi-objective Pareto selector (`src/controller/pareto_selector.py`): non-dominated sorting, knee detection, 5 strategies
+- ✅ Pareto integrated into `WorkloadCapSelector` as `strategy='pareto'`
+- ✅ Pareto rank pre-computation in rate table builder
+- ✅ 6 Pareto visualization charts + 4 cross-model comparison charts
+
+### Completed (Phase 12) ✅ — E2E Cap Selector Benchmark
+
+- ✅ 378 runs total: 3 models × 9 strategies × 5 workloads × 3 repeats, 0 errors
+- ✅ Strategies: pareto, min_energy, slo_50ms, slo_45ms, alpha_03, alpha_07, pwr_45w, dynamic, maxn
+- ✅ Pareto achieves +0.8%~+1.8% E/tok savings vs dynamic, +4.5%~+5.5% vs MAXN
+- ✅ Power savings up to **22.8%** (7B Pareto vs MAXN: 47W → 38W)
+- ✅ 5 analysis charts + detailed report in `figures/e2e_benchmark/`
 
 ## Technical Decisions
 
@@ -578,10 +596,9 @@ timestamp  level  module  message
 
 ## Next Immediate Steps
 
-1. **Larger model validation** - Test with Llama-3-8B or larger models for more DVFS headroom
-2. **Online controller deployment** - Phase-aware DVFS real-time controller with fine-grained rate table
-3. **Long-term stability testing** - Validate over extended runs with thermal monitoring
-4. **Multi-model rate table** - Extend to different quantization levels and architectures
+1. **Phase 13**: Long-running serving evaluation with temperature-aware frequency adjustment
+2. **Research paper**: Write paper from Phase 10-12 results (3 models, Pareto DVFS, E2E validation)
+3. **Jetson runtime integration**: Deploy cap selector as a llama.cpp wrapper or middleware
 
 ## Important Notes
 
@@ -590,8 +607,10 @@ timestamp  level  module  message
 - Plan includes decision points to pivot based on experimental results
 - Emphasis on reproducibility and detailed documentation
 - Modular design allows for incremental development and testing
+- **Key finding**: Model size fundamentally changes DVFS behavior (3.8B: W-shape sweet spot, 14B: monotonic improvement)
+- EMC debugfs control is currently non-functional (clk_rate ignores min/max_rate)
 
 ---
 
-**Last Updated**: 2026-05-17
-**AI Assistant Notes**: Phase 1-6 complete. Fine-grained GPU×EMC profiling done (1320 runs, 44 configs). Rate table rebuilt with 31 GPU×EMC configs, 10 buckets, 30 DVFS rules. WeightedSelector supports 3D config space with alpha knob. E2E benchmark (225 runs) validates alpha-weighted DVFS. Next: larger model validation, online controller deployment.
+**Last Updated**: 2026-06-04
+**AI Assistant Notes**: Phase 1-12 complete. Multi-objective Pareto DVFS selector implemented and validated across 3 models (7B/8B/14B, 378 E2E runs). Pareto achieves up to +5.5% E/tok savings vs MAXN and up to +22.8% power reduction vs dynamic on 7B. Available models: Phi-3-mini (3.8B), Qwen2.5-7B, Llama-3.1-8B, Qwen2.5-14B.

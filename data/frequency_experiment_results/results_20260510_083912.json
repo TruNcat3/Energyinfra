@@ -1,0 +1,9 @@
+{"experiment_info": {"start_time": "2026-05-10_08:39:12", "model": "/home/wt/work/Energyinfra/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"}, "results": [
+{"frequency_mhz": 306, "actual_mhz": 306, "temperature": 47.718, "load_time": llama_context: n_ctx_seq (2048) < n_ctx_train (4096) -- the full capacity of the model will not be utilized, "inference_time": , "tokens": , "tokens_per_second": , "output": ""}
+,
+{"frequency_mhz": 612, "actual_mhz": 612, "temperature": 47.906, "load_time": llama_context: n_ctx_seq (2048) < n_ctx_train (4096) -- the full capacity of the model will not be utilized, "inference_time": , "tokens": , "tokens_per_second": , "output": ""}
+,
+{"frequency_mhz": 918, "actual_mhz": 918, "temperature": 48.031, "load_time": llama_context: n_ctx_seq (2048) < n_ctx_train (4096) -- the full capacity of the model will not be utilized, "inference_time": , "tokens": , "tokens_per_second": , "output": ""}
+,
+{"frequency_mhz": 1300, "actual_mhz": 1300, "temperature": 48.031, "load_time": llama_context: n_ctx_seq (2048) < n_ctx_train (4096) -- the full capacity of the model will not be utilized, "inference_time": , "tokens": , "tokens_per_second": , "output": ""}
+]}

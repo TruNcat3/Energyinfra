@@ -25,9 +25,14 @@ models/gguf/*.gguf
 .DS_Store
 Thumbs.db
 
-# Data (can be regenerated)
-data/raw_logs/
-data/frequency_experiment_results/complete_results_*.json
-
 # Claude plans
 .claude/
+
+# Raw data logs (regeneratable)
+data/raw_logs/
+
+# Experiment frequency results (large JSON)
+data/frequency_experiment_results/complete_results_*.json
+
+# Logs
+logs/

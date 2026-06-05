@@ -69,11 +69,18 @@ EMC_DEBUGFS_MIN = '/sys/kernel/debug/emc/min_rate'
 EMC_DEBUGFS_CLK = '/sys/kernel/debug/clk/emc/clk_rate'
 
 WORKLOADS = {
-    'p128_o64':   {'prompt_length': 128,  'output_length': 64},
-    'p512_o128':  {'prompt_length': 512,  'output_length': 128},
-    'p1024_o128': {'prompt_length': 1024, 'output_length': 128},
-    'p128_o256':  {'prompt_length': 128,  'output_length': 256},
-    'p1024_o512': {'prompt_length': 1024, 'output_length': 512},
+    'p64_o64':     {'prompt_length': 64,   'output_length': 64},
+    'p128_o128':   {'prompt_length': 128,  'output_length': 128},
+    'p128_o512':   {'prompt_length': 128,  'output_length': 512},
+    'p256_o256':   {'prompt_length': 256,  'output_length': 256},
+    'p512_o128':   {'prompt_length': 512,  'output_length': 128},
+    'p512_o512':   {'prompt_length': 512,  'output_length': 512},
+    'p512_o1024':  {'prompt_length': 512,  'output_length': 1024},
+    'p1024_o128':  {'prompt_length': 1024, 'output_length': 128},
+    'p1024_o512':  {'prompt_length': 1024, 'output_length': 512},
+    'p1024_o1024': {'prompt_length': 1024, 'output_length': 1024},
+    'p2048_o128':  {'prompt_length': 2048, 'output_length': 128},
+    'p2048_o512':  {'prompt_length': 2048, 'output_length': 512},
 }
 
 REPEATS = 3
@@ -190,14 +197,15 @@ def run_single_with_energy(runner, mc, prompt_length, output_length, phase='mixe
     return result
 
 
-def run_finegrained_profiling(phases=('decode',)):
+def run_finegrained_profiling(phases=('decode',), model_path='models/gguf/Phi-3-mini-4k-instruct-q4.gguf', gpu_only=False):
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     output_dir = Path('data/energy_profiling')
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    logger.info("Loading model...")
+    model_name = Path(model_path).stem
+    logger.info(f"Loading model: {model_name}...")
     runner = LlamaCppRunner(
-        model_path='models/gguf/Phi-3-mini-4k-instruct-q4.gguf',
+        model_path=model_path,
         n_gpu_layers=-1, n_ctx=4096, n_threads=4
     )
     logger.info("Model loaded")
@@ -208,22 +216,33 @@ def run_finegrained_profiling(phases=('decode',)):
     actual_cpu = set_cpu_freq(CPU_FREQ)
     logger.info(f"CPU fixed at {actual_cpu} MHz")
 
-    n_configs = len(GPU_FREQS) * len(EMC_FREQS)
+    if gpu_only:
+        emc_list = [3199]  # Fixed at max, no EMC control
+    else:
+        emc_list = EMC_FREQS
+
+    n_configs = len(GPU_FREQS) * len(emc_list)
     n_phases = len(phases)
     total_runs = n_configs * len(WORKLOADS) * n_phases * REPEATS
     run_count = 0
     results: List[Dict] = []
 
     for gpu_mhz in GPU_FREQS:
-        for emc_mhz in EMC_FREQS:
-            config_name = f"GPU{gpu_mhz}_EMC{emc_mhz}_CPU{CPU_FREQ}"
+        for emc_mhz in emc_list:
+            if gpu_only:
+                config_name = f"GPU{gpu_mhz}_CPU{CPU_FREQ}"
+            else:
+                config_name = f"GPU{gpu_mhz}_EMC{emc_mhz}_CPU{CPU_FREQ}"
 
             logger.info(f"\n{'='*60}")
             logger.info(f"Config: {config_name}  [{run_count}/{total_runs}]")
             logger.info(f"{'='*60}")
 
             actual_gpu = set_gpu_freq(gpu_mhz)
-            actual_emc = set_emc_freq(emc_mhz)
+            if gpu_only:
+                actual_emc = 3199
+            else:
+                actual_emc = set_emc_freq(emc_mhz)
             time.sleep(0.5)
             logger.info(f"  Set: GPU={actual_gpu}MHz, EMC={actual_emc}MHz, CPU={actual_cpu}MHz")
 
@@ -281,7 +300,7 @@ def run_finegrained_profiling(phases=('decode',)):
                             'avg_sys_5v0_w': result.get('avg_sys_5v0_w', 0),
                             'avg_temp_cpu_c': result.get('avg_temp_cpu_c', 0),
                             'power_samples': result.get('power_samples', 0),
-                            'model': 'Phi-3-mini-Q4',
+                            'model': model_name,
                             'runtime': 'llama.cpp',
                             'experiment': 'finegrained_gpu_emc',
                         }
@@ -365,6 +384,10 @@ if __name__ == '__main__':
     parser.add_argument('--decode-only', action='store_true', help='Only decode phase')
     parser.add_argument('--mixed-only', action='store_true', help='Only mixed phase')
     parser.add_argument('--all', action='store_true', help='Both decode and mixed phases')
+    parser.add_argument('--model', type=str, default='models/gguf/Phi-3-mini-4k-instruct-q4.gguf',
+                        help='Path to GGUF model file')
+    parser.add_argument('--gpu-only', action='store_true',
+                        help='GPU-only sweep (skip EMC, fix EMC at max)')
     args = parser.parse_args()
 
     if args.all:
@@ -374,12 +397,19 @@ if __name__ == '__main__':
     else:
         phases = ('decode',)
 
-    n_configs = len(GPU_FREQS) * len(EMC_FREQS)
+    gpu_only = args.gpu_only
+    emc_count = 1 if gpu_only else len(EMC_FREQS)
+    n_configs = len(GPU_FREQS) * emc_count
     total = n_configs * len(WORKLOADS) * len(phases) * REPEATS
 
-    logger.info(f"Fine-Grained GPU×EMC Profiling Experiment")
+    mode_str = "GPU-only" if gpu_only else "GPU×EMC"
+    logger.info(f"Fine-Grained {mode_str} Profiling Experiment")
+    logger.info(f"  Model: {args.model}")
     logger.info(f"  GPU: {len(GPU_FREQS)} frequencies {GPU_FREQS}")
-    logger.info(f"  EMC: {len(EMC_FREQS)} frequencies {EMC_FREQS}")
+    if gpu_only:
+        logger.info(f"  EMC: fixed at 3199 MHz (not controllable)")
+    else:
+        logger.info(f"  EMC: {len(EMC_FREQS)} frequencies {EMC_FREQS}")
     logger.info(f"  CPU: {CPU_FREQ} MHz (fixed)")
     logger.info(f"  Workloads: {len(WORKLOADS)}")
     logger.info(f"  Phases: {phases}")
@@ -387,4 +417,4 @@ if __name__ == '__main__':
     logger.info(f"  Total runs: {total}")
     logger.info(f"  Estimated time: ~{total * 25 // 60} min ({total * 25 / 3600:.1f} hours)")
 
-    run_finegrained_profiling(phases=phases)
+    run_finegrained_profiling(phases=phases, model_path=args.model, gpu_only=gpu_only)

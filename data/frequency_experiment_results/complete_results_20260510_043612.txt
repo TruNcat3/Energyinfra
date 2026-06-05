@@ -1,0 +1,50 @@
+📊 Experiment Configuration:
+  Model: /home/wt/work/Energyinfra/models/gguf/Phi-3-mini-4k-instruct-q4.gguf
+  Frequencies to test: 306 MHz 918 MHz 1300 MHz
+  Results will be saved to: data/frequency_experiment_results
+========================================
+Test 1/3: 306 MHz
+========================================
+✅ Frequency set to: 306 MHz
+📊 Actual frequency: 306 MHz
+🌡️  Temperature: 47.593°C
+🚀 Running benchmark at 306 MHz...
+📊 Benchmark Results:
+  Load time: llama_context: n_ctx_seq (2048) < n_ctx_train (4096) -- the full capacity of the model will not be utilizeds
+  Inference time: s
+  Generated tokens: 
+  Performance:  tokens/s
+========================================
+Test 2/3: 918 MHz
+========================================
+✅ Frequency set to: 918 MHz
+📊 Actual frequency: 918 MHz
+🌡️  Temperature: 47.812°C
+🚀 Running benchmark at 918 MHz...
+📊 Benchmark Results:
+  Load time: llama_context: n_ctx_seq (2048) < n_ctx_train (4096) -- the full capacity of the model will not be utilizeds
+  Inference time: s
+  Generated tokens: 
+  Performance:  tokens/s
+========================================
+Test 3/3: 1300 MHz
+========================================
+✅ Frequency set to: 1300 MHz
+📊 Actual frequency: 1300 MHz
+🌡️  Temperature: 48.125°C
+🚀 Running benchmark at 1300 MHz...
+📊 Benchmark Results:
+  Load time: llama_context: n_ctx_seq (2048) < n_ctx_train (4096) -- the full capacity of the model will not be utilizeds
+  Inference time: s
+  Generated tokens: 
+  Performance:  tokens/s
+========================================
+Restoring default settings...
+========================================
+✅ Restored to: 1300.5 MHz
+========================================
+🎉 Experiment Completed!
+========================================
+📁 Results:
+  Text: data/frequency_experiment_results/complete_results_20260510_043612.txt
+  JSON: data/frequency_experiment_results/complete_results_20260510_043612.json

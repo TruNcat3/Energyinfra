@@ -1,65 +1,69 @@
-# Jetson LLM Energy Profiling - Project Overview
+# Jetson-LLM Energy Rate Table & Adaptive DVFS Selector
 
-**项目状态**: Phase 5 完成, Phase 6 (修正后验证) 进行中
-**总体进度**: 约 92%
+**多目标 Workload-Aware DVFS 优化系统，面向 Jetson 边端 GPU 上的 LLM 推理**
 
-## 项目概览
-
-本项目旨在构建面向 Jetson 边端 GPU 的 LLM 推理能耗 profiling 与自适应配置选择系统。系统能够自动执行 workload × frequency 扫描，采集性能、功耗和温度数据，构建能耗汇率表，并在给定 SLO 约束下输出最优的 GPU、CPU 和 EMC 频率配置。
-
-### 核心目标
-
-1. **能耗汇率表构建**: 建立 workload-aware 的能耗汇率表 (完成)
-2. **自适应配置选择**: 设计 SLO-aware 的配置选择器 (完成)
-3. **在线控制系统**: 实现可离线建表、在线查表、自动选频的系统 (进行中)
+**Platform**: Jetson Orin | **Runtime**: llama.cpp (GGUF) | **Models**: 7B / 8B / 14B (Q4_K_M)
 
 ---
 
-## 文档导航
+## 核心思路
 
-### 任务规格书
-| 文档 | 说明 |
-|------|------|
-| [docs/任务书/任务书.md](docs/任务书/任务书.md) | 项目目标、技术路线、成功标准 |
-| [docs/任务书/jetson_llm_energy_rate_table_task_doc.md](docs/任务书/jetson_llm_energy_rate_table_task_doc.md) | 技术任务详述 |
+**离线 profiling → 能耗 rate table → 在线 workload-aware 频率 cap 选择**
 
-### 开发文档
-| 文档 | 说明 |
-|------|------|
-| [docs/开发文档/当前状态.md](docs/开发文档/当前状态.md) | 当前开发状态、模块进度、技术风险 |
-| [docs/开发文档/checklist.md](docs/开发文档/checklist.md) | 待办事项清单、开发规范、检查清单 |
-| [docs/开发文档/project_progress_summary.md](docs/开发文档/project_progress_summary.md) | 项目进展总结 (Phase 1-5) |
-| [docs/开发文档/EnergyInfra_Phase5_Task_Plan.md](docs/开发文档/EnergyInfra_Phase5_Task_Plan.md) | Phase 5 详细任务计划 |
-| [docs/开发文档/scheduling_method_analysis.md](docs/开发文档/scheduling_method_analysis.md) | 调度方法分析与优化方向 |
-| [CLAUDE.md](CLAUDE.md) | AI 助手项目上下文 (英文) |
+1. **离线 profiling**: 对每个模型扫描 11 GPU 频率 × 12 workload，精确测量 E/tok、TPOT、功率
+2. **Rate Table 构建**: 聚合统计 + Pareto 排序，生成 lock-rate-table 和 cap-rate-table
+3. **多目标 Pareto 选择**: 对每个 workload 计算 E/tok × TPOT × Power 三维权衡前沿
+4. **在线部署**: 根据输入长度选择最优 GPU cap，通过 performance governor + max_freq 控制
 
-### 说明文档
-| 文档 | 说明 |
-|------|------|
-| [docs/说明文档/LLAMACPP_INTEGRATION.md](docs/说明文档/LLAMACPP_INTEGRATION.md) | llama.cpp 集成指南 |
-| [docs/说明文档/quick_experiment_guide.md](docs/说明文档/quick_experiment_guide.md) | 快速实验指南 |
-| [docs/说明文档/runtime_setup_guide.md](docs/说明文档/runtime_setup_guide.md) | 运行时环境配置 |
-| [docs/说明文档/DOCKER_MODEL_SETUP.md](docs/说明文档/DOCKER_MODEL_SETUP.md) | Docker 模型部署 |
+### 三模式频率控制
 
-### 实验文档
-| 文档 | 说明 |
-|------|------|
-| [docs/实验文档/README.md](docs/实验文档/README.md) | **实验文档首页 — 统一档位术语、图表索引** |
-| [docs/实验文档/PHASE1_COMPLETION_REPORT.md](docs/实验文档/PHASE1_COMPLETION_REPORT.md) | Phase 1 基础建设完成报告 |
-| [docs/实验文档/PHASE2_COMPLETION_REPORT.md](docs/实验文档/PHASE2_COMPLETION_REPORT.md) | Phase 2 核心模块完成报告 |
-| [docs/实验文档/PHASE3_COMPLETION_REPORT.md](docs/实验文档/PHASE3_COMPLETION_REPORT.md) | Phase 3 前置实验报告 |
-| [docs/实验文档/PHASE2_ANALYSIS_REPORT.md](docs/实验文档/PHASE2_ANALYSIS_REPORT.md) | Phase 2 分析报告 |
+| 模式 | 方法 | 用途 |
+|:---:|------|------|
+| **Lock** | performance governor + min=max=freq | 离线精确 profiling |
+| **Cap** | performance governor + max_freq | 在线部署（governor 在 cap 内动态调节） |
+| **Dynamic** | simple_ondemand 默认 | Baseline 对比 |
 
-### 实验数据与图表
-| 路径 | 说明 |
-|------|------|
-| `data/energy_profiling/expanded_profiling_20260515_031015.csv` | 修正后扩展实验数据 (672 runs) |
-| `data/rate_tables/` | 能耗汇率表 (28 buckets) + DVFS 规则 |
-| `data/real_model_experiment/` | 初始真实模型实验数据 (180 runs, governor bug) |
-| `figures/rate_table/` | 汇率表可视化 (6张) |
-| `figures/real_model_experiment/` | 真实模型实验图表 (5张, governor bug) |
-| `figures/phase5_comparison/` | Phase 5 综合对比图表 (6张) |
-| `figures/power_mode_comparison/` | Jetson 档位对比图表 (6张) |
+> **关键发现**: Jetson Orin 的 `simple_ondemand` GPU governor 在推理负载下忽略 `max_freq` 设置，
+> 因此 Cap 模式必须使用 `performance` governor + `max_freq` 实现。
+
+---
+
+## E2E 实测结果（378 runs, 3 模型, 9 策略）
+
+### Pareto (我们的方法) vs Baselines
+
+| 模型 | vs Dynamic E/tok | vs Dynamic Power | vs MAXN E/tok | vs MAXN Power |
+|:---:|:---:|:---:|:---:|:---:|
+| **7B (Qwen2.5)** | +0.8% | **+18.6%** | +4.5% | **+22.8%** |
+| **8B (Llama-3.1)** | +1.4% | +4.1% | +5.0% | +8.8% |
+| **14B (Qwen2.5)** | +1.8% | +3.3% | +5.5% | +7.5% |
+
+### 跨策略对比（vs MAXN 基线的 E/tok 节省）
+
+| 策略 | 7B | 8B | 14B | 特点 |
+|:---|:---:|:---:|:---:|:---|
+| ⭐ **Pareto (ours)** | +4.5% | +5.0% | +5.4% | 自动折中，稳定中等偏上 |
+| slo_50ms | **+7.7%** | +4.4% | +4.5% | 7B 上最省能，依赖 SLO 阈值 |
+| alpha_07 | +7.1% | +4.3% | **+6.3%** | 14B 上最优 |
+| pwr_45w | +7.1% | **+6.8%** | — | 8B 上最优 |
+| dynamic (默认) | +3.8% | +3.6% | +3.7% | 默认基线 |
+| maxn (全频) | 0% | 0% | 0% | 最差基线 |
+
+### 核心发现
+
+1. **Pareto 优势在功率节省**: 7B 上功率从 47W 降至 38W（-18.6%），E/tok 仅损失 0.8%
+2. **Workload-aware 选择有实际意义**: 7B 上 Pareto 为 5 个 workload 选择 612~1300MHz 不同 cap
+3. **不同模型 DVFS 行为完全不同**: 7B compute-bound（中频甜点），8B memory-bound（408MHz 以上 TPS 扁平），14B compute-bound（高频最优）
+4. **单目标策略在特定场景更优**: 有明确 SLO 时 slo_constrained 更好；Pareto 的价值在于无明确目标时的自动折中
+
+### 跨模型 DVFS 特征对比
+
+| 特征 | 7B (Qwen2.5) | 8B (Llama-3.1) | 14B (Qwen2.5) |
+|:---|:---:|:---:|:---:|
+| Pareto 点数 (lock 11 freq) | 9-11/11 | 2-3/11 | 6-8/11 |
+| DVFS 优化空间 | 36% (最大) | 17% (最小) | 23% |
+| 最优 E/tok 频率 | 714-918 MHz (中频) | 408+ MHz (全平) | 1122-1300 MHz (高频) |
+| Knee 点 | 714-918 MHz | 408-612 MHz | 408-918 MHz |
 
 ---
 
@@ -67,152 +71,171 @@
 
 ```
 Energyinfra/
-├── src/                        # Python 源代码 (按功能分层)
-│   ├── controller/            # 调频器/调度器 - DVFS控制
-│   │   ├── freq_controller.py       # 频率控制 (sysfs/jetson_clocks)
-│   │   ├── jetson_power_modes.py    # Jetson电源模式管理
-│   │   ├── phase_aware_policy.py    # Phase-Aware DVFS策略
-│   │   ├── phase_controller.py      # DVFS在线控制器
-│   │   └── select_config.py         # SLO-Aware配置选择器
-│   ├── metrics/               # 性能收集器
-│   │   ├── metrics_collector.py     # tegrastats指标采集
-│   │   ├── parse_logs.py            # 日志解析
-│   │   └── system_monitor.py        # 系统监控
-│   ├── benchmark/             # 基准测试框架
-│   │   ├── synthetic_benchmark.py   # 合成基准测试
-│   │   ├── benchmark_runner.py      # 基准运行器
-│   │   ├── sweep_runner.py          # 参数扫描编排
-│   │   └── llama_cpp_runner.py      # llama.cpp推理Runner
-│   ├── ratetable/             # 能耗汇率表
-│   │   ├── build_rate_table.py      # 汇率表构建
-│   │   └── evaluate_selector.py     # 选择器评估
-│   ├── visualization/         # 可视化分析 (10个)
-│   ├── experiments/           # 实验脚本 (9个)
-│   └── _legacy/               # 归档废弃代码 (5个)
-├── configs/                    # 配置文件
-├── data/                       # 实验数据输出
-├── figures/                    # 可视化图表 (27张)
-├── scripts/
-│   ├── active/                # 活跃脚本 (4个)
-│   └── _legacy/               # 归档脚本 (9个)
-├── docs/                       # 文档 (按类型分层)
-│   ├── 任务书/                # 任务规格书
-│   ├── 开发文档/              # 开发跟踪
-│   ├── 说明文档/              # 使用指南
-│   └── 实验文档/              # 实验报告
-├── README.md
-└── CLAUDE.md
+├── src/
+│   ├── controller/
+│   │   ├── pareto_selector.py          # 多目标 Pareto DVFS 选择器
+│   │   ├── workload_cap_selector.py     # Workload-aware Cap 选择器 (含 Pareto 策略)
+│   │   ├── cap_controller.py           # Lock/Cap/Dynamic 三模式频率控制
+│   │   └── freq_controller.py          # sysfs/jetson_clocks 频率控制
+│   ├── benchmark/
+│   │   └── llama_cpp_runner.py         # llama.cpp 推理 runner (含 benchmark_mode)
+│   ├── metrics/
+│   │   └── metrics_collector.py        # tegrastats 功耗采集
+│   ├── ratetable/
+│   │   └── build_workload_rate_table.py # Rate Table 构建 (含 Pareto rank)
+│   ├── experiments/
+│   │   ├── run_finegrained_profiling.py # Lock-mode 11 GPU freq profiling
+│   │   ├── run_cap_profiling.py         # Cap-mode profiling (4 caps + baselines)
+│   │   └── run_cap_selector_benchmark.py # E2E 验证 benchmark
+│   └── visualization/
+│       ├── visualize_pareto.py          # Pareto 前沿可视化 (6 张图)
+│       ├── visualize_cross_model_comparison.py # 跨模型对比 (4 张图)
+│       └── analyze_e2e_benchmark.py     # E2E benchmark 分析 (5 张图 + 报告)
+├── data/
+│   ├── energy_profiling/               # Lock-mode profiling CSV (3 models × 792 rows)
+│   ├── cap_profiling/                  # Cap-mode profiling CSV (3 models × 216 rows)
+│   ├── rate_tables/                    # Lock/cap rate tables + DVFS rules (parquet/json)
+│   └── cap_selector_benchmark/         # E2E benchmark results (378 runs)
+├── figures/
+│   ├── pareto_frontier/                # Pareto 前沿图 (6 张)
+│   ├── cross_model_comparison/         # 跨模型对比图 (4 张)
+│   └── e2e_benchmark/                  # E2E benchmark 图表 (5 张 + 报告)
+├── scripts/active/
+│   ├── run_remaining_models.sh         # 8B + 14B profiling (断点续跑)
+│   └── run_e2e_benchmark_all.sh        # 3 模型 E2E benchmark (断点续跑)
+└── docs/
 ```
 
-## 核心实验结果
-
-> **重要修正 (2026-05-15)**: 早期实验使用的 `userspace` GPU governor 存在 bug，无法在推理负载下
-> 锁定频率。修正后数据使用 `performance` governor，证实 GPU 频率对性能有显著影响。
-
-> **档位术语说明**: 见 [docs/实验文档/README.md](docs/实验文档/README.md) — MAXN / 50W / 30W (出厂默认) / 15W / GPU-Min/CPU-Max (我们的策略)
-
-### GPU 频率效应 (修正后, 2026-05-15)
-
-| GPU 频率 | Decode TPS (CPU=1036) | GPU SoC 功耗 | E/token (J) |
-|:---:|:---:|:---:|:---:|
-| 306 MHz | ~12 tok/s | ~8 W | ~0.95 |
-| 612 MHz | ~23 tok/s | ~13 W | ~0.95 |
-| 918 MHz | ~30 tok/s | ~19 W | ~1.05 |
-| 1300 MHz | ~41 tok/s | ~30 W | ~1.20 |
-
-**关键发现** (修正后):
-- **GPU 频率对性能有显著影响**: 306→918 MHz 吞吐提升 2.5×
-- **GPU 918MHz 在 10/14 负载中是最优配置**
-- **短输出 (≤64 tokens) 最优为 GPU 612MHz**，长输出最优为 GPU 918MHz
-- GPU SoC 功耗随频率线性增长（8→30W），需平衡性能与能效
-
-### Phase-Aware DVFS 验证 (合成基准, 2026-05-12)
-
-> **注意**: 此实验使用合成基准。修正后的真实模型实验已确认 GPU 频率对 LLM 推理有显著影响。
-> 合成基准中 Phase-Aware 策略 30% 能量节省 + 36% TTFT 改善的结论需用修正后数据重新验证。
-
-| 策略 | 能量/Token (J) | TTFT (ms) | TPOT (ms) | SLO 满足率 |
-|------|---------------|-----------|-----------|-----------|
-| Default (mid) | 0.164 | 121 | 7.6 | 82% |
-| Max Performance | 0.110 | 124 | 4.5 | 42% |
-| Energy Efficient | 0.326 | 125 | 16.9 | 92% |
-| **Phase-Aware (Ours)** | **0.115** | **77** | **6.7** | **80%** |
-| Oracle | 0.152 | 124 | 6.9 | 76% |
-
-### 7 个前置实验核心结论
-
-| 实验 | 核心发现 |
-|------|----------|
-| 4.1 测量稳定性 | TPOT CV=1.0% 优秀, TTFT CV=9.2% 可接受 |
-| 4.2 单旋钮敏感性 | GPU 378MHz 最能效 (7.36 tok/W), 1428MHz 最吞吐 |
-| 4.3 频率组合交互 | 67% 配置满足 SLO, mid-high 优于 max-all |
-| 4.4 Prefill/Decode 差异 | **26.97x** 阶段能效差异, Phase-Aware 必要性验证 |
-| 4.5 负载可预测性 | workload 特征可预测最优配置 |
-| 4.6 切换开销 | GPU 切换 50ms, 可隐藏于 phase boundary |
-| 4.7 SLO 端到端 | 67% 配置满足 SLO, 能效优先可行 |
+---
 
 ## 快速开始
 
-### 前置要求
-
-- **Jetson Orin 设备** (JetPack r36.x)
-- **Python 3.8+**
-- **llama.cpp** (已安装并可用)
-
-### 安装依赖
+### 环境依赖
 
 ```bash
-pip3 install pyyaml pandas numpy pyarrow matplotlib seaborn scipy scikit-learn
+# Jetson Orin, JetPack r36.x
+# Python 3.10, 已在 jetson_llm_env/ 中
+pip3 install pandas numpy pyarrow matplotlib seaborn scipy
 ```
 
-### 运行合成基准实验 (无需真实模型)
+### 1. 运行 Profiling（离线建表）
 
 ```bash
-cd /home/wt/work/Energyinfra
+# 单模型 Lock-mode profiling (~5.5h, 792 runs)
+sudo python3 src/experiments/run_finegrained_profiling.py \
+  --model models/gguf/Qwen2.5-7B-Instruct-Q4_K_M.gguf
 
-# Phase-Aware 验证实验
-python3 src/experiments/run_phase_aware_experiment.py
+# 单模型 Cap-mode profiling (~1.5h, 216 runs)
+sudo python3 src/experiments/run_cap_profiling.py \
+  --model models/gguf/Qwen2.5-7B-Instruct-Q4_K_M.gguf
 
-# 生成可视化图表
-python3 src/visualization/visualize_phase_aware.py
-python3 src/visualization/visualize_phase5_p0.py
+# 构建 Rate Table（含 Pareto rank）
+python3 src/ratetable/build_workload_rate_table.py \
+  --finegrained data/energy_profiling/finegrained_profiling_*.csv \
+  --cap data/cap_profiling/cap_profiling_*.csv \
+  --model Qwen2.5-7B-Instruct-Q4_K_M
 ```
 
-### 运行真实模型实验 (需 Jetson + llama.cpp)
+### 2. 使用 Pareto 选择器
 
-```bash
-source jetson_llm_env/bin/activate
+```python
+from src.controller.pareto_selector import ParetoSelector
 
-# 多配置实验 (4 GPU x 3 CPU x 5 workloads x 3 repeats = 180 runs)
-python3 src/experiments/run_real_model_experiment.py
+ps = ParetoSelector(
+    lock_rate_table_path='data/rate_tables/lock_rate_table_*.parquet',
+    cap_rate_table_path='data/rate_tables/cap_rate_table_with_savings_*.parquet',
+    model='Qwen2.5-7B-Instruct-Q4_K_M',
+)
 
-# 分析结果
-python3 src/visualization/analyze_real_experiment.py
+# 计算某 workload 的 Pareto 前沿
+frontier = ps.compute_frontier(512, 128, phase='decode', source='lock')
+print(f'Pareto: {frontier.n_frontier}/{frontier.n_total} configs')
 
-# 生成可视化
-python3 src/visualization/visualize_real_experiment.py
+# 选择 knee point（自动折中）
+knee = ps.select_from_frontier(frontier, strategy='knee_point')
+print(f'Knee: GPU={knee["gpu_freq_mhz"]}MHz, E/tok={knee["energy_per_token_j"]}J')
 
-# Jetson 档位对比图表 (6张)
-python3 src/visualization/visualize_power_mode_comparison.py
+# SLO 约束选择
+slo = ps.select_from_frontier(frontier, strategy='slo_constrained', tpot_slo_ms=50.0)
+
+# Alpha 连续调节 (0=能效优先, 1=延迟优先)
+alpha = ps.alpha_to_frontier_point(frontier, alpha=0.7)
 ```
 
-### 使用配置选择器
+### 3. 在线 Cap 选择（部署）
+
+```python
+from src.controller.workload_cap_selector import WorkloadCapSelector
+
+sel = WorkloadCapSelector(
+    cap_rate_table_path='data/rate_tables/cap_rate_table_with_savings_*.parquet',
+    lock_rate_table_path='data/rate_tables/lock_rate_table_*.parquet',
+    model='Qwen2.5-7B-Instruct-Q4_K_M',
+)
+
+# Pareto 策略自动选择
+cfg = sel.select(prompt_length=512, output_length=128, strategy='pareto')
+print(f'GPU cap: {cfg["gpu_cap_mhz"]}MHz, pred E/tok: {cfg["pred_energy_per_token_j"]}J')
+```
+
+### 4. 生成可视化
 
 ```bash
-python3 src/controller/select_config.py --example
+python3 src/visualization/visualize_pareto.py          # Pareto 前沿 (6 图)
+python3 src/visualization/visualize_cross_model_comparison.py  # 跨模型对比 (4 图)
+python3 src/visualization/analyze_e2e_benchmark.py     # E2E 分析 (5 图 + 报告)
 ```
 
 ---
 
 ## 项目阶段
 
-| Phase | 描述 | 进度 |
-|-------|------|------|
-| Phase 1 | 项目基础建设 | 100% |
-| Phase 2 | 核心模块实现 | 100% |
-| Phase 3 | 前置实验验证 (7个) | 100% |
-| Phase 4 | Phase-Aware DVFS | 100% |
-| Phase 5 | 高级优化 | 100% |
-| Phase 6 | 修正后验证 | 进行中 |
+| Phase | 描述 | 状态 |
+|:---:|------|:---:|
+| 1 | 项目基础建设 | ✅ |
+| 2 | 核心模块 (freq_controller, metrics_collector) | ✅ |
+| 3 | 前置验证实验 (7 个) | ✅ |
+| 4 | Phase-Aware DVFS | ✅ |
+| 5 | 高级优化 + 真实模型实验 | ✅ |
+| 6 | 细粒度 GPU×EMC DVFS (3.8B) | ✅ |
+| 7 | Phase Switching (negative result → pivot) | ✅ |
+| 8 | 频率控制重构 (lock/cap/dynamic) | ✅ |
+| 9 | Benchmark Mode (EOS 抑制) | ✅ |
+| 10 | 大模型 Profiling (7B/8B/14B) | ✅ |
+| **11** | **Workload-aware Rate Table + 多目标 Pareto** | **✅** |
+| **12** | **E2E Cap Selector Benchmark (378 runs)** | **✅** |
+| 13 | Long-running Serving + Thermal | 🔜 |
 
-**最后更新**: 2026-05-15
+### 方向调整
+
+- **Phase 7**: 证明 sysfs phase-boundary DVFS 切换开销 ~715ms (占 TTFT 37-65%)，不可行
+- **Pivot**: 从在线 phase 切换 → **离线 profiling + 在线 workload-aware cap**
+- **Phase 11**: 增加**多目标 Pareto 前沿**，不再返回单一最优解，而是完整权衡面
+
+---
+
+## 关键技术决策
+
+| 决策 | 选择 | 原因 |
+|------|------|------|
+| GPU Governor (cap mode) | `performance` + `max_freq` | `simple_ondemand` 忽略 max_freq |
+| GPU Governor (lock mode) | `performance` + min=max=freq | 精确锁定频率 |
+| Profiling scope | 11 GPU freq × 12 workload | 覆盖 64→2048 tokens 范围 |
+| Pareto objectives | E/tok, TPOT, Power (all minimize) | 三维权衡：能效 × 延迟 × 功耗 |
+| Knee detection | 最大角度变化法 | 自动找到前沿折中点 |
+| EOS 抑制 | logit_bias={eos: -100} + repeat_penalty=1.0 | 确保完整输出 |
+
+---
+
+## 文档导航
+
+| 文档 | 说明 |
+|------|------|
+| [CLAUDE.md](CLAUDE.md) | AI 助手项目上下文 (英文，详细) |
+| [docs/开发文档/当前状态.md](docs/开发文档/当前状态.md) | 开发状态、模块进度、技术风险 |
+| [docs/任务书/任务书.md](docs/任务书/任务书.md) | 项目目标与技术路线 |
+| [figures/e2e_benchmark/e2e_benchmark_report.md](figures/e2e_benchmark/e2e_benchmark_report.md) | E2E benchmark 详细报告 |
+
+---
+
+**Last Updated**: 2026-06-04

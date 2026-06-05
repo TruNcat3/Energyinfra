@@ -1,0 +1,21 @@
+频率实验结果
+====================
+开始时间: Sun May 10 07:41:25 PM PDT 2026
+模型: /home/wt/work/Energyinfra/models/gguf/Phi-3-mini-4k-instruct-q4.gguf
+
+测试 1: 306 MHz
+--------------------
+设置频率: 306 MHz
+实际频率: 306 MHz
+温度: 47.781°C
+模型加载: llama_context: n_ctx_seq (2048) < n_ctx_train (4096) -- the full capacity of the model will not be utilizeds
+推理时间: s
+生成tokens: 
+性能:  tokens/s
+输出: ...
+
+测试 2: 612 MHz
+--------------------
+设置频率: 612 MHz
+实际频率: 612 MHz
+温度: 47.75°C
