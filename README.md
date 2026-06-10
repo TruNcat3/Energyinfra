@@ -56,6 +56,37 @@
 3. **不同模型 DVFS 行为完全不同**: 7B compute-bound（中频甜点），8B memory-bound（408MHz 以上 TPS 扁平），14B compute-bound（高频最优）
 4. **单目标策略在特定场景更优**: 有明确 SLO 时 slo_constrained 更好；Pareto 的价值在于无明确目标时的自动折中
 
+### Oracle Gap 分析 (P13-P0): 单请求 DVFS 天花板
+
+从 lock-mode 11 频率数据计算 oracle 理论最优，量化 DVFS 选择器的剩余优化空间：
+
+| 模型 | Dynamic → Oracle | MAXN → Oracle | Pareto → Oracle |
+|:---:|:---:|:---:|:---:|
+| 8B (Llama-3.1) | +8.6% | +10.7% | **+0.7%** |
+| 7B (Qwen2.5) | +12.3% | +15.6% | **+4.4%** |
+| 14B (Qwen2.5) | +23.4% | +26.1% | **+9.4%** |
+
+**结论**: Pareto 选择器距 oracle 上界仅 +4.9%，单请求 E/tok 优化空间有限。
+DVFS 的真正价值在于长期运行的**功率节省**和**热管理**。
+
+### Phase 13: Thermal-SLO 反馈控制器
+
+```
+Offline Phase-aware Characterization (lock rate table, 已有)
+        ↓
+Workload-aware Initial Cap Selection (WorkloadCapSelector, 已有)
+        ↓
+Runtime SLO/Thermal Feedback Controller (ThermalSLOCapController) ← 新增
+```
+
+6 级优先级控制规则（10s 窗口）：
+1. SLO violation → 立即升频
+2. 温度 > 85°C → 升至 max（快速完成→空闲冷却）
+3. 温度 > 75°C + SLO 裕度 + 连续 K window → 降频一步
+4. 功率超限 → 降频一步
+5. 距上次切频 < 20s → 跳过
+6. 默认 → 保持
+
 ### 跨模型 DVFS 特征对比
 
 | 特征 | 7B (Qwen2.5) | 8B (Llama-3.1) | 14B (Qwen2.5) |
@@ -75,6 +106,7 @@ Energyinfra/
 │   ├── controller/
 │   │   ├── pareto_selector.py          # 多目标 Pareto DVFS 选择器
 │   │   ├── workload_cap_selector.py     # Workload-aware Cap 选择器 (含 Pareto 策略)
+│   │   ├── thermal_slo_controller.py   # Thermal-SLO 反馈控制器 (P13)
 │   │   ├── cap_controller.py           # Lock/Cap/Dynamic 三模式频率控制
 │   │   └── freq_controller.py          # sysfs/jetson_clocks 频率控制
 │   ├── benchmark/
@@ -82,24 +114,31 @@ Energyinfra/
 │   ├── metrics/
 │   │   └── metrics_collector.py        # tegrastats 功耗采集
 │   ├── ratetable/
-│   │   └── build_workload_rate_table.py # Rate Table 构建 (含 Pareto rank)
+│   │   ├── build_workload_rate_table.py # Rate Table 构建 (含 Pareto rank)
+│   │   └── oracle_gap_analysis.py     # Oracle Gap 分析 (P13)
 │   ├── experiments/
 │   │   ├── run_finegrained_profiling.py # Lock-mode 11 GPU freq profiling
 │   │   ├── run_cap_profiling.py         # Cap-mode profiling (4 caps + baselines)
-│   │   └── run_cap_selector_benchmark.py # E2E 验证 benchmark
+│   │   ├── run_cap_selector_benchmark.py # E2E 验证 benchmark
+│   │   ├── run_finegrained_cap_profiling.py # Fine-grained 10-cap profiling (P13)
+│   │   └── run_serving_benchmark.py      # Long-running serving benchmark (P13)
 │   └── visualization/
 │       ├── visualize_pareto.py          # Pareto 前沿可视化 (6 张图)
 │       ├── visualize_cross_model_comparison.py # 跨模型对比 (4 张图)
-│       └── analyze_e2e_benchmark.py     # E2E benchmark 分析 (5 张图 + 报告)
+│       ├── analyze_e2e_benchmark.py     # E2E benchmark 分析 (5 张图 + 报告)
+│       └── visualize_phase13.py         # Phase 13 可视化 (6 张图)
 ├── data/
 │   ├── energy_profiling/               # Lock-mode profiling CSV (3 models × 792 rows)
 │   ├── cap_profiling/                  # Cap-mode profiling CSV (3 models × 216 rows)
 │   ├── rate_tables/                    # Lock/cap rate tables + DVFS rules (parquet/json)
-│   └── cap_selector_benchmark/         # E2E benchmark results (378 runs)
+│   ├── cap_selector_benchmark/         # E2E benchmark results (378 runs)
+│   ├── oracle_gap_analysis/            # Oracle gap 分析结果 (P13)
+│   └── serving_benchmark/              # Serving benchmark 结果 (P13)
 ├── figures/
 │   ├── pareto_frontier/                # Pareto 前沿图 (6 张)
 │   ├── cross_model_comparison/         # 跨模型对比图 (4 张)
-│   └── e2e_benchmark/                  # E2E benchmark 图表 (5 张 + 报告)
+│   ├── e2e_benchmark/                  # E2E benchmark 图表 (5 张 + 报告)
+│   └── phase13_analysis/               # Phase 13 分析图表 (P13)
 ├── scripts/active/
 │   ├── run_remaining_models.sh         # 8B + 14B profiling (断点续跑)
 │   └── run_e2e_benchmark_all.sh        # 3 模型 E2E benchmark (断点续跑)
@@ -204,13 +243,14 @@ python3 src/visualization/analyze_e2e_benchmark.py     # E2E 分析 (5 图 + 报
 | 10 | 大模型 Profiling (7B/8B/14B) | ✅ |
 | **11** | **Workload-aware Rate Table + 多目标 Pareto** | **✅** |
 | **12** | **E2E Cap Selector Benchmark (378 runs)** | **✅** |
-| 13 | Long-running Serving + Thermal | 🔜 |
+| **13** | **Oracle Gap + Thermal-SLO Controller + Serving Benchmark** | **🔧 代码完成** |
 
 ### 方向调整
 
 - **Phase 7**: 证明 sysfs phase-boundary DVFS 切换开销 ~715ms (占 TTFT 37-65%)，不可行
 - **Pivot**: 从在线 phase 切换 → **离线 profiling + 在线 workload-aware cap**
 - **Phase 11**: 增加**多目标 Pareto 前沿**，不再返回单一最优解，而是完整权衡面
+- **Phase 13**: 从单请求 E/tok 优化 → **长期 serving 的 SLO-stable thermal-aware energy management**
 
 ---
 
@@ -238,4 +278,4 @@ python3 src/visualization/analyze_e2e_benchmark.py     # E2E 分析 (5 图 + 报
 
 ---
 
-**Last Updated**: 2026-06-04
+**Last Updated**: 2026-06-04 (Phase 13 code complete)

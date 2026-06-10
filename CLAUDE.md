@@ -8,7 +8,7 @@
 
 **Platform**: Jetson Orin with llama.cpp runtime (TensorRT-LLM planned)
 
-**Current Phase**: Phase 12 Complete — Multi-objective Pareto DVFS + E2E validation (378 runs, 3 models)
+**Current Phase**: Phase 13 Code Complete — Oracle Gap + Thermal-SLO Controller + Serving Benchmark (awaiting hardware validation)
 
 ## Key Concepts
 
@@ -31,23 +31,50 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 ├── src/                        # Python source (organized by function)
 │   ├── controller/            # Frequency/DVFS Control
 │   │   ├── freq_controller.py       # sysfs/jetson_clocks frequency control
-│   │   ├── jetson_power_modes.py    # nvpmodel/jetson_clocks management
-│   │   ├── phase_aware_policy.py    # Phase-Aware DVFS policy
-│   │   ├── phase_controller.py      # DVFS online controller
-│   │   └── select_config.py         # SLO-Aware config selector
+│   │   ├── cap_controller.py        # Lock/Cap/Dynamic 三模式频率控制 (P8)
+│   │   ├── pareto_selector.py       # 多目标 Pareto DVFS 选择器 (P11)
+│   │   ├── workload_cap_selector.py  # Workload-aware Cap 选择器 (P11)
+│   │   └── thermal_slo_controller.py # Thermal-SLO 反馈控制器 (P13)
 │   ├── metrics/               # Metrics Collection
 │   │   ├── metrics_collector.py     # tegrastats integration
-│   │   ├── parse_logs.py            # Log parsing
-│   │   └── system_monitor.py        # System monitoring
+│   │   └── parse_logs.py            # Log parsing
 │   ├── benchmark/             # Benchmark Framework
-│   │   ├── synthetic_benchmark.py   # Synthetic (no real model needed)
-│   │   ├── benchmark_runner.py      # Benchmark execution
-│   │   ├── sweep_runner.py          # Sweep orchestration
-│   │   └── llama_cpp_runner.py      # llama.cpp inference runner
+│   │   └── llama_cpp_runner.py      # llama.cpp inference runner (含 benchmark_mode)
 │   ├── ratetable/             # Rate Table
-│   │   ├── build_rate_table.py      # Energy rate table builder (synthetic)
-│   │   ├── build_rate_table_finegrained.py  # Fine-grained GPU×EMC rate table builder
-│   │   └── evaluate_selector.py     # Selector evaluation tool
+│   │   ├── build_workload_rate_table.py # Rate Table 构建 (含 Pareto rank)
+│   │   └── oracle_gap_analysis.py   # Oracle Gap 分析 (P13)
+│   ├── experiments/           # Experiment Scripts
+│   │   ├── run_finegrained_profiling.py  # Lock-mode 11 GPU freq profiling
+│   │   ├── run_cap_profiling.py          # Cap-mode profiling (4 caps + baselines)
+│   │   ├── run_cap_selector_benchmark.py # E2E 验证 benchmark (P12)
+│   │   ├── run_finegrained_cap_profiling.py # Fine-grained 10-cap profiling (P13)
+│   │   └── run_serving_benchmark.py      # Long-running serving benchmark (P13)
+│   ├── visualization/         # Visualization
+│   │   ├── visualize_pareto.py          # Pareto 前沿可视化 (6 图)
+│   │   ├── visualize_cross_model_comparison.py # 跨模型对比 (4 图)
+│   │   ├── analyze_e2e_benchmark.py     # E2E benchmark 分析 (5 图 + 报告)
+│   │   └── visualize_phase13.py         # Phase 13 可视化 (6 图)
+│   └── _legacy/               # Archived code
+├── data/
+│   ├── energy_profiling/               # Lock-mode profiling CSV (3 models × 792 rows)
+│   ├── cap_profiling/                  # Cap-mode profiling CSV
+│   ├── rate_tables/                    # Lock/cap rate tables + DVFS rules
+│   ├── cap_selector_benchmark/         # E2E benchmark results (378 runs)
+│   ├── oracle_gap_analysis/            # Oracle gap analysis results
+│   └── serving_benchmark/              # Serving benchmark results (P13)
+├── figures/
+│   ├── pareto_frontier/                # Pareto 前沿图
+│   ├── cross_model_comparison/         # 跨模型对比图
+│   ├── e2e_benchmark/                  # E2E benchmark 图表
+│   └── phase13_analysis/               # Phase 13 分析图表
+├── docs/
+│   ├── 任务书/                # Task specifications
+│   ├── 开发文档/              # Development docs (当前状态.md)
+│   └── 说明文档/              # User/setup guides
+├── EnergyInfra_next_stage_method_and_tasks.md  # Phase 13 任务书
+├── README.md
+└── CLAUDE.md
+```
 │   ├── visualization/         # Visualization (10 files)
 │   ├── experiments/           # Experiment Scripts (9 files)
 │   └── _legacy/               # Archived code (5 files)
@@ -250,6 +277,35 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 - ✅ Pareto achieves +0.8%~+1.8% E/tok savings vs dynamic, +4.5%~+5.5% vs MAXN
 - ✅ Power savings up to **22.8%** (7B Pareto vs MAXN: 47W → 38W)
 - ✅ 5 analysis charts + detailed report in `figures/e2e_benchmark/`
+
+### Completed (Phase 13) 🔧 — Long-running Serving + Thermal (Code Complete, Awaiting Hardware)
+
+**P0: Oracle Gap Analysis** ✅
+- Oracle definitions: Oracle-Energy (min E/tok), Oracle-SLO (TPOT-constrained), Oracle-Power (power-constrained)
+- Key result: Pareto → Oracle gap = **+4.9%** average (8B: +0.7%, 7B: +4.4%, 14B: +9.4%)
+- Confirms single-request DVFS optimization space is fundamentally limited
+- File: `src/ratetable/oracle_gap_analysis.py` (502 lines)
+- Data: `data/oracle_gap_analysis/oracle_gap_*.csv`
+
+**P1: Fine-grained Cap Profiling** 🔧 (needs hardware)
+- 10 GPU caps [408..1300] instead of 4, richer Pareto frontier
+- Checkpoint/resume support for 3h experiments
+- File: `src/experiments/run_finegrained_cap_profiling.py` (500 lines)
+
+**P2: Thermal-SLO Feedback Controller** ✅ (synthetic trace validated)
+- Window-based (10s) feedback with 6-priority control rules
+- Hysteresis (K=3 consecutive windows) prevents oscillation
+- Thermal protection raises (not lowers) frequency: high temp → fast completion → idle cool
+- File: `src/controller/thermal_slo_controller.py` (693 lines)
+
+**P3: Long-running Serving Benchmark** 🔧 (needs hardware)
+- 5 baselines (MAXN/Dynamic/BestStatic/Pareto/ThermalSLO) × 3 traces
+- Per-window metrics: TPOT, power, temperature, SLO violation, tokens/J
+- File: `src/experiments/run_serving_benchmark.py` (732 lines)
+
+**P4: Phase 13 Visualization** ✅ (oracle gap chart generated, others await serving data)
+- 6 charts: Oracle Gap, Temperature, Power/TPOT, Cap Timeline, Dashboard, Radar
+- File: `src/visualization/visualize_phase13.py` (520 lines)
 
 ## Technical Decisions
 
