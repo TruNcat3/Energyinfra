@@ -42,7 +42,8 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 │   │   └── llama_cpp_runner.py      # llama.cpp inference runner (含 benchmark_mode)
 │   ├── ratetable/             # Rate Table
 │   │   ├── build_workload_rate_table.py # Rate Table 构建 (含 Pareto rank)
-│   │   └── oracle_gap_analysis.py   # Oracle Gap 分析 (P13)
+│   │   ├── oracle_gap_analysis.py   # Oracle Gap 分析 (P13)
+│   │   └── pareto_multi_objective_evaluation.py # 多目标 Pareto 评估 (MDR/JIR/HV)
 │   ├── experiments/           # Experiment Scripts
 │   │   ├── run_finegrained_profiling.py  # Lock-mode 11 GPU freq profiling
 │   │   ├── run_cap_profiling.py          # Cap-mode profiling (4 caps + baselines)
@@ -53,7 +54,7 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 │   │   ├── visualize_pareto.py          # Pareto 前沿可视化 (6 图)
 │   │   ├── visualize_cross_model_comparison.py # 跨模型对比 (4 图)
 │   │   ├── analyze_e2e_benchmark.py     # E2E benchmark 分析 (5 图 + 报告)
-│   │   └── visualize_phase13.py         # Phase 13 可视化 (6 图)
+│   │   └── visualize_phase13.py         # Phase 13 可视化 (9 图, 含多目标指标)
 │   └── _legacy/               # Archived code
 ├── data/
 │   ├── energy_profiling/               # Lock-mode profiling CSV (3 models × 792 rows)

@@ -69,6 +69,26 @@
 **结论**: Pareto 选择器距 oracle 上界仅 +4.9%，单请求 E/tok 优化空间有限。
 DVFS 的真正价值在于长期运行的**功率节省**和**热管理**。
 
+### 多目标 Pareto 评估 (EMO 指标)
+
+采用 EMO 标准指标（MDR, JIR, HV）量化多维权衡优势：
+
+| 指标 | 定义 |
+|:---:|------|
+| **MDR** | Multi-Objective Dominance Rate — 所有维度同时改进的比例 |
+| **JIR** | Joint Improvement Ratio — 全部维度改进时的几何平均改进率 |
+| **HV** | Hypervolume (Zitzler 1999) — 支配的目标空间体积 |
+
+| 对比 (3D 离线) | 7B Waste | 8B Waste | 14B Waste |
+|:---|:---:|:---:|:---:|
+| Pareto vs MAXN | 14.8% | 10.2% | 11.6% |
+| Pareto vs Dynamic | 4.5% | 0.2% | 0.3% |
+
+| 对比 (4D Serving) | MDR | Waste |
+|:---|:---:|:---:|
+| Pareto vs MAXN | 4.5% | 13.0% |
+| ThermalSLO vs Dynamic | 5.4% | 10.0% |
+
 ### Phase 13: Thermal-SLO 反馈控制器
 
 ```
@@ -115,7 +135,8 @@ Energyinfra/
 │   │   └── metrics_collector.py        # tegrastats 功耗采集
 │   ├── ratetable/
 │   │   ├── build_workload_rate_table.py # Rate Table 构建 (含 Pareto rank)
-│   │   └── oracle_gap_analysis.py     # Oracle Gap 分析 (P13)
+│   │   ├── oracle_gap_analysis.py     # Oracle Gap 分析 (P13)
+│   │   └── pareto_multi_objective_evaluation.py # 多目标 Pareto 评估 (MDR/JIR/HV)
 │   ├── experiments/
 │   │   ├── run_finegrained_profiling.py # Lock-mode 11 GPU freq profiling
 │   │   ├── run_cap_profiling.py         # Cap-mode profiling (4 caps + baselines)
@@ -126,14 +147,15 @@ Energyinfra/
 │       ├── visualize_pareto.py          # Pareto 前沿可视化 (6 张图)
 │       ├── visualize_cross_model_comparison.py # 跨模型对比 (4 张图)
 │       ├── analyze_e2e_benchmark.py     # E2E benchmark 分析 (5 张图 + 报告)
-│       └── visualize_phase13.py         # Phase 13 可视化 (6 张图)
+│       └── visualize_phase13.py         # Phase 13 可视化 (9 张图, 含多目标指标)
 ├── data/
 │   ├── energy_profiling/               # Lock-mode profiling CSV (3 models × 792 rows)
 │   ├── cap_profiling/                  # Cap-mode profiling CSV (3 models × 216 rows)
 │   ├── rate_tables/                    # Lock/cap rate tables + DVFS rules (parquet/json)
 │   ├── cap_selector_benchmark/         # E2E benchmark results (378 runs)
 │   ├── oracle_gap_analysis/            # Oracle gap 分析结果 (P13)
-│   └── serving_benchmark/              # Serving benchmark 结果 (P13)
+│   ├── serving_benchmark/              # Serving benchmark 结果 (P13)
+│   └── multi_obj_eval/                 # 多目标 Pareto 评估报告 (P13)
 ├── figures/
 │   ├── pareto_frontier/                # Pareto 前沿图 (6 张)
 │   ├── cross_model_comparison/         # 跨模型对比图 (4 张)
@@ -243,7 +265,7 @@ python3 src/visualization/analyze_e2e_benchmark.py     # E2E 分析 (5 图 + 报
 | 10 | 大模型 Profiling (7B/8B/14B) | ✅ |
 | **11** | **Workload-aware Rate Table + 多目标 Pareto** | **✅** |
 | **12** | **E2E Cap Selector Benchmark (378 runs)** | **✅** |
-| **13** | **Oracle Gap + Thermal-SLO Controller + Serving Benchmark** | **🔧 代码完成** |
+| **13** | **Oracle Gap + Thermal-SLO Controller + Serving Benchmark + Multi-Obj Eval** | **✅ 代码完成 + 数据已采集** |
 
 ### 方向调整
 
@@ -278,4 +300,4 @@ python3 src/visualization/analyze_e2e_benchmark.py     # E2E 分析 (5 图 + 报
 
 ---
 
-**Last Updated**: 2026-06-04 (Phase 13 code complete)
+**Last Updated**: 2026-06-13 (Phase 13 multi-objective evaluation complete)

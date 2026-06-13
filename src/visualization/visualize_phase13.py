@@ -2,13 +2,16 @@
 """
 Phase 13 Visualization (P4)
 
-Generates 6 analysis charts from Phase 13 experiment data:
+Generates 9 analysis charts from Phase 13 experiment data:
 1. Oracle Gap — Strategies vs Oracle-Energy gap%
 2. Temperature over Time — Different baselines' temperature curves
 3. Power & TPOT over Time — Dual-axis line + rolling average
 4. Cap Adaptation Timeline — ThermalSLO cap selection + temperature overlay
 5. Serving Summary Dashboard — Multi-panel: tokens/J, power, temp, SLO, switches
 6. Cross-trace Comparison — Radar chart comparing baselines across traces
+7. 3D MDR/JIR Heatmap — Multi-objective dominance & joint improvement rates
+8. Hypervolume Comparison — Bar chart of HV across strategies/models
+9. 4D Serving MDR Matrix — Per-window multi-objective dominance in serving
 
 Usage:
     python3 src/visualization/visualize_phase13.py
@@ -439,6 +442,263 @@ def plot_cross_trace_radar(wm_df: pd.DataFrame, output_dir: Path):
 # ═══════════════════════════════════════════════════════════
 # Main
 # ═══════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════
+# Chart 7: 3D MDR/JIR Heatmap
+# ══════════════════════════════════════════════════════════════════
+
+def plot_3d_mdr_jir_heatmap(eval_dir: str, output_dir: Path):
+    """
+    Multi-objective MDR and JIR heatmap from E2E benchmark data.
+
+    Two side-by-side heatmaps showing pairwise MDR and JIR between
+    all strategies, averaged across models and workloads.
+    """
+    # Load offline evaluation CSV
+    eval_files = sorted(Path(eval_dir).glob('multi_obj_3d_offline_*.csv'))
+    if not eval_files:
+        print('    No 3D offline evaluation data found')
+        return
+
+    df = pd.read_csv(eval_files[-1])
+
+    strategies = sorted(df['strategy_a'].unique())
+    # Limit to main strategies for clarity
+    main_strats = [s for s in strategies if s in
+                   ['pareto', 'dynamic', 'maxn', 'min_energy', 'slo_50ms',
+                    'alpha_07', 'best_static', 'pwr_45w']]
+
+    models = sorted(df['model'].unique())
+    model_label = {m: m.replace('-Instruct-Q4_K_M', '').replace('Meta-Llama-3.1-', 'Llama-')
+                   for m in models}
+
+    for metric_name, metric_col, cmap, label in [
+        ('MDR', 'mdr', 'YlOrRd', 'Multi-Objective Dominance Rate'),
+        ('JIR', 'jir', 'YlGn', 'Joint Improvement Ratio'),
+    ]:
+        fig, axes = plt.subplots(1, len(models), figsize=(5 * len(models) + 1, 4.5),
+                                  squeeze=False)
+        fig.suptitle(f'3D {label}: E/tok × TPOT × Power (minimize)',
+                     fontsize=13, fontweight='bold')
+
+        for j, model in enumerate(models):
+            ax = axes[0, j]
+            model_df = df[df['model'] == model]
+
+            n = len(main_strats)
+            matrix = np.zeros((n, n))
+            for i, sa in enumerate(main_strats):
+                for k, sb in enumerate(main_strats):
+                    row = model_df[(model_df['strategy_a'] == sa) &
+                                   (model_df['strategy_b'] == sb)]
+                    if len(row) > 0:
+                        matrix[i, k] = row.iloc[0][metric_col]
+
+            # Mask diagonal
+            mask = np.eye(n, dtype=bool)
+            masked = np.ma.array(matrix, mask=mask)
+
+            im = ax.imshow(masked, cmap=cmap, aspect='auto', vmin=0)
+            ax.set_xticks(range(n))
+            ax.set_yticks(range(n))
+            ax.set_xticklabels(main_strats, rotation=45, ha='right', fontsize=8)
+            ax.set_yticklabels(main_strats, fontsize=8)
+            ax.set_title(model_label[model], fontsize=11)
+
+            # Annotate cells
+            for i in range(n):
+                for k in range(n):
+                    if i != k:
+                        val = matrix[i, k]
+                        color = 'white' if val > np.nanmax(masked) * 0.6 else 'black'
+                        ax.text(k, i, f'{val:.0%}', ha='center', va='center',
+                                fontsize=7, color=color)
+
+        plt.colorbar(im, ax=axes.ravel().tolist(), shrink=0.8, label=metric_name)
+
+        # Row label = "dominates column"
+        fig.text(0.01, 0.5, 'Row dominates → Column',
+                 rotation=90, va='center', fontsize=9, fontstyle='italic')
+
+        plt.tight_layout(rect=[0.03, 0, 1, 0.93])
+        path = output_dir / f'multi_obj_3d_{metric_name.lower()}_heatmap.png'
+        plt.savefig(path, bbox_inches='tight')
+        plt.close()
+        print(f'    Saved: {path}')
+
+
+# ══════════════════════════════════════════════════════════════════
+# Chart 8: Hypervolume Comparison Bar Chart
+# ══════════════════════════════════════════════════════════════════
+
+def plot_hypervolume_comparison(eval_dir: str, output_dir: Path):
+    """
+    Bar chart comparing Hypervolume across strategies and models.
+
+    Shows both 3D offline HV (from E2E benchmark) and 4D serving HV
+    (from serving windows), highlighting Pareto's multi-objective advantage.
+    """
+    hv_files = sorted(Path(eval_dir).glob('multi_obj_hv_summary_*.csv'))
+    if not hv_files:
+        print('    No HV summary data found')
+        return
+
+    hv_df = pd.read_csv(hv_files[-1])
+
+    model_label = {
+        'Qwen2.5-7B-Instruct-Q4_K_M': '7B',
+        'Meta-Llama-3.1-8B-Instruct-Q4_K_M': '8B',
+        'Qwen2.5-14B-Instruct-Q4_K_M': '14B',
+    }
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    fig.suptitle('Hypervolume Indicator (Higher = Better)',
+                 fontsize=14, fontweight='bold')
+
+    # ── Left: 3D Offline ──
+    ax1 = axes[0]
+    offline_hv = hv_df[hv_df['trace'] == 'offline'].copy()
+    if len(offline_hv) > 0:
+        offline_hv['model_short'] = offline_hv['model'].map(model_label)
+        strats_3d = sorted(offline_hv['strategy'].unique())
+
+        x = np.arange(len(strats_3d))
+        width = 0.25
+        models_3d = sorted(offline_hv['model_short'].unique())
+        colors_3d = ['#3498db', '#e74c3c', '#2ecc71']
+
+        for i, m in enumerate(models_3d):
+            vals = [offline_hv[(offline_hv['strategy'] == s) &
+                              (offline_hv['model_short'] == m)]['hv_3d'].values
+                    for s in strats_3d]
+            vals = [v[0] if len(v) > 0 else 0 for v in vals]
+            bars = ax1.bar(x + i * width, vals, width, label=m, color=colors_3d[i])
+
+        ax1.set_xticks(x + width)
+        ax1.set_xticklabels(strats_3d, rotation=45, ha='right', fontsize=8)
+        ax1.set_ylabel('Hypervolume (3D)')
+        ax1.set_title('3D: E/tok × TPOT × Power')
+        ax1.legend(title='Model')
+        ax1.set_yscale('log')
+        ax1.grid(axis='y', alpha=0.3)
+
+    # ── Right: 4D Serving ──
+    ax2 = axes[1]
+    serving_hv = hv_df[(hv_df['trace'] != 'offline') &
+                        (hv_df['hv_4d'] > 0)].copy()
+    if len(serving_hv) > 0:
+        serving_hv['model_short'] = serving_hv['model'].map(model_label)
+        # For serving, use the entry with max points per (baseline, model)
+        serving_hv = serving_hv.loc[
+            serving_hv.groupby(['strategy', 'model'])['n_points'].idxmax()
+        ]
+
+        strats_4d = sorted(serving_hv['strategy'].unique())
+        x4 = np.arange(len(strats_4d))
+        width4 = 0.25
+        models_4d = sorted(serving_hv['model_short'].unique())
+        colors_4d = ['#3498db', '#e74c3c', '#2ecc71']
+
+        for i, m in enumerate(models_4d):
+            vals = [serving_hv[(serving_hv['strategy'] == s) &
+                               (serving_hv['model_short'] == m)]['hv_4d'].values
+                    for s in strats_4d]
+            vals = [v[0] if len(v) > 0 else 0 for v in vals]
+            bars = ax2.bar(x4 + i * width4, vals, width4, label=m, color=colors_4d[i])
+
+            # Highlight Pareto bars
+            for si, s in enumerate(strats_4d):
+                if s == 'Pareto':
+                    ax2.bar(x4[si] + i * width4, vals[si], width4,
+                            edgecolor='black', linewidth=2, color=colors_4d[i])
+
+        ax2.set_xticks(x4 + width4)
+        ax2.set_xticklabels(strats_4d, rotation=45, ha='right', fontsize=8)
+        ax2.set_ylabel('Hypervolume (4D)')
+        ax2.set_title('4D: E/tok × TPOT × Power × Peak Temp')
+        ax2.legend(title='Model')
+        ax2.set_yscale('log')
+        ax2.grid(axis='y', alpha=0.3)
+
+    plt.tight_layout()
+    path = output_dir / 'multi_obj_hypervolume_comparison.png'
+    plt.savefig(path, bbox_inches='tight')
+    plt.close()
+    print(f'    Saved: {path}')
+
+
+# ══════════════════════════════════════════════════════════════════
+# Chart 9: 4D Serving MDR Matrix
+# ══════════════════════════════════════════════════════════════════
+
+def plot_4d_serving_mdr_matrix(eval_dir: str, output_dir: Path):
+    """
+    Per-window MDR matrix for 4D serving evaluation.
+
+    Shows MDR for each (baseline_a, baseline_b) pair per model,
+    averaged across traces. Highlights Pareto/ThermalSLO vs MAXN/Dynamic.
+    """
+    eval_files = sorted(Path(eval_dir).glob('multi_obj_4d_serving_*.csv'))
+    if not eval_files:
+        print('    No 4D serving evaluation data found')
+        return
+
+    df = pd.read_csv(eval_files[-1])
+
+    # Use per-window results only (total_count > 1)
+    win_df = df[df['total_count'] > 1].copy()
+
+    baselines = sorted(['MAXN', 'Dynamic', 'BestStatic', 'Pareto', 'ThermalSLO'])
+    models = sorted(win_df['model'].unique())
+    model_label = {m: m.replace('-Instruct-Q4_K_M', '').replace('Meta-Llama-3.1-', 'Llama-')
+                   for m in models}
+
+    fig, axes = plt.subplots(1, len(models), figsize=(5 * len(models) + 1, 4.5),
+                              squeeze=False)
+    fig.suptitle('4D Serving MDR: E/tok × TPOT × Power × Peak Temp (per-window)',
+                 fontsize=13, fontweight='bold')
+
+    for j, model in enumerate(models):
+        ax = axes[0, j]
+        model_df = win_df[win_df['model'] == model]
+
+        n = len(baselines)
+        matrix = np.zeros((n, n))
+        for i, ba in enumerate(baselines):
+            for k, bb in enumerate(baselines):
+                rows = model_df[(model_df['strategy_a'] == ba) &
+                                (model_df['strategy_b'] == bb)]
+                if len(rows) > 0:
+                    matrix[i, k] = rows['mdr'].mean()
+
+        mask = np.eye(n, dtype=bool)
+        masked = np.ma.array(matrix, mask=mask)
+
+        im = ax.imshow(masked, cmap='RdYlBu_r', aspect='auto', vmin=0, vmax=0.3)
+        ax.set_xticks(range(n))
+        ax.set_yticks(range(n))
+        ax.set_xticklabels(baselines, rotation=45, ha='right', fontsize=8)
+        ax.set_yticklabels(baselines, fontsize=8)
+        ax.set_title(model_label[model], fontsize=11)
+
+        for i in range(n):
+            for k in range(n):
+                if i != k:
+                    val = matrix[i, k]
+                    color = 'white' if val > 0.15 else 'black'
+                    ax.text(k, i, f'{val:.0%}', ha='center', va='center',
+                            fontsize=7, color=color)
+
+    plt.colorbar(im, ax=axes.ravel().tolist(), shrink=0.8, label='MDR')
+    fig.text(0.01, 0.5, 'Row dominates → Column',
+             rotation=90, va='center', fontsize=9, fontstyle='italic')
+
+    plt.tight_layout(rect=[0.03, 0, 1, 0.93])
+    path = output_dir / 'multi_obj_4d_serving_mdr_matrix.png'
+    plt.savefig(path, bbox_inches='tight')
+    plt.close()
+    print(f'    Saved: {path}')
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description='Phase 13 Visualization')
@@ -453,13 +713,16 @@ def main():
     parser.add_argument('--output', type=str,
                         default='figures/phase13_analysis',
                         help='Output directory')
+    parser.add_argument('--eval-data', type=str,
+                        default='data/multi_obj_eval',
+                        help='Directory with multi-objective evaluation results')
     args = parser.parse_args()
 
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print('=' * 60)
-    print('  Phase 13 Visualization')
+    print('  Phase 13 Visualization (9 charts)')
     print(f'  Output: {output_dir}')
     print('=' * 60)
 
@@ -471,13 +734,13 @@ def main():
         for col in oracle_df.columns:
             if 'gap_pct' in col or 'ept' in col.lower() or 'tpot' in col.lower():
                 oracle_df[col] = pd.to_numeric(oracle_df[col], errors='coerce')
-        print(f'\n[1/6] Oracle Gap: {len(oracle_df)} rows from {oracle_files[-1].name}')
+        print(f'\n[1/9] Oracle Gap: {len(oracle_df)} rows from {oracle_files[-1].name}')
         plot_oracle_gap(oracle_df, output_dir)
     else:
-        print('\n[1/6] Oracle Gap: no data found, skipping')
+        print('\n[1/9] Oracle Gap: no data found, skipping')
 
     if args.oracle_only:
-        print('\n✅ Oracle-only mode complete')
+        print('\n  Oracle-only mode complete')
         return
 
     # ── Load serving data ──
@@ -495,25 +758,42 @@ def main():
 
     # ── Charts 2-6 (require serving data) ──
     if not wm_df.empty:
-        print('\n[2/6] Temperature over Time')
+        print('\n[2/9] Temperature over Time')
         plot_temperature_over_time(wm_df, output_dir)
 
-        print('\n[3/6] Power & TPOT over Time')
+        print('\n[3/9] Power & TPOT over Time')
         plot_power_tpot_over_time(wm_df, output_dir)
 
-        print('\n[4/6] Cap Adaptation Timeline')
+        print('\n[4/9] Cap Adaptation Timeline')
         plot_cap_adaptation_timeline(wm_df, output_dir)
 
-        print('\n[5/6] Serving Summary Dashboard')
+        print('\n[5/9] Serving Summary Dashboard')
         plot_serving_summary_dashboard(wm_df, output_dir)
 
-        print('\n[6/6] Cross-trace Radar')
+        print('\n[6/9] Cross-trace Radar')
         plot_cross_trace_radar(wm_df, output_dir)
     else:
         for i in range(2, 7):
-            print(f'\n[{i}/6] Skipped: no serving data')
+            print(f'\n[{i}/9] Skipped: no serving data')
 
-    print(f'\n✅ Phase 13 visualization complete ({len(list(output_dir.glob("*.png")))} charts)')
+    # ── Charts 7-9 (require multi-objective evaluation data) ──
+    eval_dir = Path(args.eval_data)
+    if eval_dir.exists():
+        print('\n[7/9] 3D MDR/JIR Heatmap')
+        plot_3d_mdr_jir_heatmap(str(eval_dir), output_dir)
+
+        print('\n[8/9] Hypervolume Comparison')
+        plot_hypervolume_comparison(str(eval_dir), output_dir)
+
+        print('\n[9/9] 4D Serving MDR Matrix')
+        plot_4d_serving_mdr_matrix(str(eval_dir), output_dir)
+    else:
+        print(f'\nMulti-objective eval data not found in {args.eval_data}')
+        print('Run: python3 src/ratetable/pareto_multi_objective_evaluation.py')
+        for i in range(7, 10):
+            print(f'\n[{i}/9] Skipped: no eval data')
+
+    print(f'\n  Phase 13 visualization complete ({len(list(output_dir.glob("*.png")))} charts)')
 
 
 if __name__ == '__main__':
