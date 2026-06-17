@@ -769,6 +769,11 @@ def generate_report(
     lines.append("**Data source**: `data/cap_selector_benchmark/` (378 runs, 3 models × 9 strategies × 5 workloads × 3 repeats)")
     lines.append("**Objectives**: E/tok (minimize), TPOT (minimize), Power (minimize)\n")
 
+    # Fixed model order: 7B, 8B, 14B (not alphabetical)
+    model_order = ['Qwen2.5-7B-Instruct-Q4_K_M',
+                   'Meta-Llama-3.1-8B-Instruct-Q4_K_M',
+                   'Qwen2.5-14B-Instruct-Q4_K_M']
+
     # Key comparisons: pareto vs dynamic, pareto vs maxn
     key_comparisons = [('pareto', 'dynamic'), ('pareto', 'maxn')]
 
@@ -777,7 +782,7 @@ def generate_report(
         lines.append("| Model | MDR | JIR | Waste | E/tok Δ% | TPOT Δ% | Power Δ% |")
         lines.append("|:---:|:---:|:---:|:---:|:---:|:---:|:---:|")
 
-        models = sorted(set(r.model for r in offline_results if r.strategy_a == strat_a and r.strategy_b == strat_b))
+        models = [m for m in model_order if any(r.model == m for r in offline_results if r.strategy_a == strat_a and r.strategy_b == strat_b)]
         for model in models:
             matching = [r for r in offline_results
                        if r.strategy_a == strat_a and r.strategy_b == strat_b and r.model == model]
@@ -797,7 +802,7 @@ def generate_report(
     lines.append("|:---|:---:|:---:|:---:|")
 
     strats_offline = sorted(set(s.strategy for s in offline_summaries))
-    models_offline = sorted(set(s.model for s in offline_summaries))
+    models_offline = [m for m in model_order if m in set(s.model for s in offline_summaries)]
     for strat in strats_offline:
         cells = [strat]
         for model in models_offline:
@@ -821,7 +826,7 @@ def generate_report(
     lines.append("| Model | Dynamic→Oracle | MAXN→Oracle | Pareto→Oracle | BestStatic→Oracle |")
     lines.append("|:---:|:---:|:---:|:---:|:---:|")
 
-    models_oracle = sorted(set(s.model for s in oracle_summaries if s.trace == "oracle_gap"))
+    models_oracle = [m for m in model_order if any(s.model == m for s in oracle_summaries if s.trace == "oracle_gap")]
     for model in models_oracle:
         cells = [short_model(model)]
         for strat in ['dynamic', 'maxn', 'pareto', 'best_static']:
@@ -859,7 +864,7 @@ def generate_report(
     lines.append("**Data source**: `data/serving_benchmark/` (long-running serving windows)")
     lines.append("**Objectives**: E/tok (minimize), TPOT (minimize), Power (minimize), Peak Temp (minimize)\n")
 
-    models_serving = sorted(set(s.model for s in serving_summaries if s.trace != "offline"))
+    models_serving = [m for m in model_order if any(s.model == m for s in serving_summaries if s.trace != "offline")]
     for model in models_serving:
         lines.append(f"### Model: {short_model(model)}\n")
 
@@ -1098,6 +1103,9 @@ def main():
     )
 
     # Print key results
+    MODEL_ORDER = ['Qwen2.5-7B-Instruct-Q4_K_M',
+                   'Meta-Llama-3.1-8B-Instruct-Q4_K_M',
+                   'Qwen2.5-14B-Instruct-Q4_K_M']
     print("\n" + "=" * 60)
     print("  KEY RESULTS SUMMARY")
     print("=" * 60)
@@ -1109,7 +1117,7 @@ def main():
             for r in offline_results:
                 if r.strategy_a == pair[0] and r.strategy_b == pair[1]:
                     matching_per_model.setdefault(r.model, []).append(r)
-            for model in sorted(matching_per_model.keys()):
+            for model in [m for m in MODEL_ORDER if m in matching_per_model]:
                 m = matching_per_model[model][0]
                 sm = short_model(model)
                 print(f"    {sm}: {pair[0]:>8s} vs {pair[1]:<8s}: "
@@ -1136,7 +1144,7 @@ def main():
 
     if offline_summaries:
         print("\n  3D Hypervolume (top 3 per model):")
-        for model in sorted(set(s.model for s in offline_summaries if s.trace == "offline")):
+        for model in [m for m in MODEL_ORDER if any(s.model == m for s in offline_summaries if s.trace == "offline")]:
             model_s = [s for s in offline_summaries if s.model == model and s.trace == "offline"]
             model_s.sort(key=lambda x: x.hv_3d, reverse=True)
             short = model.replace("-Instruct-Q4_K_M", "").replace("Meta-Llama-3.1-", "Llama-")
