@@ -308,7 +308,8 @@ python3 src/visualization/analyze_e2e_benchmark.py     # E2E 分析 (5 图 + 报
 | [docs/开发文档/当前状态.md](docs/开发文档/当前状态.md) | 开发状态、模块进度、技术风险 |
 | [docs/任务书/任务书.md](docs/任务书/任务书.md) | 项目目标与技术路线 |
 | [figures/e2e_benchmark/e2e_benchmark_report.md](figures/e2e_benchmark/e2e_benchmark_report.md) | E2E benchmark 详细报告 |
+| [docs/实验文档/related_work_comparison.md](docs/实验文档/related_work_comparison.md) | **相关工作对比分析** (DVFS/Serving/边缘部署/多目标) |
 
 ---
 
-**Last Updated**: 2026-06-16 (Phase 13 complete: serving data + multi-obj eval + HV analysis)
+**Last Updated**: 2026-06-17 (Phase 13 complete + related work comparison)
