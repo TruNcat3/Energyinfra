@@ -279,7 +279,7 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 - ✅ Power savings up to **22.8%** (7B Pareto vs MAXN: 47W → 38W)
 - ✅ 5 analysis charts + detailed report in `figures/e2e_benchmark/`
 
-### Completed (Phase 13) 🔧 — Long-running Serving + Thermal (Code Complete, Awaiting Hardware)
+### Completed (Phase 13) ✅ — Long-running Serving + Thermal + Multi-Obj Eval
 
 **P0: Oracle Gap Analysis** ✅
 - Oracle definitions: Oracle-Energy (min E/tok), Oracle-SLO (TPOT-constrained), Oracle-Power (power-constrained)
@@ -288,9 +288,9 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 - File: `src/ratetable/oracle_gap_analysis.py` (502 lines)
 - Data: `data/oracle_gap_analysis/oracle_gap_*.csv`
 
-**P1: Fine-grained Cap Profiling** 🔧 (needs hardware)
+**P1: Fine-grained Cap Profiling** ✅
 - 10 GPU caps [408..1300] instead of 4, richer Pareto frontier
-- Checkpoint/resume support for 3h experiments
+- 3 models completed (252 rows each)
 - File: `src/experiments/run_finegrained_cap_profiling.py` (500 lines)
 
 **P2: Thermal-SLO Feedback Controller** ✅ (synthetic trace validated)
@@ -299,14 +299,21 @@ Choosing configurations that satisfy Service Level Objectives (SLOs) such as TTF
 - Thermal protection raises (not lowers) frequency: high temp → fast completion → idle cool
 - File: `src/controller/thermal_slo_controller.py` (693 lines)
 
-**P3: Long-running Serving Benchmark** 🔧 (needs hardware)
+**P3: Long-running Serving Benchmark** ✅ (data collected, 109 files, 5811 windows)
 - 5 baselines (MAXN/Dynamic/BestStatic/Pareto/ThermalSLO) × 3 traces
 - Per-window metrics: TPOT, power, temperature, SLO violation, tokens/J
 - File: `src/experiments/run_serving_benchmark.py` (732 lines)
 
-**P4: Phase 13 Visualization** ✅ (oracle gap chart generated, others await serving data)
-- 6 charts: Oracle Gap, Temperature, Power/TPOT, Cap Timeline, Dashboard, Radar
-- File: `src/visualization/visualize_phase13.py` (520 lines)
+**P4: Phase 13 Visualization** ✅ (8 charts generated)
+- 8 charts: Oracle Gap, Temperature, Power/TPOT, Dashboard, 3D MDR, 3D JIR, HV, 4D Serving MDR
+- File: `src/visualization/visualize_phase13.py` (810 lines)
+
+**P5: Multi-Objective Pareto Evaluation** ✅
+- EMO metrics (MDR, JIR, HV, Composite Waste) for 3D offline + 4D serving
+- **Key result: Pareto HV ranks #1 on all 3 models** — 8B: 31× 2nd-place, 14B: 22×, 7B: 1.3×
+- File: `src/ratetable/pareto_multi_objective_evaluation.py` (1150 lines)
+- Data: `data/multi_obj_eval/multi_obj_eval_report_*.md` + CSVs
+- Charts: `figures/phase13_analysis/multi_obj_*.png` (4 charts)
 
 ## Technical Decisions
 
@@ -669,5 +676,5 @@ timestamp  level  module  message
 
 ---
 
-**Last Updated**: 2026-06-04
-**AI Assistant Notes**: Phase 1-12 complete. Multi-objective Pareto DVFS selector implemented and validated across 3 models (7B/8B/14B, 378 E2E runs). Pareto achieves up to +5.5% E/tok savings vs MAXN and up to +22.8% power reduction vs dynamic on 7B. Available models: Phi-3-mini (3.8B), Qwen2.5-7B, Llama-3.1-8B, Qwen2.5-14B.
+**Last Updated**: 2026-06-16
+**AI Assistant Notes**: Phase 13 complete. Multi-objective evaluation (MDR/JIR/HV) done. Pareto HV ranks #1 on all 3 models (8B: 31× 2nd-place, 14B: 22×, 7B: 1.3×). Serving data: 7B/8B sufficient, 14B partial (needs long_gen/bursty supplement). Available models: Qwen2.5-7B, Llama-3.1-8B, Qwen2.5-14B.

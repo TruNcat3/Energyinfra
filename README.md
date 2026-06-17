@@ -86,11 +86,14 @@ DVFS 的真正价值在于长期运行的**功率节省**和**热管理**。
 
 **Hypervolume (Zitzler 1999 金标准)** — Pareto 支配更多目标空间：
 
-| 模型 | Pareto HV | 第二名 HV | 倍数 |
-|:---:|:---:|:---:|:---:|
-| **7B** | 483.74 | pwr_45w 368.80 | 1.3× |
-| **8B** | 73.68 | alpha_03 2.37 | **31×** |
-| **14B** | 96.02 | alpha_07 4.31 | **22×** |
+| 模型 | Pareto HV | 第二名 (策略/HV) | Pareto 领先 | vs 中位数 |
+|:---:|:---:|---|:---:|:---:|
+| **7B** | 483.74 | pwr_45w 368.80 | +31.2% | 7.4× |
+| **8B** | 73.68 | alpha_03 2.37 | **+3014%** | **33.0×** |
+| **14B** | 96.02 | alpha_07 4.31 | **+2130%** | **30.6×** |
+
+> 8B/14B 上 Pareto 支配的目标空间是所有其他策略的 **22-37 倍**。
+> Dynamic/MAXN 的 HV < 3.4（点集高度聚集），Pareto 均匀覆盖整个 Pareto 前沿。
 
 | 对比 (4D Serving) | MDR | Waste |
 |:---|:---:|:---:|
@@ -308,4 +311,4 @@ python3 src/visualization/analyze_e2e_benchmark.py     # E2E 分析 (5 图 + 报
 
 ---
 
-**Last Updated**: 2026-06-13 (Phase 13 multi-objective evaluation complete)
+**Last Updated**: 2026-06-16 (Phase 13 complete: serving data + multi-obj eval + HV analysis)
