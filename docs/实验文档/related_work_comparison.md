@@ -283,6 +283,39 @@ FlashFlow 的 phase-boundary DVFS 在 Jetson Orin 上的切换开销分析：
 
 **EnergyInfra 的核心优势**: workload-aware 选择避免了 FlashFlow 的切频开销，同时比 EdgeShark 的静态策略更好地适配不同输入长度。仅在 14B 长序列的功率指标上，FlashFlow 因使用极低 decode 频率而略有优势。
 
+### 4.7 多目标评估（3D: E/tok × TPOT × Power）
+
+> 将 EdgeShark* 和 FlashFlow* 纳入 EMO 框架，与 EnergyInfra 做 MDR/HV/Composite Waste 对比。
+
+#### Pareto 支配率 (MDR)
+
+| 对比 | 7B | 8B | 14B |
+|:---|:---:|:---:|:---:|
+| Pareto → EdgeShark\* | 8.3% (1/12) | 33.3% (4/12) | **75.0% (9/12)** |
+| Pareto → FlashFlow\* | 41.7% (5/12) | **58.3% (7/12)** | 8.3% (1/12) |
+| EdgeShark\* → Pareto | **0% (0/12)** | **0% (0/12)** | **0% (0/12)** |
+| FlashFlow\* → Pareto | **0% (0/12)** | **0% (0/12)** | **0% (0/12)** |
+
+> **没有任何方法能在 3 个维度上同时支配 Pareto** — 包括 EdgeShark 和 FlashFlow。
+
+#### Hypervolume (HV) — 支配的目标空间体积
+
+| 方法 | 7B HV | 8B HV | 14B HV | Pareto 领先 |
+|:---|:---:|:---:|:---:|:---:|
+| **EnergyInfra (Pareto)** | **2914** | **794** | **3181** | 1.0× |
+| EdgeShark\* | 2132 | 600 | 2605 | 1.2-1.4× |
+| FlashFlow\* | 1617 | 418 | 2306 | 1.4-1.9× |
+| Dynamic | 1991 | 540 | 1599 | 1.5-2.0× |
+| MAXN | 1039 | 385 | 1182 | 2.1-2.8× |
+
+#### Composite Waste — 到理想点的距离
+
+| 对比 (Pareto 更近为正) | 7B | 8B | 14B |
+|:---|:---:|:---:|:---:|
+| vs EdgeShark\* | 3.0pp | **18.7pp** | **22.4pp** |
+| vs FlashFlow\* | **25.4pp** | **80.3pp** | **40.8pp** |
+| vs MAXN | 42.3pp | 63.2pp | 70.8pp |
+
 ---
 
 ## 5. 论文 Related Work 叙事建议
