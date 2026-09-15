@@ -1,3 +1,0 @@
-switch_name,before_gpu_freq,after_gpu_freq,switching_overhead_ms,delta_ttft_ms,delta_tpot_ms,delta_energy_per_token_j,delta_avg_power_w
-gpu_low_to_high,378,1428,50.0,1.1071331585638422,-12.36031556358543,0.0301779214467177,6.991557735313231
-gpu_high_to_low,1428,378,45.0,-1.436832241910686,12.56530691019847,0.0347547257583188,-5.6631211178520005

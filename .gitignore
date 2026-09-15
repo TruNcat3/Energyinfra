@@ -43,5 +43,11 @@ CLAUDE.md
 docs/任务书/
 docs/开发文档/
 
-# Invalid/archived experiment data (local only)
+# Raw experiment data (local only; *.md/*.txt reports under data/ stay tracked)
+data/**
+!data/**/
+!data/**/*.md
+!data/**/*.txt
+
+# Invalid/archived experiment data (local only, incl. its md)
 data/_archived_invalid/

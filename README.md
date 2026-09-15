@@ -159,13 +159,10 @@ Energyinfra/
 │       ├── visualize_cross_model_comparison.py # 跨模型对比 (4 张图)
 │       ├── analyze_e2e_benchmark.py     # E2E benchmark 分析 (5 张图 + 报告)
 │       └── visualize_phase13.py         # Phase 13 可视化 (9 张图, 含多目标指标)
-├── data/
-│   ├── energy_profiling/               # Lock-mode profiling CSV (3 models × 792 rows)
-│   ├── cap_profiling/                  # Cap-mode profiling CSV (3 models × 216 rows)
-│   ├── rate_tables/                    # Lock/cap rate tables + DVFS rules (parquet/json)
-│   ├── cap_selector_benchmark/         # E2E benchmark results (378 runs)
-│   ├── oracle_gap_analysis/            # Oracle gap 分析结果 (P13)
-│   ├── serving_benchmark/              # Serving benchmark 结果 (P13)
+├── data/                               # 实验报告 (原始数据仅本地保留)
+│   ├── energy_profiling/               # Lock-mode profiling 报告
+│   ├── rate_tables/                    # 汇率表构建报告 (parquet/json 原始数据仅本地)
+│   ├── oracle_gap_analysis/            # Oracle gap 分析报告 (P13)
 │   └── multi_obj_eval/                 # 多目标 Pareto 评估报告 (P13)
 ├── figures/
 │   ├── pareto_frontier/                # Pareto 前沿图 (6 张)
