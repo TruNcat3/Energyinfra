@@ -7,7 +7,7 @@
 
 ## 1. 分类总览
 
-我们将相关工作按**优化维度**分为 5 类：
+本文将相关工作按**优化维度**分为 5 类：
 
 | 类别 | 核心思路 | 代表工作数 | 与本文关系 |
 |:---|------|:---:|:---|
@@ -350,7 +350,7 @@ FlashFlow 的 phase-boundary DVFS 在 Jetson Orin 上的切换开销分析：
 
 ---
 
-## 5. 参考文献列表
+## 6. 参考文献列表
 
 [1] Frantar et al., "GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers", ICLR 2023.
 [2] Lin et al., "AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration", 2024.

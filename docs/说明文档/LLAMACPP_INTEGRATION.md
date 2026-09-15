@@ -27,7 +27,7 @@ print(output)
 
 ```bash
 # 下载Qwen-7B GGUF模型
-bash scripts/download_qwen_gguf.sh
+bash scripts/_legacy/download_qwen_gguf.sh
 
 # 这将下载约2.7GB的Q4_K_M量化模型
 ```
@@ -36,7 +36,7 @@ bash scripts/download_qwen_gguf.sh
 
 ```bash
 # 测试下载的模型
-bash scripts/test_llamacpp_model.sh /home/wt/work/Energyinfra/models/gguf/qwen-7b-chat-q4_k_m.gguf
+bash scripts/active/test_llamacpp_model.sh models/gguf/qwen-7b-chat-q4_k_m.gguf
 ```
 
 ### 选项3：运行实验
@@ -65,17 +65,17 @@ python3 src/experiment_4_1_stability_llamacpp.py \
 
 ## 🎯 推荐的测试流程
 
-### 步骤1：基础验证（今日）
+### 步骤1：基础验证
 1. 下载Qwen-7B-Q4_K_M模型
 2. 运行快速测试验证功能
 3. 修改实验脚本支持llama.cpp
 
-### 步骤2：真实实验4.1（明日）
+### 步骤2：真实实验4.1
 1. 使用llama.cpp运行测量稳定性实验
 2. 对比合成测试和真实测试结果
-3. 验证我们的核心假设
+3. 验证核心假设
 
-### 步骤3：频率扫描实验（本周）
+### 步骤3：频率扫描实验
 1. 修改实验4.2支持llama.cpp
 2. 运行单旋钮敏感性实验
 3. 生成GPU/CPU/EMC频率影响热力图
@@ -125,9 +125,9 @@ llama.cpp可以提供我们需要的所有指标：
 
 现在您已经准备好使用llama.cpp开始真实的LLM实验！
 
-建议的下一步：
+基本使用流程：
 1. 运行下载脚本获取Qwen-7B模型
 2. 运行测试脚本验证功能
-3. 开始真实实验验证我们的假设
+3. 运行真实实验
 
 祝您实验顺利！🚀

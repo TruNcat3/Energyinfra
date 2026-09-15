@@ -1,5 +1,7 @@
 # Phase 1 完成报告 - Jetson LLM Energy Profiling
 
+> 本文档为研究过程阶段记录，保留撰写时点的原始结论；最新汇总见 [实验总览](实验总览.md) 与 [文档索引](README.md)。
+
 **完成时间**: 2026-05-06  
 **项目阶段**: Phase 1 (项目基础建设)  
 **状态**: ✅ **完成**
@@ -8,7 +10,7 @@
 
 ## 📋 执行概要
 
-根据[原始任务文档](/home/wt/work/Energyinfra/jetson_llm_energy_rate_table_task_doc.md)和实施计划，我们已成功完成Phase 1的所有核心任务，为前置验证实验奠定了完整的技术基础。
+根据原始任务文档（内部开发文档，未随仓库发布）和实施计划，我们已成功完成Phase 1的所有核心任务，为前置验证实验奠定了完整的技术基础。
 
 ## 📁 已完成的工作
 
@@ -16,7 +18,7 @@
 
 **创建的目录结构**:
 ```
-/home/wt/work/Energyinfra/
+Energyinfra/
 ├── configs/                    # 配置文件目录
 │   ├── platform.yaml          # ✅ 平台配置
 │   ├── workloads.yaml         # ✅ 工作负载配置  
@@ -44,11 +46,13 @@
 └── jetson_llm_energy_rate_table_task_doc.md  # 原始任务文档
 ```
 
+> 注：以上为撰写时点的目录结构。其中 CLAUDE.md、docs/任务书.md、docs/当前状态.md、docs/checklist.md 与原始任务文档现为内部开发文档，仅本地维护、未随仓库发布；src/ 下的模块后来整理至 src/controller、src/metrics、src/benchmark 等子目录。
+
 ### 2. ✅ 核心文档编写 (17个文件，总计约320KB)
 
 #### 中文核心文档
 
-**[docs/任务书.md](/home/wt/work/Energyinfra/docs/任务书.md) - 7.3KB**
+**docs/任务书.md - 7.3KB（内部开发文档，未随仓库发布）**
 - **目的**: 明确项目目标和方向
 - **内容**:
   - 项目核心目标（能耗汇率表、自适应选择、在线控制）
@@ -60,7 +64,7 @@
   - 关键里程碑（M1-M5）
   - 风险与限制分析
 
-**[docs/当前状态.md](/home/wt/work/Energyinfra/docs/当前状态.md) - 12KB**
+**docs/当前状态.md - 12KB（内部开发文档，未随仓库发布）**
 - **目的**: 当前开发情况和模糊、妥协的部分说明
 - **内容**:
   - 项目启动状态（已完成工作清单）
@@ -73,7 +77,7 @@
   - 当前需要解决的关键问题
   - 当前开发重点
 
-**[docs/checklist.md](/home/wt/work/Energyinfra/docs/checklist.md) - 16KB**
+**docs/checklist.md - 16KB（内部开发文档，未随仓库发布）**
 - **目的**: 记录待完成内容和每次修改时都需要检查各项事宜的说明
 - **内容**:
   - 阶段1待办清单（6个阶段，每个阶段详细子任务）
@@ -89,7 +93,7 @@
 
 #### 英文文档
 
-**[CLAUDE.md](/home/wt/work/Energyinfra/CLAUDE.md) - 18KB**
+**CLAUDE.md - 18KB（内部开发文档，未随仓库发布）**
 - **目的**: 为AI助手提供项目上下文
 - **内容**:
   - 项目概览和核心概念
@@ -101,7 +105,7 @@
 
 #### 项目使用文档
 
-**[README.md](/home/wt/work/Energyinfra/README.md) - 详细项目使用指南**
+**[README.md](../../README.md) - 详细项目使用指南**
 - **内容**:
   - 项目概览和核心目标
   - 完整项目结构展示
@@ -115,7 +119,7 @@
 
 ### 3. ✅ 配置文件创建 (5个YAML文件)
 
-**[configs/platform.yaml](/home/wt/work/Energyinfra/configs/platform.yaml)** - 平台配置
+**[configs/platform.yaml](../../configs/platform.yaml)** - 平台配置
 - **配置项**:
   - Jetson平台信息（型号、JetPack版本、CUDA版本、TensorRT版本）
   - 电源管理（电源模式、调节器、最大功耗限制）
@@ -127,7 +131,7 @@
   - 日志配置（级别、目录、轮转设置）
   - 实验环境（Python版本、CUDA设备、模型路径）
 
-**[configs/workloads.yaml](/home/wt/work/Energyinfra/configs/workloads.yaml)** - 工作负载配置
+**[configs/workloads.yaml](../../configs/workloads.yaml)** - 工作负载配置
 - **配置项**:
   - 模型配置（Qwen-7B-INT4、Llama-3-8B-FP16等）
   - 批处理大小配置（1、2、4、8、16）
@@ -137,7 +141,7 @@
   - 并发度配置（1、2、4、8）
   - 7个前置实验的详细配置（每个实验的完整参数）
 
-**[configs/frequencies.yaml](/home/wt/work/Energyinfra/configs/frequencies.yaml)** - 频率配置
+**[configs/frequencies.yaml](../../configs/frequencies.yaml)** - 频率配置
 - **配置项**:
   - GPU频率配置（可用频率选项、预设档位、频率限制）
   - CPU频率配置（可用频率选项、预设档位、频率限制）
@@ -147,7 +151,7 @@
   - 频率验证规则（验证设置、最大重试次数、容差）
   - 电源模式对应的频率建议
 
-**[configs/sweep.yaml](/home/wt/work/Energyinfra/configs/sweep.yaml)** - 扫描配置
+**[configs/sweep.yaml](../../configs/sweep.yaml)** - 扫描配置
 - **配置项**:
   - 扫描全局配置（实验ID、运行配置、超时设置、数据保存、监控、恢复）
   - 7个前置实验的详细配置（每个实验的重复次数、超时、冷却等）
@@ -157,7 +161,7 @@
   - 结果输出配置（格式、压缩、可视化、报告）
   - 实验调度（时间窗口、优先级配置、执行顺序）
 
-**[configs/slo.yaml](/home/wt/work/Energyinfra/configs/slo.yaml)** - SLO配置
+**[configs/slo.yaml](../../configs/slo.yaml)** - SLO配置
 - **配置项**:
   - 全局SLO配置（类型、严格程度、违反容忍度）
   - 延迟约束（TTFT、TPOT、ITL、总延迟的P95/P99约束）
@@ -174,7 +178,7 @@
 
 ### 4. ✅ 核心Python模块实现 (5个模块，每个~400行)
 
-**[src/freq_controller.py](/home/wt/work/Energyinfra/src/freq_controller.py)** - 频率控制模块
+**[src/controller/freq_controller.py](../../src/controller/freq_controller.py)** - 频率控制模块（撰写时点位于 src/freq_controller.py，后整理至 src/controller/）
 - **核心功能**:
   - 读取当前GPU/CPU/EMC频率
   - 设置指定频率（支持jetson_clocks和sysfs两种方法）
@@ -188,7 +192,7 @@
 - **文档**: Google风格的详细文档字符串
 - **类型提示**: 所有函数参数和返回值的类型提示
 
-**[src/metrics_collector.py](/home/wt/work/Energyinfra/src/metrics_collector.py)** - 指标采集模块
+**[src/metrics/metrics_collector.py](../../src/metrics/metrics_collector.py)** - 指标采集模块（撰写时点位于 src/metrics_collector.py）
 - **核心功能**:
   - 启动tegrastats后台进程
   - 实时解析tegrastats输出（功耗、温度、频率、内存、CPU使用率）
@@ -201,7 +205,7 @@
 - **数据格式**: 结构化的DataFrame输出
 - **解析逻辑**: 支持不同JetPack版本的tegrastats格式
 
-**[src/benchmark_runner.py](/home/wt/work/Energyinfra/src/benchmark_runner.py)** - 基准测试运行模块
+**[src/benchmark/benchmark_runner.py](../../src/benchmark/benchmark_runner.py)** - 基准测试运行模块（撰写时点位于 src/benchmark_runner.py）
 - **核心功能**:
   - 根据workload和frequency配置生成benchmark命令
   - 执行TensorRT-LLM benchmark（支持其他runtime扩展）
@@ -214,7 +218,7 @@
 - **多runtime支持**: 主要支持TensorRT-LLM，设计可扩展到llama.cpp、vLLM
 - **统计计算**: 完整的统计分析功能
 
-**[src/sweep_runner.py](/home/wt/work/Energyinfra/src/sweep_runner.py)** - 扫描编排模块
+**[src/benchmark/sweep_runner.py](../../src/benchmark/sweep_runner.py)** - 扫描编排模块（撰写时点位于 src/sweep_runner.py）
 - **核心功能**:
   - 生成workload × frequency的所有配置组合
   - 支持7种不同实验类型的配置生成
@@ -228,7 +232,7 @@
 - **恢复能力**: 支持从中断点继续实验
 - **进度监控**: 实时显示进度百分比和预估剩余时间
 
-**[src/parse_logs.py](/home/wt/work/Energyinfra/src/parse_logs.py)** - 日志解析模块
+**[src/metrics/parse_logs.py](../../src/metrics/parse_logs.py)** - 日志解析模块（撰写时点位于 src/parse_logs.py）
 - **核心功能**:
   - 对齐benchmark日志和tegrastats日志
   - 计算派生指标（energy/token、tokens/J、energy/request、能效分数）
@@ -244,7 +248,7 @@
 
 ### 5. ✅ 运行脚本创建
 
-**[scripts/run_prelim_experiments.sh](/home/wt/work/Energyinfra/scripts/run_prelim_experiments.sh)** - 前置实验运行脚本
+**[scripts/active/run_prelim_experiments.sh](../../scripts/active/run_prelim_experiments.sh)** - 前置实验运行脚本（撰写时点位于 scripts/run_prelim_experiments.sh）
 - **功能特性**:
   - 环境检查（Jetson设备检测、依赖包检查）
   - 目录创建（必要的日志和数据目录）
@@ -324,6 +328,8 @@
 
 ## 🚀 Phase 2 准备情况
 
+> 撰写时点状态，仅供参考
+
 ### 前置条件
 - ✅ **项目结构完整**: 所有必要的目录和文件已创建
 - ✅ **模块实现完成**: 5个核心模块已实现并可测试
@@ -331,7 +337,7 @@
 - ✅ **文档齐全**: 详细的使用指南和开发指南已准备
 - ✅ **运行脚本可用**: 前置实验运行脚本已创建
 
-### 待完成工作（需要在Jetson设备上执行）
+### 撰写时点的待完成工作（需要在Jetson设备上执行）
 1. **Jetson环境验证**
    - 验证JetPack版本兼容性
    - 测试频率控制功能
@@ -386,6 +392,8 @@
 
 ## 🔮 预期下一步（Phase 2）
 
+> 撰写时点计划，仅供参考
+
 ### 短期目标（1-2周）
 1. **Jetson设备验证**
    - 在实际Jetson Orin设备上测试所有模块
@@ -425,9 +433,9 @@ Phase 1（项目基础建设）已**圆满完成**。我们成功建立了：
 4. **专业的工程实践** - 遵循最佳实践，确保代码质量和可维护性
 5. **详细的实施计划** - 为Phase 2的实施提供了清晰路线图
 
-项目现在已准备好进入Phase 2，在Jetson Orin设备上执行前置验证实验。所有代码、配置和文档均已就位，为实验的成功执行奠定了坚实基础。
+至此项目已准备好进入Phase 2，在Jetson Orin设备上执行前置验证实验。所有代码、配置和文档均已就位，为实验的成功执行奠定了坚实基础。
 
-**项目状态**: 🎉 **Phase 1 完成，Phase 2 准备开始！**
+**项目状态**（撰写时点）: 🎉 **Phase 1 完成，Phase 2 准备开始！**
 
 ---
 

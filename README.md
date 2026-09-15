@@ -187,6 +187,10 @@ Energyinfra/
 pip3 install pandas numpy pyarrow matplotlib seaborn scipy
 ```
 
+> **数据与模型说明**：仓库不包含 GGUF 模型文件与原始实验数据（体积较大，均可由脚本重新生成）。
+> 模型获取见 [docs/说明文档/DOCKER_MODEL_SETUP.md](docs/说明文档/DOCKER_MODEL_SETUP.md)；
+> profiling 原始数据由下方步骤 1 生成，各阶段实验报告见 [docs/实验文档](docs/实验文档/README.md)。
+
 ### 1. 运行 Profiling（离线建表）
 
 ```bash
@@ -257,30 +261,25 @@ python3 src/visualization/analyze_e2e_benchmark.py     # E2E 分析 (5 图 + 报
 
 ---
 
-## 项目阶段
+## 研究阶段与实验记录
 
-| Phase | 描述 | 状态 |
-|:---:|------|:---:|
-| 1 | 项目基础建设 | ✅ |
-| 2 | 核心模块 (freq_controller, metrics_collector) | ✅ |
-| 3 | 前置验证实验 (7 个) | ✅ |
-| 4 | Phase-Aware DVFS | ✅ |
-| 5 | 高级优化 + 真实模型实验 | ✅ |
-| 6 | 细粒度 GPU×EMC DVFS (3.8B) | ✅ |
-| 7 | Phase Switching (negative result → pivot) | ✅ |
-| 8 | 频率控制重构 (lock/cap/dynamic) | ✅ |
-| 9 | Benchmark Mode (EOS 抑制) | ✅ |
-| 10 | 大模型 Profiling (7B/8B/14B) | ✅ |
-| **11** | **Workload-aware Rate Table + 多目标 Pareto** | **✅** |
-| **12** | **E2E Cap Selector Benchmark (378 runs)** | **✅** |
-| **13** | **Oracle Gap + Thermal-SLO Controller + Serving Benchmark + Multi-Obj Eval** | **✅ 代码完成 + 数据已采集** |
+各阶段的完整实验报告入口见 [docs/实验文档](docs/实验文档/README.md)。
 
-### 方向调整
+| 阶段 | 内容 | 实验记录 |
+|:---:|------|------|
+| 1-3 | 基础设施、核心模块、前置验证实验 | [Phase 1-3 报告](docs/实验文档/README.md) |
+| 4-5 | Phase-Aware DVFS、真实模型实验 | [实验总览](docs/实验文档/实验总览.md) |
+| 6-7 | 细粒度 GPU×EMC DVFS；phase 切换开销验证（负结果） | [Phase 6 报告](docs/实验文档/PHASE6_FINEGRAINED_DVFS_REPORT.md) |
+| 8-10 | 频率控制重构 (lock/cap/dynamic)、benchmark 模式、大模型 profiling | — |
+| 11 | Workload-aware Rate Table + 多目标 Pareto | [Pareto 图表](figures/pareto_frontier/) |
+| 12 | E2E Cap Selector Benchmark (378 runs) | [E2E 报告](figures/e2e_benchmark/e2e_benchmark_report.md) |
+| 13 | Oracle Gap + Thermal-SLO 控制器 + Serving Benchmark | [Phase 13 图表](figures/phase13_analysis/) |
 
-- **Phase 7**: 证明 sysfs phase-boundary DVFS 切换开销 ~715ms (占 TTFT 37-65%)，不可行
-- **Pivot**: 从在线 phase 切换 → **离线 profiling + 在线 workload-aware cap**
-- **Phase 11**: 增加**多目标 Pareto 前沿**，不再返回单一最优解，而是完整权衡面
-- **Phase 13**: 从单请求 E/tok 优化 → **长期 serving 的 SLO-stable thermal-aware energy management**
+### 方法演进中的关键转折
+
+- **Phase 7（负结果）**: 实测 sysfs phase-boundary DVFS 切换开销 ~715ms（占 TTFT 37-65%），据此放弃在线 phase 切换，转向**离线 profiling + 在线 workload-aware cap**
+- **Phase 11**: 从返回单一最优解改为输出完整**多目标 Pareto 前沿**（权衡面而非点）
+- **Phase 13**: 从单请求 E/tok 优化转向**长期 serving 的 SLO-stable thermal-aware energy management**
 
 ---
 
@@ -301,9 +300,10 @@ python3 src/visualization/analyze_e2e_benchmark.py     # E2E 分析 (5 图 + 报
 
 | 文档 | 说明 |
 |------|------|
-| [figures/e2e_benchmark/e2e_benchmark_report.md](figures/e2e_benchmark/e2e_benchmark_report.md) | E2E benchmark 详细报告 |
+| [docs/实验文档/README.md](docs/实验文档/README.md) | 实验文档索引（术语规范 + 全部报告入口） |
+| [docs/实验文档/实验总览.md](docs/实验文档/实验总览.md) | 实验环境、频率配置空间、功耗采集方法 |
 | [docs/实验文档/related_work_comparison.md](docs/实验文档/related_work_comparison.md) | **相关工作对比分析** (DVFS/Serving/边缘部署/多目标) |
-
----
-
-**Last Updated**: 2026-06-17 (Phase 13 complete + related work comparison)
+| [figures/e2e_benchmark/e2e_benchmark_report.md](figures/e2e_benchmark/e2e_benchmark_report.md) | E2E benchmark 详细报告 |
+| [docs/说明文档/runtime_setup_guide.md](docs/说明文档/runtime_setup_guide.md) | 运行时环境搭建（llama.cpp / Jetson） |
+| [docs/说明文档/DOCKER_MODEL_SETUP.md](docs/说明文档/DOCKER_MODEL_SETUP.md) | 模型获取与 GGUF 部署 |
+| [docs/说明文档/quick_experiment_guide.md](docs/说明文档/quick_experiment_guide.md) | 快速实验指引 |

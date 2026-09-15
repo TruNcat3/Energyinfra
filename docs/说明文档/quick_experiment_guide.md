@@ -9,17 +9,17 @@
 
 ## 🔧 解决方案
 
-我已经创建了最终版本的实验脚本，使用改进的基准测试：
-- 📝 `scripts/final_freq_experiment.sh` - 最终实验脚本
-- 📝 `src/final_benchmark.py` - 改进的基准测试（纯净CSV输出）
+最终版本的实验脚本使用改进的基准测试：
+- 📝 `scripts/_legacy/final_freq_experiment.sh` - 最终实验脚本
+- 📝 `src/_legacy/final_benchmark.py` - 改进的基准测试（纯净CSV输出）
 
 ## 🚀 运行步骤
 
 ### 1. 在有sudo权限的终端中执行：
 
 ```bash
-cd /home/wt/work/Energyinfra
-./scripts/final_freq_experiment.sh
+cd <仓库根目录>
+./scripts/_legacy/final_freq_experiment.sh
 ```
 
 ### 2. 预期输出：
@@ -40,7 +40,7 @@ cd /home/wt/work/Energyinfra
 🚀 Final Frequency Experiment
 ==========================================
 📊 实验配置:
-  模型: /home/wt/work/Energyinfra/models/gguf/Phi-3-mini-4k-instruct-q4.gguf
+  模型: models/gguf/Phi-3-mini-4k-instruct-q4.gguf
   测试频率: 306 MHz 612 MHz 918 MHz 1300 MHz
 
 ==========================================
@@ -71,7 +71,7 @@ cd /home/wt/work/Energyinfra
 
 ## 🎯 预期发现
 
-基于之前的诊断测试，我们预期：
+基于之前的诊断测试，预期：
 - **306 MHz**: 最低性能，约8-9 tokens/s
 - **612 MHz**: 中低性能，约10-12 tokens/s
 - **918 MHz**: 中等性能，约13-15 tokens/s
@@ -81,7 +81,7 @@ cd /home/wt/work/Energyinfra
 
 实验完成后，结果将保存在：
 - `data/frequency_experiment_results/final_results_YYYYMMDD_HHMMSS.txt` - 文本格式
-- `data/frequency_experiment_results/final_results_YYYYMMDD_HHMMSS.json` - JSON格式
+- `data/frequency_experiment_results/final_results_YYYYMMDD_HHMMSS.json` - JSON格式（原始数据仅本地保留，由 `scripts/_legacy/final_freq_experiment.sh` 生成）
 
 ## ⚠️ 注意事项
 
@@ -94,7 +94,7 @@ cd /home/wt/work/Energyinfra
 ### 如果基准测试失败：
 ```bash
 # 手动测试基准脚本
-python3 /home/wt/work/Energyinfra/src/final_benchmark.py
+python3 src/_legacy/final_benchmark.py
 ```
 
 ### 如果频率设置失败：
@@ -106,9 +106,9 @@ sudo -v
 ls -la /sys/class/devfreq/17000000.gpu/
 ```
 
-## 📈 下一步
+## 📈 后续分析
 
-获得实验数据后，我们将：
+获得实验数据后，可进行以下分析：
 1. 分析频率-性能关系
 2. 计算能效比 (tokens/J)
 3. 确定最优频率选择策略
@@ -116,8 +116,8 @@ ls -la /sys/class/devfreq/17000000.gpu/
 
 ---
 
-**准备好了吗？请运行最终实验脚本！**
+**运行方式：**
 
 ```bash
-cd /home/wt/work/Energyinfra && ./scripts/final_freq_experiment.sh
+cd <仓库根目录> && ./scripts/_legacy/final_freq_experiment.sh
 ```

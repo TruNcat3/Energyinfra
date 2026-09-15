@@ -180,7 +180,7 @@ python3 scripts/build.py \
 
 ---
 
-## 🎯 立即行动计划
+## 🎯 推荐行动计划
 
 ### 推荐：llama.cpp (立即可行）
 
@@ -211,7 +211,7 @@ cmake --build . --target llama-server
 
 # 2. 下载并转换模型
 # 从Hugging Face下载Qwen-7B
-python3 scripts/download_and_convert_qwen.py
+bash scripts/_legacy/download_qwen_gguf.sh
 
 # 3. 运行基准测试
 python3 src/benchmark_runner_llamacpp.py \
@@ -233,7 +233,7 @@ python3 src/experiment_4_1_stability_real.py
 
 ### 继续使用合成测试 + 深度分析
 
-如果我们决定暂时不安装真实模型，可以：
+若暂时不安装真实模型，可以：
 
 #### 策略A：深化合成测试
 1. **完善合成测试参数**：
@@ -294,7 +294,7 @@ python3 src/experiment_4_1_stability_real.py
 
 ## 💡 建议的决策路径
 
-### 短期决策（今日）
+### 短期决策
 **推荐选择**: llama.cpp
 
 **理由**：
@@ -304,7 +304,7 @@ python3 src/experiment_4_1_stability_real.py
 4. 支持我们需要的所有模型
 5. 开发和调试成本低
 
-### 中期决策（本周）
+### 中期决策
 **如果llama.cpp工作良好**：
 - 继续使用llama.cpp完成所有前置实验
 - 基于真实数据验证我们的假设
@@ -315,7 +315,7 @@ python3 src/experiment_4_1_stability_real.py
 - 评估性能差异
 - 选择最佳方案继续
 
-### 长期决策（后续）
+### 长期决策
 **如果获得NGC账号**：
 - 重新评估TensorRT-LLM方案
 - 对比llama.cpp和TensorRT-LLM的性能
@@ -323,10 +323,10 @@ python3 src/experiment_4_1_stability_real.py
 
 ---
 
-## 🚀 下一步行动建议
+## 🚀 行动方案选项
 
 ### 选项A：选择llama.cpp（强烈推荐）⭐
-**立即执行**：
+**执行步骤**：
 1. 安装llama.cpp（pip或编译）
 2. 下载Qwen-7B-GGUF模型
 3. 修改benchmark_runner支持llama.cpp
@@ -340,7 +340,7 @@ python3 src/experiment_4_1_stability_real.py
 - **总计**：4-6小时可以开始真实测试
 
 ### 选项B：继续深化合成测试
-**立即执行**：
+**执行步骤**：
 1. 完善合成测试参数
 2. 运行实验4.2、4.3、4.4
 3. 生成完整的分析报告
@@ -379,6 +379,5 @@ python3 src/experiment_4_1_stability_real.py
 
 ---
 
-**文档状态**: 替代方案分析完成，等待用户决策  
-**推荐**: llama.cpp作为主要替代方案  
-**预期**: 4-6小时内可以开始真实测试
+**文档状态**: 替代方案分析完成，项目最终采用 llama.cpp 路线（见 [runtime_migration_report](runtime_migration_report.md)）  
+**推荐**: llama.cpp作为主要替代方案

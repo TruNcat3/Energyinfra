@@ -1,5 +1,7 @@
 # Phase 6 实验报告：细粒度 GPU×EMC DVFS 能耗优化
 
+> 本文档为研究过程阶段记录，保留撰写时点的原始结论；最新汇总见 [实验总览](实验总览.md) 与 [文档索引](README.md)。
+
 **日期**: 2026-05-16 ~ 2026-05-17
 **模型**: Phi-3-mini-4k-instruct-Q4 (3.8B)
 **平台**: Jetson Orin (JetPack 5.x)
@@ -100,7 +102,7 @@ GPU 能效（E/token）并非单调递增或递减，而是呈 W 形：
 - **101 个 Pareto 最优配置**
 - **30 条 DVFS 规则** (3 objectives × 10 buckets)
 
-**输出文件**:
+**输出文件**（原始数据仅本地保留，由 `src/ratetable/build_rate_table_finegrained.py` 生成）:
 - `data/rate_tables/finegrained_selector_table_20260516_071238.parquet`
 - `data/rate_tables/finegrained_dvfs_rules_20260516_071238.json`
 
@@ -142,7 +144,7 @@ E2E benchmark 中各配置差异较小（<3%），主要原因：
 
 ## 6. 数据归档
 
-以下旧数据已归档至 `data/_archived_invalid/`：
+以下旧数据已归档至 `data/_archived_invalid/`（该目录仅本地保留）：
 
 | 类别 | 文件数 | 原因 |
 |------|:---:|------|
@@ -156,6 +158,9 @@ E2E benchmark 中各配置差异较小（<3%），主要原因：
 ## 7. 输出文件清单
 
 ### 数据
+
+> 以下原始数据文件（csv/parquet/json）仅本地保留，可由下方「代码」节列出的对应脚本重新生成；两次 profiling 的文字摘要（`data/energy_profiling/finegrained_summary_20260516_*.md`）随仓库发布。
+
 - `data/energy_profiling/finegrained_profiling_20260516_015611.csv` — Decode profiling (660 runs)
 - `data/energy_profiling/finegrained_profiling_20260516_055330.csv` — Mixed profiling (660 runs)
 - `data/energy_profiling/finegrained_combined_20260516.csv` — 合并数据 (1320 runs)

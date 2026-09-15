@@ -5,6 +5,8 @@
 **状态**: 🔄 Docker配置脚本创建完成，开始执行  
 **目标**: 配置TensorRT-LLM Docker环境并准备Qwen-7B-INT4和Llama-3-8B-FP16模型
 
+> 撰写时点状态，仅供参考：本文档记录 Docker/TensorRT-LLM 准备阶段的进度与计划，其中的执行状态、任务清单与时间预期均为当时状态；后续项目已转向 llama.cpp 路线，见 [runtime_migration_report](runtime_migration_report.md)。
+
 ## ✅ 已完成的工作
 
 ### 1. 实验4.1：测量稳定性测试（合成）
@@ -23,9 +25,9 @@
 3. **TPOT相对稳定**：decode阶段的延迟一致性较好
 4. **能耗变异较大**：需要在实际系统中进一步验证
 
-**文件生成**：
-- 详细结果：`data/experiment_4_1/stability_results_*.csv`
-- 稳定性指标：`data/experiment_4_1/stability_metrics_*.json`
+**文件生成**（由 `src/experiments/experiment_4_1_stability.py` 生成）：
+- 详细结果：`data/experiment_4_1/stability_results_*.csv`（原始数据仅本地保留）
+- 稳定性指标：`data/experiment_4_1/stability_metrics_*.json`（原始数据仅本地保留）
 - 实验报告：`data/experiment_4_1/stability_report_*.txt`
 
 **系统验证**：✅ 合成测试框架工作正常，可以开始真实测试
@@ -34,7 +36,7 @@
 **状态**: ✅ **完成**
 
 **创建的脚本**：
-- `scripts/setup_tensorrt_llm_docker.sh` - 完整的Docker环境设置脚本
+- `scripts/_legacy/setup_tensorrt_llm_docker.sh` - 完整的Docker环境设置脚本
   - Docker安装检查
   - NVIDIA运行时支持验证
   - TensorRT-LLM镜像拉取
@@ -81,7 +83,7 @@
 
 ### 优先级1：Docker环境验证
 **任务**：
-- [ ] 执行 `bash scripts/setup_tensorrt_llm_docker.sh`
+- [ ] 执行 `bash scripts/_legacy/setup_tensorrt_llm_docker.sh`
 - [ ] 验证Docker容器可以正常启动
 - [ ] 验证TensorRT-LLM功能正常
 
@@ -127,7 +129,7 @@
 ### 立即行动
 1. **执行Docker设置脚本**：
    ```bash
-   bash scripts/setup_tensorrt_llm_docker.sh
+   bash scripts/_legacy/setup_tensorrt_llm_docker.sh
    ```
 
 2. **拉取Docker镜像**：
@@ -246,8 +248,7 @@
 ---
 
 **文档状态**: 初始版本，正在执行中  
-**责任者**: 系统架构师 + 开发团队  
-**更新频率**: 每日或每关键步骤更新
+**责任者**: 系统架构师 + 开发团队
 
 ## 🚀 当前状态总结
 

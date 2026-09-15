@@ -1,6 +1,8 @@
 # LLM 运行时设置指南
 # LLM Runtime Setup Guide
 
+> 撰写时点状态，仅供参考。
+
 ## 🎯 当前运行时配置
 
 ### 主要运行时：llama.cpp
@@ -19,7 +21,7 @@
 
 ### 已完成
 ✅ **llama.cpp 已安装**
-- 位置: `/home/wt/work/llama.cpp`
+- 位置: 本地克隆的 llama.cpp 仓库（如 `~/work/llama.cpp`）
 - 可执行文件: `llama-cli`
 - 支持的模型格式: GGUF
 
@@ -264,5 +266,4 @@ llama-cli --model tinyllama-1.1b-chat.Q5_K_M.gguf --prompt "test" --n-predict 10
 ---
 
 **更新时间**: 2026-05-08
-**维护状态**: Active
 **负责人**: Energyinfra Team

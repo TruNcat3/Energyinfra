@@ -1,5 +1,7 @@
 # EnergyInfra Phase 6 实验分析总结（更新版）
 
+> 本文档为研究过程阶段记录，保留撰写时点的原始结论；最新汇总见 [实验总览](实验总览.md) 与 [文档索引](README.md)。
+
 **更新日期**：2026-05-19  
 **对应工程版本**：`TruNcat3/Energyinfra` 最新 Phase 6 commit  
 **更新原因**：基于最新讨论，对 E2E baseline 能耗差异较小的原因、与其他工作 token/J 收益差异的来源，以及后续实验设计进行补充和修正。
@@ -7,6 +9,8 @@
 ---
 
 ## 1. 当前阶段判断
+
+> 撰写时点状态，仅供参考
 
 EnergyInfra 当前已经完成从基础 profiling 到细粒度 GPU×EMC DVFS 建模的主要工程闭环。Phase 6 已经包括：
 
@@ -186,7 +190,7 @@ EnergyInfra 当前的收益尺度不应直接和那些动辄 40%–50% token/J �
 
 ---
 
-## 8. 下一步实验建议
+## 8. 后续实验建议
 
 ### 8.1 更大模型验证
 
@@ -258,7 +262,7 @@ EnergyInfra 当前的收益尺度不应直接和那些动辄 40%–50% token/J �
 
 ### 9.1 文档修改
 
-建议在 `docs/开发文档/当前状态.md` 中增加一段：
+建议在内部开发文档（未随仓库发布）中记录以下结论：
 
 > 当前 E2E benchmark 中不同配置的 E/token 差异较小，主要因为比较对象均为同一 runtime 下接近 Pareto 的频率配置，且 Phi-3-mini-Q4 的 mixed-phase 推理中 prefill、系统静态功耗和 runtime overhead 稀释了 decode 阶段的 DVFS 差异。当前结果证明了细粒度汇率表和 selector 的工程可行性，但尚不足以支撑显著端到端节能结论。后续需在更大模型、长 decode 和真实在线 phase switching 下继续验证。
 

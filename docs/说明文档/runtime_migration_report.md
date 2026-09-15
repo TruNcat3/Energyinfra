@@ -7,6 +7,8 @@
 
 ---
 
+> 撰写时点状态，仅供参考：文中后续规划为当时内容；文内文件路径已按当前仓库布局更新。
+
 ## 📊 迁移概述
 
 ### 主要变更
@@ -60,20 +62,20 @@ description: "Core system validation before real llama.cpp integration"
 
 ### 2. 源代码文件更新
 
-#### `src/analyze_existing_experiments.py`
+#### `src/visualization/analyze_existing_experiments.py`
 - ✅ 所有报告中的TensorRT-LLM → llama.cpp
 - ✅ 建议部分更新为真实llama.cpp实验
 
-#### `src/build_rate_table.py`
+#### `src/ratetable/build_rate_table.py`
 - ✅ 建议部分更新为llama.cpp实验
 
-#### `src/evaluate_selector.py`
+#### `src/ratetable/evaluate_selector.py`
 - ✅ 评估报告更新为llama.cpp性能
 
-#### `src/benchmark_runner.py`
+#### `src/benchmark/benchmark_runner.py`
 - ✅ 默认runtime更新为llama.cpp
 
-#### `src/experiment_manager.py`
+#### `src/experiments/experiment_manager.py`
 - ✅ 集成建议更新为llama.cpp
 
 #### `configs/workloads.yaml` & `workloads_updated.yaml`
@@ -81,7 +83,7 @@ description: "Core system validation before real llama.cpp integration"
 
 ### 3. 新增文档
 
-#### `docs/runtime_setup_guide.md`
+#### `docs/说明文档/runtime_setup_guide.md`
 - 📄 完整的llama.cpp设置指南
 - 🔄 从Synthetic到Real Model迁移计划
 - 🛠️ llama.cpp特定优化配置
@@ -95,32 +97,32 @@ description: "Core system validation before real llama.cpp integration"
 - `configs/platform.yaml` - 平台配置
 - `configs/selector.yaml` - 选择器配置
 - `configs/phase3_experiments.yaml` - 实验配置
-- `src/analyze_existing_experiments.py` - 分析脚本
-- `src/build_rate_table.py` - 汇率表构建
-- `src/evaluate_selector.py` - 评估脚本
-- `src/benchmark_runner.py` - 基准测试运行器（默认runtime）
-- `src/experiment_manager.py` - 实验管理器
+- `src/visualization/analyze_existing_experiments.py` - 分析脚本
+- `src/ratetable/build_rate_table.py` - 汇率表构建
+- `src/ratetable/evaluate_selector.py` - 评估脚本
+- `src/benchmark/benchmark_runner.py` - 基准测试运行器（默认runtime）
+- `src/experiments/experiment_manager.py` - 实验管理器
 - `configs/workloads.yaml` - 工作负载配置
-- `docs/runtime_setup_guide.md` - 新增运行时设置指南
+- `docs/说明文档/runtime_setup_guide.md` - 新增运行时设置指南
 
 ### 部分更新 🔧
 - `configs/sweep.yaml` - 保留TensorRT作为版本信息
-- `src/benchmark_runner.py` - 保留TensorRT作为代码注释和参考
+- `src/benchmark/benchmark_runner.py` - 保留TensorRT作为代码注释和参考
 
 ### 合理保留 📝
 - `configs/platform.yaml` - 备选运行时列表包含TensorRT-LLM
 - `configs/selector.yaml` - 运行时选项包含TensorRT-LLM
-- `docs/runtime_setup_guide.md` - 备选运行时说明
+- `docs/说明文档/runtime_setup_guide.md` - 备选运行时说明
 
 ---
 
-## 🎯 验收结果
+## 🎯 验证结果
 
 ### 核心功能验证 ✅
-1. ✅ **分析管道**: `python3 src/analyze_existing_experiments.py` 成功运行
-2. ✅ **汇率表构建**: `python3 src/build_rate_table.py` 成功运行
-3. ✅ **配置选择**: `python3 src/select_config.py --example` 成功运行
-4. ✅ **性能评估**: `python3 src/evaluate_selector.py` 成功运行
+1. ✅ **分析管道**: `python3 src/visualization/analyze_existing_experiments.py` 成功运行
+2. ✅ **汇率表构建**: `python3 src/ratetable/build_rate_table.py` 成功运行
+3. ✅ **配置选择**: `python3 src/controller/select_config.py --example` 成功运行
+4. ✅ **性能评估**: `python3 src/ratetable/evaluate_selector.py` 成功运行
 5. ✅ **报告生成**: 所有报告中的TensorRT-LLM引用已更新
 
 ### 配置验证 ✅
@@ -147,7 +149,7 @@ grep "llama.cpp" configs/phase3_experiments.yaml
 - **原因**: Phase 3使用Synthetic Benchmark，不依赖真实运行时
 - **状态**: ✅ 所有实验和分析完全正常
 
-### 对Phase 4 (下一步) 的影响
+### 对Phase 4 的影响
 - **影响程度**: 🟡 **需要适配**
 - **影响范围**:
   - 📝 实验配置需要适配llama.cpp参数
@@ -230,8 +232,8 @@ grep "llama.cpp" configs/phase3_experiments.yaml
 ## 📞 技术支持
 
 ### 相关文档
-1. `docs/runtime_setup_guide.md` - llama.cpp详细设置指南
-2. `docs/runtime_migration_summary.md` - 本迁移报告
+1. `docs/说明文档/runtime_setup_guide.md` - llama.cpp详细设置指南
+2. `docs/说明文档/runtime_migration_report.md` - 本迁移报告
 3. `configs/platform.yaml` - 平台配置文件
 4. `configs/selector.yaml` - 选择器配置文件
 
@@ -248,10 +250,10 @@ sudo jetson_clocks --show
 tegrastats --interval 1000
 
 # 运行分析管道
-python3 src/analyze_existing_experiments.py
-python3 src/build_rate_table.py
-python3 src/select_config.py --example
-python3 src/evaluate_selector.py
+python3 src/visualization/analyze_existing_experiments.py
+python3 src/ratetable/build_rate_table.py
+python3 src/controller/select_config.py --example
+python3 src/ratetable/evaluate_selector.py
 ```
 
 ---
@@ -282,4 +284,4 @@ python3 src/evaluate_selector.py
 
 核心配置、代码和文档已全面更新，所有功能验证通过，系统已准备好使用llama.cpp进行真实Jetson Orin实验。
 
-**下一步**: 根据 `docs/runtime_setup_guide.md` 开始llama.cpp环境配置和模型下载。
+**运行时设置指南**: llama.cpp 环境配置和模型下载步骤见 `docs/说明文档/runtime_setup_guide.md`。
