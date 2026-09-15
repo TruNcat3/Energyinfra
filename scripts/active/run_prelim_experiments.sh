@@ -392,7 +392,7 @@ This document summarizes the 7 preliminary validation experiments for the Jetson
    - Make decision on full system implementation
 
 4. **Document Findings**
-   - Update docs/当前状态.md with results
+   - Update docs/开发文档/当前状态.md (local-only) with results
    - Generate comprehensive reports
    - Plan Phase 4 implementation
 

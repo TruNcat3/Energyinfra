@@ -36,3 +36,12 @@ data/frequency_experiment_results/complete_results_*.json
 
 # Logs
 logs/
+/*.log
+
+# Internal dev-process docs (kept local only, not published)
+CLAUDE.md
+docs/任务书/
+docs/开发文档/
+
+# Invalid/archived experiment data (local only)
+data/_archived_invalid/
