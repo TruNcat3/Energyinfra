@@ -2,7 +2,7 @@
 
 ## 统一档位术语
 
-本节定义所有实验文档中使用的统一术语。Jetson Orin 出厂提供 4 个官方电源档位 (nvpmodel mode)，我们的研究在此基础增加自定义配置进行对比。
+本节定义所有实验文档中使用的统一术语。Jetson Orin 出厂提供 4 个官方电源档位 (nvpmodel mode)，本研究在此基础增加自定义配置进行对比。
 
 ### Jetson 官方电源档位
 
@@ -15,7 +15,7 @@
 
 > 注：nvpmodel 设置的是频率上限 (MAX_FREQ)，实际运行频率由调度器动态调节。-1 表示不设上限。
 
-### 我们的自定义配置
+### 本项目的自定义配置
 
 | 配置名称 | GPU 频率 | CPU 频率 | 说明 |
 |----------|:---:|:---:|------|
@@ -51,20 +51,15 @@
 |------|------|------|---------|
 | [实验1-混合阶段能耗分析](实验1-混合阶段能耗分析.md) | Mixed Phase | 170 runs | ⚠️ GPU governor bug — 结论已过时，见下方修正 |
 | [实验2-分阶段能耗分析](实验2-分阶段能耗分析.md) | Prefill + Decode | 345 runs | ⚠️ GPU governor bug — 结论已过时，见下方修正 |
-| 实验3-扩展负载汇率表（记录并入[实验总览](实验总览.md)与本文"核心实验结论"） | Mixed + Decode | 672 runs | GPU 918MHz 最优 (10/14 workloads)；28 DVFS rules |
+| [实验3-扩展负载汇率表](实验3-扩展负载汇率表.md) | Mixed + Decode | 672 runs | GPU 918MHz 最优 (10/14 workloads)；28 DVFS rules |
 
-### 历史归档
+### 专题分析与报告
 
-| 报告 | 阶段 | 日期 | 核心内容 |
-|------|------|------|---------|
-| [Phase 1 完成报告](PHASE1_COMPLETION_REPORT.md) | 基础建设 | 2026-05-06 | 项目结构搭建、核心模块原型 |
-| [Phase 2 完成报告](PHASE2_COMPLETION_REPORT.md) | 核心模块 | 2026-05-07 | DVFS 控制器、指标采集、基准测试框架 |
-| [Phase 2 分析报告](PHASE2_ANALYSIS_REPORT.md) | 数据分析 | 2026-05-08 | 频率扫描结果、Pareto 前沿分析 |
-| [Phase 3 完成报告](PHASE3_COMPLETION_REPORT.md) | 前置实验 | 2026-05-10 | 7 个前置实验验证 |
-| [方案总结](FINAL_SOLUTIONS_SUMMARY.md) | 运行时方案 | 2026-05-09 | TensorRT-LLM / llama.cpp 方案对比 |
-| [Phase 6 细粒度 DVFS 报告](PHASE6_FINEGRAINED_DVFS_REPORT.md) | 细粒度 DVFS | 2026-05-16 | 11 GPU × 4 EMC 细粒度 profiling、三维汇率表 |
-| [Phase 6 实验分析总结（更新版）](EnergyInfra_Phase6_实验分析总结_更新版.md) | 实验分析 | 2026-05-19 | E2E baseline 差异归因、token/J 收益来源分析 |
-| [相关工作对比](related_work_comparison.md) | 文献对比 | 2026-06-17 | DVFS / Serving / 边缘部署 / 多目标优化对比 |
+| 报告 | 日期 | 核心内容 |
+|------|------|---------|
+| [Phase 6 细粒度 DVFS 报告](PHASE6_FINEGRAINED_DVFS_REPORT.md) | 2026-05-16 | 11 GPU × 4 EMC 细粒度 profiling、三维汇率表 |
+| [Phase 6 实验分析总结](EnergyInfra_Phase6_实验分析总结_更新版.md) | 2026-05-19 | E2E baseline 差异归因、token/J 收益来源分析 |
+| [相关工作对比](related_work_comparison.md) | 2026-06-17 | DVFS / Serving / 边缘部署 / 多目标优化对比 |
 
 > **重要说明**：2026-05-13 的实验数据因 llama-cpp-python 未编译 CUDA 支持，所有推理实际运行在 CPU 上。
 > 该问题已于 2026-05-14 修复。详见 [实验总览](实验总览.md) 中的历史说明。
@@ -101,4 +96,4 @@
 2. **GPU 612MHz 适合短输出**：低功耗下吞吐量已足够，能效最优
 3. **GPU 918MHz 适合长输出**：在 14 个负载中 10 个的最优配置为 GPU 918MHz
 4. **Decode 仍是功耗主体**：占推理总功耗 ~73%
-5. **数据来源**：`data/energy_profiling/expanded_profiling_20260515_031015.csv`（原始数据仅本地保留，可由 `src/experiments/run_finegrained_profiling.py` 重新生成）
+5. **数据来源**：`data/energy_profiling/expanded_profiling_20260515_031015.csv`（原始数据仅本地保留，可由 `src/experiments/run_expanded_profiling.py` 重新生成）

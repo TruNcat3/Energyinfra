@@ -30,7 +30,7 @@
 
 ## E2E 实测结果（378 runs, 3 模型, 9 策略）
 
-### Pareto (我们的方法) vs Baselines
+### Pareto (Ours) vs Baselines
 
 | 模型 | vs Dynamic E/tok | vs Dynamic Power | vs MAXN E/tok | vs MAXN Power |
 |:---:|:---:|:---:|:---:|:---:|
@@ -269,7 +269,7 @@ python3 src/visualization/analyze_e2e_benchmark.py     # E2E 分析 (5 图 + 报
 
 | 阶段 | 内容 | 实验记录 |
 |:---:|------|------|
-| 1-3 | 基础设施、核心模块、前置验证实验 | [Phase 1-3 报告](docs/实验文档/README.md) |
+| 1-3 | 前置验证实验（实验 1-3） | [实验总览](docs/实验文档/实验总览.md) |
 | 4-5 | Phase-Aware DVFS、真实模型实验 | [实验总览](docs/实验文档/实验总览.md) |
 | 6-7 | 细粒度 GPU×EMC DVFS；phase 切换开销验证（负结果） | [Phase 6 报告](docs/实验文档/PHASE6_FINEGRAINED_DVFS_REPORT.md) |
 | 8-10 | 频率控制重构 (lock/cap/dynamic)、benchmark 模式、大模型 profiling | — |

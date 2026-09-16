@@ -209,7 +209,7 @@
 
 ## 4. 同平台量化对比（Jetson Orin + LLM）
 
-> **关键实验**: 在我们的 Jetson Orin 硬件上，使用相同的 LLM 模型 (7B/8B/14B Q4_K_M)，
+> **关键实验**: 在本文的 Jetson Orin 硬件上，使用相同的 LLM 模型 (7B/8B/14B Q4_K_M)，
 > 模拟 EdgeShark 和 FlashFlow 的方法，与 EnergyInfra 进行公平对比。
 
 ### 4.1 模拟方法
