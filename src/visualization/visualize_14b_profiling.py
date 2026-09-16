@@ -1,4 +1,4 @@
-#!/home/wt/work/Energyinfra/jetson_llm_env/bin/python3
+#!/usr/bin/env python3
 """
 Visualization for Qwen2.5-14B GPU-only Profiling Results
 Generates comparison charts: finegrained profiling + cap profiling

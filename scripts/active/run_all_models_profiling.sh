@@ -8,8 +8,9 @@
 # 3 models total: ~3024 runs, estimated ~35-45 hours
 
 set -e
-cd /home/wt/work/Energyinfra
-PYTHON="/home/wt/work/Energyinfra/jetson_llm_env/bin/python3"
+source "$(dirname "${BASH_SOURCE[0]}")/../common.sh"
+cd "$REPO_ROOT"
+PYTHON="$PY"
 SCRIPTS="src/experiments"
 
 MODELS=(

@@ -1,4 +1,4 @@
-#!/home/wt/work/Energyinfra/jetson_llm_env/bin/python3
+#!/usr/bin/env python3
 """
 Phase 13 Visualization (P4)
 

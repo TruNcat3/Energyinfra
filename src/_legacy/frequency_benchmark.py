@@ -12,7 +12,8 @@ from pathlib import Path
 from datetime import datetime
 
 # Add jetson_llm_env to path
-jetson_env_path = "/home/wt/work/Energyinfra/jetson_llm_env/lib/python3.10/site-packages"
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+jetson_env_path = os.path.join(REPO_ROOT, "jetson_llm_env/lib/python3.10/site-packages")
 if jetson_env_path not in sys.path:
     sys.path.insert(0, jetson_env_path)
 
@@ -114,7 +115,7 @@ def main():
     print("Frequency Benchmark for llama.cpp")
     print("=" * 60)
 
-    model_path = "/home/wt/work/Energyinfra/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
+    model_path = os.path.join(REPO_ROOT, "models/gguf/Phi-3-mini-4k-instruct-q4.gguf")
 
     # 检查模型文件
     if not os.path.exists(model_path):

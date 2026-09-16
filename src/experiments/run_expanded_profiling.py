@@ -1,4 +1,4 @@
-#!/home/wt/work/Energyinfra/jetson_llm_env/bin/python3
+#!/usr/bin/env python3
 """
 Expanded Energy Rate Table Profiling Experiment
 Extends the workload matrix for comprehensive rate table coverage and rule mining.

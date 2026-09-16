@@ -1,4 +1,4 @@
-#!/home/wt/work/Energyinfra/jetson_llm_env/bin/python3
+#!/usr/bin/env python3
 """
 Compare EnergyInfra (our method) vs simulated EdgeShark and FlashFlow on our hardware.
 
@@ -18,8 +18,9 @@ Data sources:
 """
 
 import sys, os
-sys.path.insert(0, '/home/wt/work/Energyinfra')
-os.chdir('/home/wt/work/Energyinfra')
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, REPO_ROOT)
+os.chdir(REPO_ROOT)
 import pandas as pd
 import numpy as np
 

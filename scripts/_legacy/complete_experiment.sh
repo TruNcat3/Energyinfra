@@ -6,7 +6,9 @@ echo "🚀 Starting Complete Frequency Experiment"
 echo "=========================================="
 
 # 模型路径
-MODEL_PATH="/home/wt/work/Energyinfra/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export REPO_ROOT
+MODEL_PATH="$REPO_ROOT/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
 OUTPUT_DIR="data/frequency_experiment_results"
 mkdir -p "$OUTPUT_DIR"
 
@@ -57,7 +59,8 @@ for i in "${!FREQUENCIES[@]}"; do
     echo "🚀 Running benchmark at $name..." | tee -a "$RESULT_FILE"
     benchmark_result=$(python3 -c "
 import sys
-sys.path.insert(0, '/home/wt/work/Energyinfra/jetson_llm_env/lib/python3.10/site-packages')
+import os
+sys.path.insert(0, os.environ.get('REPO_ROOT', '.') + '/jetson_llm_env/lib/python3.10/site-packages')
 import llama_cpp
 import time
 

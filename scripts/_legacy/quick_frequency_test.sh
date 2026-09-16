@@ -9,7 +9,8 @@ FREQUENCIES=("306000000" "612000000" "918000000" "1122000000" "1300500000")
 FREQ_NAMES=("306 MHz" "612 MHz" "918 MHz" "1122 MHz" "1300 MHz")
 
 # 模型路径
-MODEL_PATH="/home/wt/work/Energyinfra/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+MODEL_PATH="$REPO_ROOT/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
 
 # 输出目录
 OUTPUT_DIR="data/frequency_test_results"
@@ -89,8 +90,8 @@ cat "$RESULT_FILE"
 
 echo ""
 echo "💡 Now you can run the benchmark script in another terminal:"
-echo "   cd /home/wt/work/Energyinfra"
-echo "   python3 src/frequency_benchmark.py"
+echo "   cd \"$REPO_ROOT\""
+echo "   python3 src/_legacy/frequency_benchmark.py"
 echo ""
 echo "   Make sure to set the desired frequency first using:"
 echo "   sudo sh -c 'echo \"<FREQUENCY>\" > /sys/class/devfreq/17000000.gpu/max_freq'"

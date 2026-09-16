@@ -18,8 +18,9 @@ mkdir -p "$OUTPUT_DIR"
 # 实验配置
 FREQUENCIES=("306000000" "612000000" "918000000" "1300500000")
 FREQ_NAMES=("306 MHz" "612 MHz" "918 MHz" "1300 MHz")
-MODEL_PATH="/home/wt/work/Energyinfra/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
-BENCHMARK_SCRIPT="/home/wt/work/Energyinfra/src/final_benchmark.py"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+MODEL_PATH="$REPO_ROOT/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
+BENCHMARK_SCRIPT="$REPO_ROOT/src/_legacy/final_benchmark.py"
 
 # 结果文件
 RESULT_FILE="$OUTPUT_DIR/final_results_$(date +%Y%m%d_%H%M%S).txt"

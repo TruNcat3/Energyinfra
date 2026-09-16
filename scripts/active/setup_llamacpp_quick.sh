@@ -22,7 +22,7 @@ print_success() {
     echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
-WORKSPACE_DIR="/home/wt/work/Energyinfra"
+WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 print_info "========================================="
 print_info "llama.cpp Quick Setup Script"
@@ -118,7 +118,7 @@ echo "URL: $MODEL_URL"
 echo ""
 
 # 下载模型
-cd /home/wt/work/Energyinfra/models/gguf
+cd "$WORKSPACE_DIR/models/gguf"
 
 if [ -f "$MODEL_NAME" ]; then
     echo "Model already exists: $MODEL_NAME"
@@ -140,7 +140,7 @@ if [ $? -eq 0 ]; then
     echo "✅ SUCCESS: Model downloaded"
     echo "========================================="
     echo ""
-    echo "Model saved to: /home/wt/work/Energyinfra/models/gguf/$MODEL_NAME"
+    echo "Model saved to: $WORKSPACE_DIR/models/gguf/$MODEL_NAME"
     echo "File size: $(du -h "$MODEL_NAME" | cut -f1)"
     echo ""
     echo "Next steps:"
@@ -178,7 +178,7 @@ set -e
 
 if [ $# -eq 0 ]; then
     echo "Usage: $0 <model_path>"
-    echo "Example: $0 /home/wt/work/Energyinfra/models/gguf/qwen-7b-chat-q4_k_m.gguf"
+    echo "Example: $0 $WORKSPACE_DIR/models/gguf/qwen-7b-chat-q4_k_m.gguf"
     exit 1
 fi
 
@@ -324,7 +324,7 @@ bash scripts/download_qwen_gguf.sh
 
 ```bash
 # 测试下载的模型
-bash scripts/test_llamacpp_model.sh /home/wt/work/Energyinfra/models/gguf/qwen-7b-chat-q4_k_m.gguf
+bash scripts/test_llamacpp_model.sh "$WORKSPACE_DIR/models/gguf/qwen-7b-chat-q4_k_m.gguf"
 ```
 
 ### 选项3：运行实验

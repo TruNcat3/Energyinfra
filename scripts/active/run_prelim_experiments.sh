@@ -7,7 +7,8 @@ set -e  # Exit on error
 set -u  # Exit on undefined variable
 
 # Configuration
-PROJECT_DIR="/home/wt/work/Energyinfra"
+source "$(dirname "${BASH_SOURCE[0]}")/../common.sh"
+PROJECT_DIR="$REPO_ROOT"
 SCRIPTS_DIR="${PROJECT_DIR}/scripts"
 SRC_DIR="${PROJECT_DIR}/src"
 CONFIG_DIR="${PROJECT_DIR}/configs"

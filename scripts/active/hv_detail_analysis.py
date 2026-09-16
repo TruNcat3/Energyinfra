@@ -1,9 +1,10 @@
-#!/home/wt/work/Energyinfra/jetson_llm_env/bin/python3
+#!/usr/bin/env python3
 """Detailed HV statistical analysis for paper narrative."""
 
 import sys, os
-sys.path.insert(0, '/home/wt/work/Energyinfra')
-os.chdir('/home/wt/work/Energyinfra')
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, REPO_ROOT)
+os.chdir(REPO_ROOT)
 import pandas as pd, numpy as np
 
 hv = pd.read_csv('data/multi_obj_eval/multi_obj_hv_summary_20260614_181323.csv')

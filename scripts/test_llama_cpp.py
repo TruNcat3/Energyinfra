@@ -8,7 +8,8 @@ import sys
 import os
 
 # Add jetson_llm_env to path
-jetson_env_path = "/home/wt/work/Energyinfra/jetson_llm_env/lib/python3.10/site-packages"
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+jetson_env_path = os.path.join(REPO_ROOT, "jetson_llm_env/lib/python3.10/site-packages")
 if jetson_env_path not in sys.path:
     sys.path.insert(0, jetson_env_path)
 
@@ -24,7 +25,7 @@ except ImportError as e:
     sys.exit(1)
 
 # Test 2: Check GGUF model availability
-model_path = "/home/wt/work/Energyinfra/models/gguf/qwen-7b-chat-q4_k_m.gguf"
+model_path = os.path.join(REPO_ROOT, "models/gguf/qwen-7b-chat-q4_k_m.gguf")
 if not os.path.exists(model_path):
     print(f"❌ Model not found at: {model_path}")
     sys.exit(1)

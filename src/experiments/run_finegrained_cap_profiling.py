@@ -1,4 +1,4 @@
-#!/home/wt/work/Energyinfra/jetson_llm_env/bin/python3
+#!/usr/bin/env python3
 """
 Fine-grained Cap Profiling (Phase 13, P1)
 

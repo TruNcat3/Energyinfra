@@ -1,4 +1,4 @@
-#!/home/wt/work/Energyinfra/jetson_llm_env/bin/python3
+#!/usr/bin/env python3
 """
 Baseline Comparison Experiment Orchestrator
 Runs llama.cpp inference under different Jetson power configurations,

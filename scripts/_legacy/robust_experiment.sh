@@ -24,7 +24,9 @@ JSON_FILE="$OUTPUT_DIR/results_$(date +%Y%m%d_%H%M%S).json"
 # 实验配置
 FREQUENCIES=("306000000" "612000000" "918000000" "1300500000")
 FREQ_NAMES=("306 MHz" "612 MHz" "918 MHz" "1300 MHz")
-MODEL_PATH="/home/wt/work/Energyinfra/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export REPO_ROOT
+MODEL_PATH="$REPO_ROOT/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
 
 echo "📊 实验配置:"
 echo "  模型: $MODEL_PATH"
@@ -112,7 +114,7 @@ import os
 import time
 
 # 添加路径
-sys.path.insert(0, '/home/wt/work/Energyinfra/jetson_llm_env/lib/python3.10/site-packages')
+sys.path.insert(0, os.environ.get('REPO_ROOT', '.') + '/jetson_llm_env/lib/python3.10/site-packages')
 
 try:
     import llama_cpp

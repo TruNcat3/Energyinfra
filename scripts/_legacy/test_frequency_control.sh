@@ -97,4 +97,4 @@ echo "306000000" > /sys/class/devfreq/17000000.gpu/min_freq
 echo "✅ Frequency control test completed!"
 echo ""
 echo "💡 You can now run the benchmark script to test different frequencies"
-echo "   Example: python3 /home/wt/work/Energyinfra/src/frequency_benchmark.py"
+echo "   Example: python3 src/_legacy/frequency_benchmark.py"

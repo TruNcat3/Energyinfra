@@ -24,7 +24,7 @@ print_warning() {
 
 # 配置变量
 CONTAINER_IMAGE="nvcr.io/nvidia/tensorrt-llm:v0.12.0-nightly-trtllm-python-py3"
-WORKSPACE_DIR="/home/wt/work/Energyinfra"
+WORKSPACE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DOCKER_VOLUME_MOUNT="$WORKSPACE_DIR:/workspace"
 
 # 模型配置

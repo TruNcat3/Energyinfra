@@ -179,13 +179,15 @@ Energyinfra/
 
 ## 快速开始
 
-### 环境依赖
+### 环境初始化
 
 ```bash
-# Jetson Orin, JetPack r36.x
-# Python 3.10, 已在 jetson_llm_env/ 中
-pip3 install pandas numpy pyarrow matplotlib seaborn scipy
+./setup.sh
 ```
+
+一行完成目录结构创建、`jetson_llm_env` 虚拟环境构建与依赖安装（可重复执行）。
+要求：Jetson Orin、JetPack r36.x、Python 3.10；`llama-cpp-python` 需 CUDA 编译，见
+[docs/说明文档/LLAMACPP_INTEGRATION.md](docs/说明文档/LLAMACPP_INTEGRATION.md)。
 
 > **数据与模型说明**：仓库不包含 GGUF 模型文件与原始实验数据（体积较大，均可由脚本重新生成）。
 > 模型获取见 [docs/说明文档/DOCKER_MODEL_SETUP.md](docs/说明文档/DOCKER_MODEL_SETUP.md)；

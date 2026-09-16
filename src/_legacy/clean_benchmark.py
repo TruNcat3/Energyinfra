@@ -16,8 +16,9 @@ def print_to_stderr(*args, **kwargs):
 
 print = print_to_stderr
 
-# Add jetson_llm_env to path
-jetson_env_path = "/home/wt/work/Energyinfra/jetson_llm_env/lib/python3.10/site-packages"
+# Add jetson_llm_env to path (self-locating relative to this file)
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+jetson_env_path = os.path.join(REPO_ROOT, "jetson_llm_env", "lib", "python3.10", "site-packages")
 if jetson_env_path not in sys.path:
     sys.path.insert(0, jetson_env_path)
 
@@ -81,7 +82,7 @@ def run_benchmark(model_path, prompt, max_tokens=20):
         return False
 
 if __name__ == "__main__":
-    model_path = "/home/wt/work/Energyinfra/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
+    model_path = "models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
     prompt = "What is 2+2? Give brief answer."
 
     success = run_benchmark(model_path, prompt)

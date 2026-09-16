@@ -36,8 +36,9 @@
 
 set -euo pipefail
 
-cd /home/wt/work/Energyinfra
-PYTHON="/home/wt/work/Energyinfra/jetson_llm_env/bin/python3"
+source "$(dirname "${BASH_SOURCE[0]}")/../common.sh"
+cd "$REPO_ROOT"
+PYTHON="$PY"
 mkdir -p logs data/serving_benchmark data/cap_profiling figures/phase13_analysis
 
 # ── Defaults ──

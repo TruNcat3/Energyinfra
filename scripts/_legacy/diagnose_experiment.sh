@@ -16,7 +16,9 @@ fi
 # 2. 检查模型文件
 echo ""
 echo "2️⃣  检查模型文件..."
-MODEL_PATH="/home/wt/work/Energyinfra/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export REPO_ROOT
+MODEL_PATH="$REPO_ROOT/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
 if [ -f "$MODEL_PATH" ]; then
     size=$(ls -lh "$MODEL_PATH" | awk '{print $5}')
     echo "✅ 模型文件存在: $MODEL_PATH ($size)"
@@ -54,7 +56,7 @@ import sys
 import os
 
 # 添加llama_cpp路径
-jetson_env_path = '/home/wt/work/Energyinfra/jetson_llm_env/lib/python3.10/site-packages'
+jetson_env_path = os.environ.get('REPO_ROOT', '.') + '/jetson_llm_env/lib/python3.10/site-packages'
 if jetson_env_path not in sys.path:
     sys.path.insert(0, jetson_env_path)
 

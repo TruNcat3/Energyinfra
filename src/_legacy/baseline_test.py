@@ -11,8 +11,9 @@ import subprocess
 import json
 from pathlib import Path
 
-# Add jetson_llm_env to path
-jetson_env_path = "/home/wt/work/Energyinfra/jetson_llm_env/lib/python3.10/site-packages"
+# Add jetson_llm_env to path (self-locating relative to this file)
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+jetson_env_path = os.path.join(REPO_ROOT, "jetson_llm_env", "lib", "python3.10", "site-packages")
 if jetson_env_path not in sys.path:
     sys.path.insert(0, jetson_env_path)
 
@@ -145,7 +146,7 @@ def main():
         print(f"  {key}: {value}")
 
     # Check model
-    model_path = "/home/wt/work/Energyinfra/models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
+    model_path = "models/gguf/Phi-3-mini-4k-instruct-q4.gguf"
     print(f"\n📁 Model Check: {model_path}")
 
     model_ok, model_info = check_file_size(model_path)

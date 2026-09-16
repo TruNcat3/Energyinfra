@@ -20,8 +20,9 @@
 # Resume (same command, auto-skips completed):
 #   sudo nohup bash scripts/active/run_remaining_models.sh >> logs/run_remaining_models.log 2>&1 &
 
-cd /home/wt/work/Energyinfra
-PYTHON="/home/wt/work/Energyinfra/jetson_llm_env/bin/python3"
+source "$(dirname "${BASH_SOURCE[0]}")/../common.sh"
+cd "$REPO_ROOT"
+PYTHON="$PY"
 SCRIPTS="src/experiments"
 
 mkdir -p logs

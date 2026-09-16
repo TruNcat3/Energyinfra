@@ -1,4 +1,4 @@
-#!/home/wt/work/Energyinfra/jetson_llm_env/bin/python3
+#!/usr/bin/env python3
 """
 Multi-objective comparison: EnergyInfra vs EdgeShark/FlashFlow in EMO framework.
 
@@ -10,8 +10,9 @@ Extends our MDR/JIR/HV/Composite Waste evaluation to include:
 """
 
 import sys, os
-sys.path.insert(0, '/home/wt/work/Energyinfra')
-os.chdir('/home/wt/work/Energyinfra')
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, REPO_ROOT)
+os.chdir(REPO_ROOT)
 import pandas as pd
 import numpy as np
 

@@ -5,7 +5,7 @@ set -e
 
 if [ $# -eq 0 ]; then
     echo "Usage: $0 <model_path>"
-    echo "Example: $0 /home/wt/work/Energyinfra/models/gguf/qwen-7b-chat-q4_k_m.gguf"
+    echo "Example: $0 models/gguf/qwen-7b-chat-q4_k_m.gguf (relative to repo root)"
     exit 1
 fi
 

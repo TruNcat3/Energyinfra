@@ -11,8 +11,9 @@
 #   sudo nohup bash scripts/active/run_e2e_benchmark_all.sh >> logs/run_e2e_benchmark_all.log 2>&1 &
 #   tail -f logs/run_e2e_benchmark_all.log
 
-cd /home/wt/work/Energyinfra
-PYTHON="/home/wt/work/Energyinfra/jetson_llm_env/bin/python3"
+source "$(dirname "${BASH_SOURCE[0]}")/../common.sh"
+cd "$REPO_ROOT"
+PYTHON="$PY"
 
 mkdir -p logs
 

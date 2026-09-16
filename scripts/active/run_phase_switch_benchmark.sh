@@ -11,7 +11,9 @@
 set -e
 cd "$(dirname "$0")/../.."
 
-ENV_PYTHON="/home/wt/work/Energyinfra/jetson_llm_env/bin/python3"
+source "$(dirname "${BASH_SOURCE[0]}")/../common.sh"
+cd "$REPO_ROOT"
+ENV_PYTHON="$PY"
 echo "Phase-Switching E2E Benchmark"
 echo "=============================="
 echo "Started: $(date)"

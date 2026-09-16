@@ -50,7 +50,8 @@ echo "URL: $MODEL_URL"
 echo ""
 
 # 下载模型
-cd /home/wt/work/Energyinfra/models/gguf
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$REPO_ROOT/models/gguf"
 
 if [ -f "$MODEL_NAME" ]; then
     echo "Model already exists: $MODEL_NAME"
@@ -72,7 +73,7 @@ if [ $? -eq 0 ]; then
     echo "✅ SUCCESS: Model downloaded"
     echo "========================================="
     echo ""
-    echo "Model saved to: /home/wt/work/Energyinfra/models/gguf/$MODEL_NAME"
+    echo "Model saved to: $REPO_ROOT/models/gguf/$MODEL_NAME"
     echo "File size: $(du -h "$MODEL_NAME" | cut -f1)"
     echo ""
     echo "Next steps:"
