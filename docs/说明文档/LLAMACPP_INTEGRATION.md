@@ -42,7 +42,7 @@ bash scripts/active/test_llamacpp_model.sh models/gguf/qwen-7b-chat-q4_k_m.gguf
 ### 选项3：运行实验
 
 ```bash
-# 使用llama.cpp运行实验4.1
+# 使用llama.cpp运行测量稳定性实验
 python3 src/experiment_4_1_stability_llamacpp.py \
   --model /path/to/model.gguf \
   --batch_size 1 \
@@ -70,13 +70,13 @@ python3 src/experiment_4_1_stability_llamacpp.py \
 2. 运行快速测试验证功能
 3. 修改实验脚本支持llama.cpp
 
-### 步骤2：真实实验4.1
+### 步骤2：真实测量稳定性实验
 1. 使用llama.cpp运行测量稳定性实验
 2. 对比合成测试和真实测试结果
 3. 验证核心假设
 
 ### 步骤3：频率扫描实验
-1. 修改实验4.2支持llama.cpp
+1. 修改单旋钮敏感性实验支持llama.cpp
 2. 运行单旋钮敏感性实验
 3. 生成GPU/CPU/EMC频率影响热力图
 

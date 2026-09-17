@@ -146,7 +146,7 @@ grep "llama.cpp" configs/phase3_experiments.yaml
 
 ### 对Phase 3 (当前阶段) 的影响
 - **影响程度**: 🟢 **无影响**
-- **原因**: Phase 3使用Synthetic Benchmark，不依赖真实运行时
+- **原因**: 前置验证阶段使用 Synthetic Benchmark，不依赖真实运行时
 - **状态**: ✅ 所有实验和分析完全正常
 
 ### 对Phase 4 的影响
@@ -166,13 +166,13 @@ grep "llama.cpp" configs/phase3_experiments.yaml
 
 ## 🔄 后续工作建议
 
-### 短期任务 (Phase 4 准备)
+### 短期任务 (真实模型实验准备)
 1. **模型准备**: 下载和配置GGUF格式模型
 2. **benchmark适配**: 完成benchmark_runner.py的llama.cpp支持
 3. **参数调优**: 适配llama.cpp特定参数和配置
 4. **基础测试**: 验证llama.cpp在Jetson Orin上的运行
 
-### 中期任务 (Phase 4 实施)
+### 中期任务 (真实模型实验实施)
 1. **真实实验**: 使用llama.cpp运行真实性能测试
 2. **数据对比**: 对比Synthetic vs Real数据差异
 3. **策略验证**: 验证Phase-Aware DVFS在真实数据上的效果
@@ -273,8 +273,8 @@ python3 src/ratetable/evaluate_selector.py
 - ✅ **可维护性**: 清晰的文档和代码注释
 
 ### 项目进展
-- ✅ **Phase 3**: 100% 完成，所有目标达成
-- ✅ **Phase 4 准备**: 就绪，可以开始真实实验
+- ✅ **前置验证**: 100% 完成，所有目标达成
+- ✅ **真实模型实验准备**: 就绪，可以开始真实实验
 - ✅ **系统验证**: 分析管道完全验证
 - ✅ **数据基础**: Synthetic数据为真实实验提供基础
 

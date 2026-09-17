@@ -38,12 +38,12 @@ llama-cli --help
 
 ## 🔧 当前工作模式
 
-### Phase 3: Synthetic Benchmark (已完成)
+### 前置验证: Synthetic Benchmark (已完成)
 - **数据来源**: 合成测试框架
 - **目的**: 验证分析管道和系统架构
 - **状态**: ✅ 完成并验证所有7个前置实验
 
-### Phase 4: Real Model Integration (准备中)
+### 真实模型集成 (准备中)
 - **数据来源**: llama.cpp 真实模型推理
 - **目的**: 获取真实的Jetson Orin性能数据
 - **状态**: ⏳ 等待模型下载和配置

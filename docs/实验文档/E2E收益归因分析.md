@@ -1,9 +1,9 @@
-# EnergyInfra Phase 6 实验分析总结（更新版）
+# E2E 收益归因分析
 
 > 本文档为研究过程阶段记录，保留撰写时点的原始结论；最新汇总见 [实验总览](实验总览.md) 与 [文档索引](README.md)。
 
 **更新日期**：2026-05-19  
-**对应工程版本**：`TruNcat3/Energyinfra` 最新 Phase 6 commit  
+**对应实验**：实验 4（细粒度 GPU×EMC 能耗建模）完成后的 E2E 验证  
 **更新原因**：分析 E2E baseline 能耗差异较小的原因与其他工作 token/J 收益差异的来源，并给出后续实验设计建议。
 
 ---
@@ -12,7 +12,7 @@
 
 > 撰写时点状态，仅供参考
 
-EnergyInfra 当前已经完成从基础 profiling 到细粒度 GPU×EMC DVFS 建模的主要工程闭环。Phase 6 已经包括：
+此时已完成从基础 profiling 到细粒度 GPU×EMC DVFS 建模的主要工程闭环，具体包括：
 
 - 通过 DebugFS 增加 EMC 频率控制；
 - 完成 11 GPU × 4 EMC × 5 workloads × 2 phases × 3 repeats 的细粒度 profiling；

@@ -57,8 +57,8 @@
 
 | 报告 | 日期 | 核心内容 |
 |------|------|---------|
-| [Phase 6 细粒度 DVFS 报告](PHASE6_FINEGRAINED_DVFS_REPORT.md) | 2026-05-16 | 11 GPU × 4 EMC 细粒度 profiling、三维汇率表 |
-| [Phase 6 实验分析总结](EnergyInfra_Phase6_实验分析总结_更新版.md) | 2026-05-19 | E2E baseline 差异归因、token/J 收益来源分析 |
+| [实验 4：细粒度 GPU×EMC 能耗建模](实验4-细粒度GPUxEMC能耗建模.md) | 2026-05-16 | 11 GPU × 4 EMC 细粒度 profiling、三维汇率表 |
+| [E2E 收益归因分析](E2E收益归因分析.md) | 2026-05-19 | E2E baseline 差异归因、token/J 收益来源分析 |
 | [相关工作对比](related_work_comparison.md) | 2026-06-17 | DVFS / Serving / 边缘部署 / 多目标优化对比 |
 
 > **重要说明**：2026-05-13 的实验数据因 llama-cpp-python 未编译 CUDA 支持，所有推理实际运行在 CPU 上。

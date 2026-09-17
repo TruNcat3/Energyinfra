@@ -223,7 +223,7 @@ python3 src/benchmark_runner_llamacpp.py \
   --cpu_freq 1479 \
   --emc_freq 1600
 
-# 4. 运行实验4.1（真实测量）
+# 4. 运行测量稳定性实验（真实测量）
 python3 src/experiment_4_1_stability_real.py
 ```
 
@@ -242,9 +242,9 @@ python3 src/experiment_4_1_stability_real.py
    - 模拟Jetson特定的性能特征
 
 2. **运行完整实验集**：
-   - 实验4.2：单旋钮敏感性（GPU/CPU/EMC sweep）
-   - 实验4.3：频率组合交互（Pareto前沿分析）
-   - 实验4.4：Prefill/Decode阶段差异
+   - 单旋钮敏感性实验（GPU/CPU/EMC sweep）
+   - 频率组合交互实验（Pareto前沿分析）
+   - Prefill/Decode 阶段差异实验
    - 生成完整的数据集和分析
 
 3. **优化系统参数**：
@@ -330,7 +330,7 @@ python3 src/experiment_4_1_stability_real.py
 1. 安装llama.cpp（pip或编译）
 2. 下载Qwen-7B-GGUF模型
 3. 修改benchmark_runner支持llama.cpp
-4. 运行真实的实验4.1
+4. 运行真实的测量稳定性实验
 5. 对比合成测试和真实测试结果
 
 **预期时间**：
@@ -342,7 +342,7 @@ python3 src/experiment_4_1_stability_real.py
 ### 选项B：继续深化合成测试
 **执行步骤**：
 1. 完善合成测试参数
-2. 运行实验4.2、4.3、4.4
+2. 运行单旋钮敏感性、频率组合交互、Prefill/Decode 差异实验
 3. 生成完整的分析报告
 4. 优化调度算法
 5. 准备详细的实验文档

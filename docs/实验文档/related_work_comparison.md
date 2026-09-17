@@ -217,7 +217,7 @@
 | 方法 | 模拟方式 | 数据源 |
 |------|----------|--------|
 | **EdgeShark\*** | 静态单 cap per 模型（忽略 workload 差异） | E2E benchmark `best_static` 策略 |
-| **FlashFlow\*** | Prefill 高频 + Decode 低频 + 切换开销 715ms | Lock rate table per-phase 数据 + Phase 7 实测切换延迟 |
+| **FlashFlow\*** | Prefill 高频 + Decode 低频 + 切换开销 715ms | Lock rate table per-phase 数据 + 本项目实测切换延迟 |
 | **EnergyInfra** | Workload-aware Pareto cap | E2E benchmark `pareto` 策略实际运行数据 |
 | **MAXN** | 全频 1300MHz 不调整 | E2E benchmark 实际运行数据 |
 | **Dynamic** | simple_ondemand 默认 | E2E benchmark 实际运行数据 |
@@ -268,7 +268,7 @@ FlashFlow 的 phase-boundary DVFS 在 Jetson Orin 上的切换开销分析：
 | **平均** | **7.3%** | **7.6%** | **4.0%** |
 
 > **关键发现**: 短序列 (p64_o64) 的切换开销占 **19-21%**，严重侵蚀 FlashFlow 的能效收益。
-> 这正是 Phase 7 实验证明的 Jetson GPU 切频开销问题。
+> 这正是切换开销验证实验证明的 Jetson GPU 切频开销问题。
 
 ### 4.6 对比结论
 
