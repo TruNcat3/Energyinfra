@@ -28,7 +28,11 @@
 
 ---
 
-## E2E 实测结果（378 runs, 3 模型, 9 策略）
+## 关键实验结果
+
+E2E 基准验证：3 模型 × 9 策略 × 多 workload，共 378 runs。
+
+![E2E 各策略节省总览](figures/e2e_benchmark/e2e_savings_summary.png)
 
 ### Pareto (Ours) vs Baselines
 
@@ -38,94 +42,17 @@
 | **8B (Llama-3.1)** | +1.4% | +4.1% | +5.0% | +8.8% |
 | **14B (Qwen2.5)** | +1.8% | +3.3% | +5.5% | +7.5% |
 
-### 跨策略对比（vs MAXN 基线的 E/tok 节省）
-
-| 策略 | 7B | 8B | 14B | 特点 |
-|:---|:---:|:---:|:---:|:---|
-| ⭐ **Pareto (ours)** | +4.5% | +5.0% | +5.4% | 自动折中，稳定中等偏上 |
-| slo_50ms | **+7.7%** | +4.4% | +4.5% | 7B 上最省能，依赖 SLO 阈值 |
-| alpha_07 | +7.1% | +4.3% | **+6.3%** | 14B 上最优 |
-| pwr_45w | +7.1% | **+6.8%** | — | 8B 上最优 |
-| dynamic (默认) | +3.8% | +3.6% | +3.7% | 默认基线 |
-| maxn (全频) | 0% | 0% | 0% | 最差基线 |
-
 ### 核心发现
 
 1. **Pareto 优势在功率节省**: 7B 上功率从 47W 降至 38W（-18.6%），E/tok 仅损失 0.8%
-2. **Workload-aware 选择有实际意义**: 7B 上 Pareto 为 5 个 workload 选择 612~1300MHz 不同 cap
+2. **Workload-aware 选择有实际意义**: 7B 上 Pareto 为 5 个 workload 选择 612~1300MHz 不同 cap（[按 workload 节省分布](figures/e2e_benchmark/e2e_per_workload_savings.png)）
 3. **不同模型 DVFS 行为完全不同**: 7B compute-bound（中频甜点），8B memory-bound（408MHz 以上 TPS 扁平），14B compute-bound（高频最优）
-4. **单目标策略在特定场景更优**: 有明确 SLO 时 slo_constrained 更好；Pareto 的价值在于无明确目标时的自动折中
+4. **单请求 E/tok 优化空间有限**: Pareto 选择器距 oracle 理论上界仅 +4.9%；DVFS 的真正价值在长期运行的功率节省与热管理
 
-### Oracle Gap 分析：单请求 DVFS 优化天花板
+![E/tok × TPOT 多目标 Pareto 前沿](figures/pareto_frontier/pareto_2d_ept_vs_tpot.png)
 
-从 lock-mode 11 频率数据计算 oracle 理论最优，量化 DVFS 选择器的剩余优化空间：
-
-| 模型 | Dynamic → Oracle | MAXN → Oracle | Pareto → Oracle |
-|:---:|:---:|:---:|:---:|
-| 8B (Llama-3.1) | +8.6% | +10.7% | **+0.7%** |
-| 7B (Qwen2.5) | +12.3% | +15.6% | **+4.4%** |
-| 14B (Qwen2.5) | +23.4% | +26.1% | **+9.4%** |
-
-**结论**: Pareto 选择器距 oracle 上界仅 +4.9%，单请求 E/tok 优化空间有限。
-DVFS 的真正价值在于长期运行的**功率节省**和**热管理**。
-
-### 多目标 Pareto 评估 (EMO 指标)
-
-采用 EMO 标准指标（MDR, JIR, HV）量化多维权衡优势：
-
-| 指标 | 定义 |
-|:---:|------|
-| **MDR** | Multi-Objective Dominance Rate — 所有维度同时改进的比例 |
-| **JIR** | Joint Improvement Ratio — 全部维度改进时的几何平均改进率 |
-| **HV** | Hypervolume (Zitzler 1999) — 支配的目标空间体积 |
-
-| 对比 (3D 离线) | 7B Waste | 8B Waste | 14B Waste |
-|:---|:---:|:---:|:---:|
-| Pareto vs MAXN | 14.8% | 10.2% | 11.6% |
-| Pareto vs Dynamic | 4.5% | 0.2% | 0.3% |
-
-**Hypervolume (Zitzler 1999 金标准)** — Pareto 支配更多目标空间：
-
-| 模型 | Pareto HV | 第二名 (策略/HV) | Pareto 领先 | vs 中位数 |
-|:---:|:---:|---|:---:|:---:|
-| **7B** | 483.74 | pwr_45w 368.80 | +31.2% | 7.4× |
-| **8B** | 73.68 | alpha_03 2.37 | **+3014%** | **33.0×** |
-| **14B** | 96.02 | alpha_07 4.31 | **+2130%** | **30.6×** |
-
-> 8B/14B 上 Pareto 支配的目标空间是所有其他策略的 **22-37 倍**。
-> Dynamic/MAXN 的 HV < 3.4（点集高度聚集），Pareto 均匀覆盖整个 Pareto 前沿。
-
-| 对比 (4D Serving) | MDR | Waste |
-|:---|:---:|:---:|
-| Pareto vs MAXN | 4.5% | 13.0% |
-| ThermalSLO vs Dynamic | 5.4% | 10.0% |
-
-### Thermal-SLO 反馈控制器
-
-```
-Offline Phase-aware Characterization (lock rate table, 已有)
-        ↓
-Workload-aware Initial Cap Selection (WorkloadCapSelector, 已有)
-        ↓
-Runtime SLO/Thermal Feedback Controller (ThermalSLOCapController) ← 新增
-```
-
-6 级优先级控制规则（10s 窗口）：
-1. SLO violation → 立即升频
-2. 温度 > 85°C → 升至 max（快速完成→空闲冷却）
-3. 温度 > 75°C + SLO 裕度 + 连续 K window → 降频一步
-4. 功率超限 → 降频一步
-5. 距上次切频 < 20s → 跳过
-6. 默认 → 保持
-
-### 跨模型 DVFS 特征对比
-
-| 特征 | 7B (Qwen2.5) | 8B (Llama-3.1) | 14B (Qwen2.5) |
-|:---|:---:|:---:|:---:|
-| Pareto 点数 (lock 11 freq) | 9-11/11 | 2-3/11 | 6-8/11 |
-| DVFS 优化空间 | 36% (最大) | 17% (最小) | 23% |
-| 最优 E/tok 频率 | 714-918 MHz (中频) | 408+ MHz (全平) | 1122-1300 MHz (高频) |
-| Knee 点 | 714-918 MHz | 408-612 MHz | 408-918 MHz |
+> 多目标 Pareto 前沿在 8B/14B 上支配的目标空间（Hypervolume）是所有其他策略的 22-37 倍。
+> 跨策略对比、Oracle Gap 全表、EMO 指标（MDR/JIR/HV）、Thermal-SLO 控制器规则与跨模型特征对比见 **[实验结果详述](docs/实验文档/实验结果详述.md)**。
 
 ---
 
@@ -305,6 +232,7 @@ python3 src/visualization/analyze_e2e_benchmark.py     # E2E 分析 (5 图 + 报
 |------|------|
 | [docs/实验文档/README.md](docs/实验文档/README.md) | 实验文档索引（术语规范 + 全部报告入口） |
 | [docs/实验文档/实验总览.md](docs/实验文档/实验总览.md) | 实验环境、频率配置空间、功耗采集方法 |
+| [docs/实验文档/实验结果详述.md](docs/实验文档/实验结果详述.md) | 跨策略对比、Oracle Gap、EMO 多目标评估、Thermal-SLO 控制器 |
 | [docs/实验文档/related_work_comparison.md](docs/实验文档/related_work_comparison.md) | **相关工作对比分析** (DVFS/Serving/边缘部署/多目标) |
 | [figures/e2e_benchmark/e2e_benchmark_report.md](figures/e2e_benchmark/e2e_benchmark_report.md) | E2E benchmark 详细报告 |
 | [docs/说明文档/runtime_setup_guide.md](docs/说明文档/runtime_setup_guide.md) | 运行时环境搭建（llama.cpp / Jetson） |

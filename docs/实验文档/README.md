@@ -57,6 +57,7 @@
 
 | 报告 | 日期 | 核心内容 |
 |------|------|---------|
+| [实验结果详述](实验结果详述.md) | — | 跨策略对比、Oracle Gap、EMO 多目标评估、Thermal-SLO 控制器、跨模型特征 |
 | [实验 4：细粒度 GPU×EMC 能耗建模](实验4-细粒度GPUxEMC能耗建模.md) | 2026-05-16 | 11 GPU × 4 EMC 细粒度 profiling、三维汇率表 |
 | [E2E 收益归因分析](E2E收益归因分析.md) | 2026-05-19 | E2E baseline 差异归因、token/J 收益来源分析 |
 | [相关工作对比](related_work_comparison.md) | 2026-06-17 | DVFS / Serving / 边缘部署 / 多目标优化对比 |
