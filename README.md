@@ -32,7 +32,9 @@
 
 E2E 基准验证：3 模型 × 9 策略 × 多 workload，共 378 runs。
 
-![E2E 各策略节省总览](figures/e2e_benchmark/e2e_savings_summary.png)
+<img src="figures/e2e_benchmark/e2e_savings_summary.png" width="720" alt="E2E 各策略节省总览">
+
+*E2E 基准验证各策略节省总览（378 runs），对应下表数值。*
 
 ### Pareto (Ours) vs Baselines
 
@@ -49,7 +51,9 @@ E2E 基准验证：3 模型 × 9 策略 × 多 workload，共 378 runs。
 3. **不同模型 DVFS 行为完全不同**: 7B compute-bound（中频甜点），8B memory-bound（408MHz 以上 TPS 扁平），14B compute-bound（高频最优）
 4. **单请求 E/tok 优化空间有限**: Pareto 选择器距 oracle 理论上界仅 +4.9%；DVFS 的真正价值在长期运行的功率节省与热管理
 
-![E/tok × TPOT 多目标 Pareto 前沿](figures/pareto_frontier/pareto_2d_ept_vs_tpot.png)
+<img src="figures/pareto_frontier/pareto_2d_ept_vs_tpot.png" width="540" alt="Pareto 前沿">
+
+*E/tok × TPOT 多目标 Pareto 前沿：选择器返回整条权衡面而非单点（knee / SLO / alpha 三种取点方式）。*
 
 > 多目标 Pareto 前沿在 8B/14B 上支配的目标空间（Hypervolume）是所有其他策略的 22-37 倍。
 > 跨策略对比、Oracle Gap 全表、EMO 指标（MDR/JIR/HV）、Thermal-SLO 控制器规则与跨模型特征对比见 **[实验结果详述](docs/实验文档/实验结果详述.md)**。
