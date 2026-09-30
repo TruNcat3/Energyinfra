@@ -236,6 +236,7 @@ python3 src/visualization/analyze_e2e_benchmark.py     # E2E 分析 (5 图 + 报
 
 | 文档 | 说明 |
 |------|------|
+| [项目总结与示例](docs/summary-example.md) | 项目流程概览与一个 workload 的 GPU cap 选择示例 |
 | [docs/实验文档/README.md](docs/实验文档/README.md) | 实验文档索引（术语规范 + 全部报告入口） |
 | [docs/实验文档/实验总览.md](docs/实验文档/实验总览.md) | 实验环境、频率配置空间、功耗采集方法 |
 | [docs/实验文档/实验结果详述.md](docs/实验文档/实验结果详述.md) | 跨策略对比、Oracle Gap、EMO 多目标评估、Thermal-SLO 控制器 |
