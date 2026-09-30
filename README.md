@@ -113,6 +113,8 @@ Energyinfra/
 ### 环境初始化
 
 ```bash
+git clone https://github.com/TruNcat3/Energyinfra.git
+cd Energyinfra
 ./setup.sh
 ```
 
