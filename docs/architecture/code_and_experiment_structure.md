@@ -2,7 +2,7 @@
 
 ## 1. 组织原则
 
-当前仓库包含早期 Orin 原型、Thor 适配、运行时构建和大量实验产物。为了不破坏历史可复现性，第一阶段不直接移动现有脚本，而采用“稳定路径 + 清晰命名 + 文档分层”的渐进式整理方式。
+当前仓库包含 Orin 基线、Thor 适配、运行时构建和大量实验产物。两者属于同一框架的不同平台实例。为了不破坏历史可复现性，第一阶段不直接移动现有脚本，而采用“公共算法 + 平台 adapter + 稳定路径 + 清晰命名”的渐进式整理方式。
 
 - `configs/` 定义实验身份，不在 shell 脚本中硬编码关键实验参数；
 - `scripts/active/` 只放当前仍可复现的编排、准备、运行和分析脚本；
@@ -11,7 +11,14 @@
 - `data/protocol_v2/` 的 trace、manifest 和结果属于实验产物，不直接手工修改；
 - `docs/experiments/` 记录协议，`docs/research/` 记录跨实验结论。
 
-## 2. 目录职责
+## 2. 平台适配
+
+- Orin：保留既有 platform.yaml、frequencies.yaml、src/ 和 rate-table 流程；
+- Thor：使用 platform_thor.yaml、platform_profiles.yaml、Thor protocol 和 run_thor_* 入口；
+- 公共分析：使用相同的 Power、Energy/token、TTFT、TPOT、Temperature 和 SLO 字段；
+- 平台特殊能力：只在 adapter/config 层记录，例如 Thor EMC setpoint 限制或 Orin power mode。
+
+## 3. 目录职责
 
 | 目录 | 责任 | 不应放入 |
 |---|---|---|

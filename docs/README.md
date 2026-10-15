@@ -1,9 +1,13 @@
 # EnergyInfra 文档入口
 
+EnergyInfra 的统一主题是面向边端 GPU 的多目标能效调优框架。Orin 和 Thor 共享方法、指标和报告模板，平台特有内容通过 adapter 和 profile 隔离。
+
 ## 当前主线
 
 - [面向边端 GPU 的多目标能耗调优框架](research/edge_gpu_multi_objective_framework.md)
+- [平台与实验矩阵](research/platform_experiment_matrix.md)
 - [Thor 当前研究状态](research/thor_current_status_20261015.md)
+- [数据目录与证据等级](../data/README.md)
 - [代码与实验组织方式](architecture/code_and_experiment_structure.md)
 - [Thor 复现实验指南](operations/thor_reproduction.md)
 
