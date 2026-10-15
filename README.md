@@ -56,6 +56,7 @@ Orin 和 Thor 都以 llama.cpp/GGUF 为主要运行时。Thor 当前主模型为
 - [平台与实验矩阵](docs/research/platform_experiment_matrix.md)
 - [数据目录与证据等级](data/README.md)
 - [Thor 当前研究状态](docs/research/thor_current_status_20261015.md)
+- [Thor 统一证据汇总协议](docs/experiments/thor_unified_evidence_v1.md)
 - [代码与实验组织方式](docs/architecture/code_and_experiment_structure.md)
 - [Thor 复现实验指南](docs/operations/thor_reproduction.md)
 - [串行边端协议说明](docs/experiments/thor_edge_interactive_think_v1.md)
