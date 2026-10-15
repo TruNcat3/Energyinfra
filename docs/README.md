@@ -21,6 +21,7 @@ EnergyInfra 的统一主题是面向边端 GPU 的多目标能效调优框架。
 - [Queue-aware Pareto 硬件验证](experiments/thor_queue_aware_hardware_validation_v1.md)
 - [Queue-aware paired confirmation](experiments/thor_queue_aware_confirmation_v1.md)
 - [Phase validation 与静态候选诊断](experiments/thor_phase_validation_v1.md)
+- [Thor unified evidence aggregation](experiments/thor_unified_evidence_v1.md)
 
 ## 文档分层
 

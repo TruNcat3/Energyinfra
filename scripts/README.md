@@ -11,4 +11,6 @@
 
 每个新实验至少提供一个配置、prepare/protocol freeze 入口、带日志和 PID 的 run wrapper、report/analyze 入口以及一份 `docs/experiments/` 协议说明。硬件实验脚本必须具备恢复路径；分析脚本必须默认不修改硬件频率。
 
+Thor 的跨协议收口入口为 `active/analyze_thor_unified_evidence_v1.py`。它只读取已完成协议的摘要 CSV，按场景生成 `evidence_rows.csv`、源文件 hash 清单和 Markdown 汇总，不替代各协议的原始 `RESULTS.md`。
+
 `scripts/_legacy/` 仅保留历史入口。新实验不要从 legacy 脚本复制未审计的硬件控制逻辑，应复用当前 `run_energyinfra_v2.py`、Thor protocol 和 runtime manifest 机制。
