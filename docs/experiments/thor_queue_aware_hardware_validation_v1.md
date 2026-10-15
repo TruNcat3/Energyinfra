@@ -35,3 +35,13 @@ sudo -E bash scripts/active/run_thor_queue_aware_hardware_validation_nohup.sh an
 The run is not considered successful merely because power falls. Fixed-work
 total energy, completion, TTFT, TPOT, E2E and every-repeat attainment must all
 pass. Queue candidates remain predictions until this campaign completes.
+
+## Archived outcome
+
+The hardware validation completed with 70/70 requests for every retained
+strategy. Dynamic reached 81.43% joint SLO attainment and was not feasible;
+MaxClock, MaxClockIdleDynamic, BalancedWeighted, QueueEnergyMin and
+QueuePowerMin reached 100% observed attainment. QueuePowerMin measured about
+52.047 W and 3.219 J/token, approximately -5.53% power and -5.47% J/token
+against MaxClock. This is evidence for the frozen long-generation arrival
+protocol only, not for single-user or P8 transfer.

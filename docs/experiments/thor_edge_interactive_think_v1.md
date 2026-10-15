@@ -28,3 +28,14 @@ bash scripts/active/run_thor_edge_interactive_think_nohup.sh full analyze
 ```
 
 最终报告必须与低并发 bursty 协议和 P8 capacity 报告分开。
+
+## 收口判据
+
+该协议的正式结果不是“30 秒间隔下平均功率最低的点”，而是同一固定 horizon 下的多目标集合。报告必须按 workload 和 repeat 输出：
+
+- 请求级 TTFT/TPOT P95、完成数和 SLO 达标率；
+- 包含 idle horizon 的总能量、平均功率和 J/token；
+- 相对 native dynamic、max clock 的绝对值和百分比；
+- power-minimum、energy-minimum、latency-minimum 和 knee 候选。
+
+如果 idle energy 让低频点功率下降但 J/token 上升，应分别标记为 power-oriented Pareto 点和 energy regression，不能合并为“续航提升”。

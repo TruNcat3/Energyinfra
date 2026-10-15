@@ -116,3 +116,22 @@ The next separate track, if required, is a pretrained-model quality plus
 TensorRT Edge-LLM experiment using INT4 AWQ or NVFP4/FP8. It needs a different
 runtime and calibration data, so it must receive separate configuration,
 provenance and baseline tables.
+
+## Current status and interpretation
+
+The precision track is a sensitivity study inside llama.cpp, not a comparison of all edge deployment
+formats. Q4/Q5/Q8 results can be compared only after the same-source gate, with the same workload,
+hardware candidates, SLO and independent repeats. Lower precision is not assumed to be better: lower
+memory traffic may reduce power while kernel or runtime behavior increases execution time and J/token.
+Until the gate and validation table are complete, precision remains `partial` in the platform matrix.
+
+## Archived pilot interpretation
+
+The same-source gate and 20-block pilot completed for Q4_K_M, Q5_K_M and
+Q8_0. At 64/64, the low-power Q4 candidate was about 63.8 W and 3.10
+J/token, while MaxClock was about 93.6 W and 2.36 J/token; Q5 and Q8 show
+the same direction. The low-power point therefore demonstrates a power
+frontier, not an energy win. High-performance locked points reduce J/token
+slightly relative to MaxClock, but do not provide a broad low-power solution.
+These figures are limited to llama.cpp weight-only formats and synthetic
+weights; they are not INT4 AWQ, NVFP4, FP8 or a quality comparison.

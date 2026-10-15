@@ -41,6 +41,7 @@ Orin 和 Thor 都以 llama.cpp/GGUF 为主要运行时。Thor 当前主模型为
 | 场景 | 当前状态 | 解释 |
 |---|---|---|
 | P8 共享容量 | 已完成 | c1/c3 在 TPOT 100 ms 约束下可支持到 64 tok/s，存在明确功率/能效收益 |
+| Queue-aware long generation | 已完成 | QueuePowerMin 在同一 arrival trace 下通过硬件验证和 paired confirmation |
 | 低并发突发负载 | 已完成 | 90 个测试点完成；严格的全重复、全 prompt bucket 门槛下暂无最终可行点 |
 | 单用户串行 think-time | 已完成运行 | 请求间隔固定为 30 秒；用于判断真正边端交互场景，结果需与突发场景分开解释 |
 | 静态硬件候选 | 已完成初版 | 已覆盖动态、最高频、低 EMC、c1/c3 等候选配置 |
@@ -51,6 +52,7 @@ Orin 和 Thor 都以 llama.cpp/GGUF 为主要运行时。Thor 当前主模型为
 ## 文档入口
 
 - [项目研究总报告](docs/research/edge_gpu_multi_objective_framework.md)
+- [Thor 实验收口计划](docs/research/thor_completion_plan_20261015.md)
 - [平台与实验矩阵](docs/research/platform_experiment_matrix.md)
 - [数据目录与证据等级](data/README.md)
 - [Thor 当前研究状态](docs/research/thor_current_status_20261015.md)
