@@ -1,12 +1,14 @@
 # 面向边端 GPU 的多目标能耗调优框架
 
 **项目**：EnergyInfra
-**当前平台**：Jetson AGX Thor；Orin 结果作为历史基线
-**当前运行时**：隔离构建的 llama.cpp
-**当前主模型**：随机权重 Qwen2.5 7B Q4_K_M
+**平台实例**：Jetson Orin、Jetson AGX Thor 及后续 Jetson 边端 GPU
+**统一运行时**：以 llama.cpp/GGUF 为主，平台可扩展其他 runtime
+**当前主模型**：Orin 使用多模型历史基线；Thor 以随机权重 Qwen2.5 7B Q4_K_M 做系统控制变量
 **文档日期**：2026-10-15
 
-## 1. 研究问题
+## 1. 框架定位与研究问题
+
+EnergyInfra 研究的是边端 GPU LLM 推理的系统能效问题，而不是某个单一平台的频率脚本。Orin 和 Thor 通过统一的 profiling、SLO、Pareto 和在线控制方法接入同一研究框架；平台差异只保留在硬件 adapter、runtime manifest 和实验配置中。
 
 边端 LLM 推理不是单一的“最快”或“最低功率”优化问题。降低 GPU/EMC/CPU 频率可能降低平均功率，却也可能增加排队和 decode 时间，使每 token 能量上升；提高频率可能缩短 busy time，也不一定降低平台总能耗。
 
@@ -56,7 +58,13 @@ f(x) = (average_power_w,
 
 三类场景不能合并成一张“总排行榜”。同一个频率点在 A 中可能因 idle energy 占主导，在 C 中可能因 queueing 和 batch efficiency 获益。
 
-## 5. Thor 当前证据
+## 5. 平台实例与当前证据
+
+### 5.1 Jetson Orin
+
+Orin 是当前已有数据最完整的平台，包含 GPU/EMC profiling、7B/8B/14B 模型、lock/cap rate table、workload-aware selector、378-run E2E benchmark、Oracle gap、MDR/JIR/HV、phase-aware 和 thermal-SLO 分析。已有结果显示 Pareto 方法相对 MAXN 在不同模型上有约 4.5% 到 5.5% 的 Energy/token 优势，功率收益最高约 22.8%。这些数字只对对应的模型、runtime、workload 和 SLO 有效。
+
+### 5.2 Jetson AGX Thor
 
 已确认：
 
@@ -68,13 +76,15 @@ f(x) = (average_power_w,
 
 `edge_c3_p2 @ rate_012` 在 bursty 低并发 full 数据中，TPOT 100 ms 下总体达标率约 90%，三次重复为 `[100%, 80%, 80%]`，平均功率约 40.5 W，TPOT P95 约 30.9 ms。由于未达到 95% 保守门槛，它应标记为“接近可行候选”，不能写成“满足 SLO”。
 
-## 6. 结果边界
+## 6. 场景和结果边界
 
 - 随机权重模型适合系统测量，不代表模型质量或准确率；
 - Orin 旧实验数字不能与 Thor 直接合并统计；
 - quick 结果只能作为 gate 或探索性证据；
 - 功率下降必须和 Energy/token、TTFT、TPOT 一起解释；
 - 没有统一 workload、runtime、trace 和 SLO 时，不能声称 Thor 全面超越原生动态策略。
+
+单用户串行、低平均负载带突发和 P8 共享容量不能合并成一个总排行榜。同一个硬件点在不同场景中的功率、能效和延迟排名可能不同。缺少某个平台或某类负载的数据时，应在平台矩阵中标为 planned，而不是用另一平台的数据替代。
 
 ## 7. 研究定位
 

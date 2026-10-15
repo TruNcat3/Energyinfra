@@ -1,6 +1,13 @@
 # EnergyInfra
 
-## 面向边端 GPU 的多目标能耗调优框架
+## 面向边端 GPU 的多目标能效调优框架
+
+EnergyInfra 是面向 Jetson Orin、Jetson AGX Thor 及后续边端 GPU 的统一 LLM 推理能效调优框架。Orin 和 Thor 是同一方法在不同硬件平台上的实例，不是两个相互独立的项目。
+
+| 平台 | 当前角色 | 证据状态 |
+|---|---|---|
+| Jetson Orin | 已有基线平台 | profiling、rate table、Pareto、E2E serving 和 thermal 原型已完成多轮 |
+| Jetson AGX Thor | 新平台实例 | 硬件适配、资源筛选、P8 serving、低并发 serving 已完成，精度和长期闭环持续补齐 |
 
 EnergyInfra 面向 Jetson Orin、Jetson AGX Thor 等边端 GPU 上的 LLM 推理，围绕以下目标构建可复现实验和在线调优链路：
 
@@ -27,7 +34,7 @@ SLO 过滤 + 多目标 Pareto 分析
 在线 cap / phase / thermal feedback 控制
 ```
 
-当前主平台是 Thor，运行时为隔离构建的 llama.cpp，主模型为随机权重 Qwen2.5 7B Q4_K_M。随机权重只用于控制变量和系统性能实验，不用于模型质量结论。
+Orin 和 Thor 都以 llama.cpp/GGUF 为主要运行时。Thor 当前主模型为随机权重 Qwen2.5 7B Q4_K_M，随机权重只用于控制变量和系统性能实验，不用于模型质量结论。
 
 ## 当前 Thor 证据
 
@@ -44,6 +51,8 @@ SLO 过滤 + 多目标 Pareto 分析
 ## 文档入口
 
 - [项目研究总报告](docs/research/edge_gpu_multi_objective_framework.md)
+- [平台与实验矩阵](docs/research/platform_experiment_matrix.md)
+- [数据目录与证据等级](data/README.md)
 - [Thor 当前研究状态](docs/research/thor_current_status_20261015.md)
 - [代码与实验组织方式](docs/architecture/code_and_experiment_structure.md)
 - [Thor 复现实验指南](docs/operations/thor_reproduction.md)
@@ -73,6 +82,6 @@ bash scripts/active/run_thor_edge_interactive_think_nohup.sh full analyze
 
 ## 结果解释边界
 
-EnergyInfra 当前报告严格区分平均功率、每 token 能量、TTFT/TPOT、SLO 达标率和 Pareto 前沿。Orin 早期结果和旧 Phase 文档仍保留，但属于历史基线，不能与 Thor 的随机权重、llama.cpp 版本和 serving trace 结果直接合并统计。
+EnergyInfra 当前报告严格区分平均功率、每 token 能量、TTFT/TPOT、SLO 达标率和 Pareto 前沿。Orin 和 Thor 采用相同指标，但不同模型、runtime、trace 和 SLO 下的结果不能直接合并统计。
 
 大型模型、原始 telemetry 日志和中间构建产物不应提交到代码仓库；发布结果时应提交配置、摘要、哈希和可复现命令。
