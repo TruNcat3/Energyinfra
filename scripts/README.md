@@ -13,4 +13,6 @@
 
 Thor 的跨协议收口入口为 `active/analyze_thor_unified_evidence_v1.py`。它只读取已完成协议的摘要 CSV，按场景生成 `evidence_rows.csv`、源文件 hash 清单和 Markdown 汇总，不替代各协议的原始 `RESULTS.md`。
 
+Thor P1 定向确认入口为 `active/run_thor_edge_confirmation_nohup.sh`，通过 `serial` 或 `bursty` 模式选择独立 protocol；它只验证既有候选，不重新扫描静态频率表。
+
 `scripts/_legacy/` 仅保留历史入口。新实验不要从 legacy 脚本复制未审计的硬件控制逻辑，应复用当前 `run_energyinfra_v2.py`、Thor protocol 和 runtime manifest 机制。

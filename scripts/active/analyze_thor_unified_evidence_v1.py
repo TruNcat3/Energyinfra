@@ -362,7 +362,7 @@ def render_report(rows: list[dict[str, str]], sources: list[dict[str, object]], 
     ]
     lines.extend(markdown_table(["Kind", "Path", "Status", "Rows", "SHA256"], ((s.get("kind"), s.get("path"), s.get("status"), s.get("rows", 0), text(s.get("sha256", ""))[:12]) for s in sources)))
     lines.extend(["", "## Reading rules", "", "- A feasible anchor is selected only from rows whose declared all-repeat SLO flag is true.", "- Empty or missing source files remain missing; this report never substitutes another platform or scenario.", "- Pilot and static-validation rows are descriptive and do not establish online serving gains.", "- Use `evidence_rows.csv` for the complete table and the source protocol for SLO semantics.", ""])
-    for scenario in ("edge_serial", "edge_bursty"):
+    for scenario in ("edge_serial", "edge_bursty", "edge_confirmation_serial", "edge_confirmation_bursty"):
         lines.extend(edge_summary(rows, scenario))
         lines.append("")
     for scenario in ("queue_aware_validation", "queue_aware_confirmation"):
@@ -390,6 +390,8 @@ def build(args: argparse.Namespace) -> None:
     edge_specs = (
         ("edge_serial", "fixed_trace_serving", root / "thor_edge_interactive_think_v1/full/summary.csv"),
         ("edge_bursty", "fixed_trace_serving", root / "thor_edge_low_concurrency_v1/full/summary.csv"),
+        ("edge_confirmation_serial", "targeted_confirmation", root / "thor_edge_confirmation_v1/serial/full/summary.csv"),
+        ("edge_confirmation_bursty", "targeted_confirmation", root / "thor_edge_confirmation_v1/bursty/full/summary.csv"),
     )
     for scenario, kind, path in edge_specs:
         sources.append(source_record(root, path, kind))
