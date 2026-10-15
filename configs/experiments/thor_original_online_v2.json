@@ -1,0 +1,23 @@
+{
+  "schema": "energyinfra-original-online-v2",
+  "fixed_cpu_khz": 1458000,
+  "fixed_emc_hz": 4266000000,
+  "trace": "short_chat",
+  "duration_s": 600,
+  "repeats": 3,
+  "seed": 42,
+  "queue_limit": 256,
+  "client_ttft_slo_ms": 1000,
+  "required_attainment": 0.95,
+  "strategies": ["Dynamic", "MaxClock", "BestStatic", "Pareto", "ThermalSLO"],
+  "controller": {
+    "tpot_slo_ms": 50.0,
+    "power_budget_w": 50.0,
+    "thermal_warning_c": 75.0,
+    "thermal_critical_c": 85.0,
+    "window_interval_s": 10.0,
+    "lower_hysteresis_k": 3,
+    "cooldown_s": 20.0,
+    "initial_cap_strategy": "pareto"
+  }
+}

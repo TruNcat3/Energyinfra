@@ -1,0 +1,50 @@
+{
+  "schema": "energyinfra-phase-validation-v1",
+  "diagnostic_config": "configs/experiments/thor_phase_diagnostic_v1.json",
+  "selection_source": "data/protocol_v2/thor_phase_diag_full_v1",
+  "repeats": 20,
+  "measurement": {
+    "warmup_requests": 2,
+    "settle_s": 1.0,
+    "min_samples": 20
+  },
+  "workloads": [
+    {
+      "tokens": [64, 64], "requests_per_block": 6,
+      "energy_candidate": "g1575_e4266_c1458_lock",
+      "power_candidate": "g1485_e2750_c1458_lock"
+    },
+    {
+      "tokens": [512, 512], "requests_per_block": 2,
+      "energy_candidate": "g1485_e4266_c1458_lock",
+      "power_candidate": "g1485_e2750_c1458_lock"
+    },
+    {
+      "tokens": [2048, 128], "requests_per_block": 3,
+      "energy_candidate": "g1485_e4266_c1458_lock",
+      "power_candidate": "g1485_e2750_c1458_lock"
+    }
+  ],
+  "cpu_dynamic_control": "g1485_e4266_c1458_gpu_lock_cpu_dynamic",
+  "quick": {"workload": [512, 512], "repeats": 1, "requests_per_block": 1},
+  "tpot_slos_ms": [50, 75, 100],
+  "ttft_scenarios_ms": {"tpot_only": null, "interactive_1s": 1000, "long_context_2s": 2000},
+  "required_observed_attainment": 0.95,
+  "lock_tolerance_pct": 3.0,
+  "statistics": {
+    "bootstrap_replicates": 10000,
+    "family_alpha": 0.05,
+    "primary_comparison": "energy_candidate_vs_max_clock",
+    "primary_family_size": 3
+  },
+  "profile_pair": {
+    "prompt_tokens": 512,
+    "repeats": 2,
+    "phases": ["prefill", "decode"],
+    "points": {
+      "cpu_dynamic": "g1485_e4266_c1458_gpu_lock_cpu_dynamic",
+      "cpu_fixed": "g1485_e4266_c1458_lock"
+    },
+    "ncu_launch_count": 16
+  }
+}

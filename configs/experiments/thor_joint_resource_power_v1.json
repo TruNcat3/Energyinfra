@@ -1,0 +1,85 @@
+{
+  "schema": "energyinfra-thor-joint-resource-power-v1",
+  "runtime": {
+    "repository": "https://github.com/ggml-org/llama.cpp.git",
+    "commit": "4df29be4f4c3673f428170fda944a5b19f743bb8",
+    "compatibility_reason": "official llama-cpp-python v0.3.35 vendor/llama.cpp submodule commit",
+    "binding_tag": "v0.3.35",
+    "binding_commit": "3691546f1c9e0c1bf93323dff02230bd959cf562",
+    "cuda_architectures": "110",
+    "source_dir": "third_party/llama.cpp-4df29be4f4c3",
+    "build_dir": "build/llama.cpp-4df29be4f4c3-thor-make",
+    "server_binary": "build/llama.cpp-4df29be4f4c3-thor-make/bin/llama-server",
+    "batched_bench_binary": "build/llama.cpp-4df29be4f4c3-thor-make/bin/llama-batched-bench"
+  },
+  "model": {
+    "path": "data/protocol_v2/thor_attribution_v2/models/Qwen2.5-random-paired-v152064-Q4_K_M.gguf",
+    "quality_scope": "random weights; systems behavior only"
+  },
+  "output_dir": "data/protocol_v2/thor_joint_resource_power_v1_4df29be",
+  "hardware_points": [
+    {
+      "name": "queue_power_min",
+      "mode": "cap",
+      "gpu_hz": 1485000000,
+      "emc_hz": 4266000000,
+      "cpu_khz": 1458000,
+      "cpu_floor_khz": 486000
+    },
+    {
+      "name": "lock1485",
+      "mode": "isolated",
+      "gpu_hz": 1485000000,
+      "emc_hz": 4266000000,
+      "cpu_khz": 1458000,
+      "cpu_mode": "lock"
+    },
+    {
+      "name": "race_to_idle_1575",
+      "mode": "isolated",
+      "gpu_hz": 1575000000,
+      "emc_hz": 4266000000,
+      "cpu_khz": 1458000,
+      "cpu_mode": "lock"
+    },
+    {
+      "name": "emc_power_cap",
+      "mode": "cap",
+      "gpu_hz": 1485000000,
+      "emc_hz": 3200000000,
+      "cpu_khz": 1458000,
+      "cpu_floor_khz": 486000
+    }
+  ],
+  "pilot": {
+    "per_slot_context_tokens": 4096,
+    "utilization_surface": {
+      "parallel_slots": [1, 2, 4, 8],
+      "closed_loop_concurrency": [1, 2, 4, 8],
+      "n_batch": 512,
+      "n_ubatch": 256
+    },
+    "prefill_microbatch_surface": {
+      "parallel_slots": 4,
+      "closed_loop_concurrency": 4,
+      "n_batch": [256, 512, 1024],
+      "n_ubatch": [128, 256, 512],
+      "workloads": [[128, 128], [1024, 128]]
+    },
+    "workloads": [[128, 128], [512, 128], [128, 512], [1024, 512]],
+    "repeats": 3,
+    "job_timeout_s": 300
+  },
+  "slo_profiles": [
+    {"name": "interactive_strict", "ttft_ms": 500, "tpot_ms": 30},
+    {"name": "interactive", "ttft_ms": 1000, "tpot_ms": 50},
+    {"name": "long_context", "ttft_ms": 2000, "tpot_ms": 50}
+  ],
+  "measurement_rules": {
+    "fixed_prompt_and_output_tokens": true,
+    "include_queue_delay_in_ttft": true,
+    "energy_scope": "tegrastats VIN input",
+    "primary_energy_metric": "joules_per_completed_output_token",
+    "required_joint_slo_attainment": 0.95
+  }
+}

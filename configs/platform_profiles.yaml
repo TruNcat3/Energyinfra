@@ -1,0 +1,82 @@
+# Hardware and OS specific controls. First matching profile wins.
+profiles:
+  - name: jetson_thor_r38
+    model_regex: "(?i)thor"
+    os_id: "ubuntu"
+    os_version_regex: "24\\.04|r38|38\\."
+    kernel_regex: ""
+    paths:
+      gpu_devfreq: ["/sys/class/devfreq/gpu-gpc-0"]
+      emc_cap: ["/sys/kernel/nvpmodel_clk_cap/emc"]
+      emc_rate: ["/sys/kernel/debug/clk/emc/clk_rate"]
+      emc_min: ["/sys/kernel/debug/emc/min_rate"]
+      emc_max: ["/sys/kernel/debug/emc/max_rate"]
+    emc_setpoints_mhz: [665, 2750, 3200, 4266]
+    lock_gpu_governors: [performance, userspace]
+    dynamic_gpu_governors: [nvhost_podgov, performance]
+    lock_cpu_governors: [userspace, performance]
+    experiments:
+      gpu_caps_mhz: [359, 665, 1116, 1575]
+      emc_caps_mhz: [665, 2750, 3200, 4266]
+      cpu_cap_mhz: 1458
+      gpu_max_mhz: 1575
+      emc_max_mhz: 4266
+      cpu_max_mhz: 2601
+      serving_emc_cap_mhz: 4266
+      serving_cpu_cap_mhz: 2601
+      n_ctx: 8192
+      # Phase 13 P1: preserve the original ten relative GPU levels,
+      # mapped to the nearest Thor sysfs setpoint. Not performance equivalence.
+      finegrained_cap:
+        gpu_caps_mhz: [495, 621, 738, 864, 990, 1116, 1233, 1359, 1485, 1575]
+        emc_cap_mhz: 4266
+        cpu_cap_mhz: 1458
+
+  - name: jetson_orin_r36
+    model_regex: "(?i)orin|agx xavier|xavier nx|nano"
+    os_id: "ubuntu"
+    os_version_regex: "22\\.04|r36|36\\."
+    kernel_regex: ""
+    paths:
+      gpu_devfreq: ["/sys/class/devfreq/17000000.gpu", "/sys/class/devfreq/gpu-gpc-0"]
+      emc_cap: []
+      emc_rate: ["/sys/kernel/debug/clk/emc/clk_rate", "/sys/kernel/debug/bpmp/debug/emc_rate"]
+      emc_min: ["/sys/class/devfreq/bwmgr/min_freq", "/sys/kernel/debug/emc/min_rate"]
+      emc_max: ["/sys/class/devfreq/bwmgr/max_freq", "/sys/kernel/debug/emc/max_rate"]
+    emc_setpoints_mhz: []
+    lock_gpu_governors: [userspace, performance]
+    dynamic_gpu_governors: [nvhost_podgov, simple_ondemand, schedutil]
+    lock_cpu_governors: [userspace, performance]
+    experiments:
+      gpu_caps_mhz: [306, 612, 918, 1300]
+      emc_caps_mhz: [204, 665, 2133, 3199]
+      cpu_cap_mhz: 1036
+      gpu_max_mhz: 1300
+      emc_max_mhz: 3199
+      cpu_max_mhz: 2201
+      serving_emc_cap_mhz: 3199
+      serving_cpu_cap_mhz: 1036
+      n_ctx: 4096
+      finegrained_cap:
+        gpu_caps_mhz: [408, 510, 612, 714, 816, 918, 1020, 1122, 1224, 1300]
+        emc_cap_mhz: 3199
+        cpu_cap_mhz: 1036
+
+  - name: generic_jetson
+    model_regex: "(?i)jetson|tegra"
+    os_id: ""
+    os_version_regex: ""
+    kernel_regex: ""
+    paths: {}
+    emc_setpoints_mhz: []
+    lock_gpu_governors: [userspace, performance]
+    dynamic_gpu_governors: [nvhost_podgov, simple_ondemand, schedutil]
+    lock_cpu_governors: [userspace, performance]
+    experiments:
+      gpu_caps_mhz: []
+      emc_caps_mhz: []
+      cpu_cap_mhz: 1036
+      gpu_max_mhz: 1300
+      emc_max_mhz: 3199
+      cpu_max_mhz: 2201
+      n_ctx: 4096

@@ -1,0 +1,53 @@
+{
+  "schema": "energyinfra-serving-slo-audit-v1",
+  "output_dir": "reports/thor_slo_audit_v2",
+  "campaigns": {
+    "short_chat": "data/protocol_v2/thor_q4_full_frontier_v1/serving/short_chat_interactive_1s_50",
+    "long_generation": "data/protocol_v2/thor_q4_long_generation_fixed_trace_v1",
+    "bursty_mixed": "data/protocol_v2/thor_q4_bursty_fixed_trace_v1"
+  },
+  "profiles": {
+    "strict_reference_500_30": {
+      "ttft_ms": 500,
+      "tpot_ms": 30,
+      "required_joint_attainment": 0.95,
+      "basis": "Strict MLPerf Llama3.1-8B interactive reference; not the default edge target"
+    },
+    "edge_fast_1000_40": {
+      "ttft_ms": 1000,
+      "tpot_ms": 40,
+      "required_joint_attainment": 0.95,
+      "basis": "Latency-sensitive edge agent tier"
+    },
+    "edge_interactive_1000_50": {
+      "ttft_ms": 1000,
+      "tpot_ms": 50,
+      "required_joint_attainment": 0.95,
+      "basis": "Responsive edge chat tier"
+    },
+    "edge_balanced_2000_50": {
+      "ttft_ms": 2000,
+      "tpot_ms": 50,
+      "required_joint_attainment": 0.95,
+      "basis": "Balanced edge chat tier"
+    },
+    "edge_conversational_2000_75": {
+      "ttft_ms": 2000,
+      "tpot_ms": 75,
+      "required_joint_attainment": 0.95,
+      "basis": "Conversational edge tier"
+    },
+    "edge_relaxed_3000_100": {
+      "ttft_ms": 3000,
+      "tpot_ms": 100,
+      "required_joint_attainment": 0.95,
+      "basis": "Relaxed edge service and capacity-planning tier"
+    },
+    "edge_background_5000_150": {
+      "ttft_ms": 5000,
+      "tpot_ms": 150,
+      "required_joint_attainment": 0.95,
+      "basis": "Delay-tolerant foreground/background assistant tier"
+    }
+  }
+}

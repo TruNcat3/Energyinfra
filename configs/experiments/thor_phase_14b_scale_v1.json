@@ -1,0 +1,39 @@
+{
+  "schema": "energyinfra-phase-diagnostic-v1",
+  "base_config": "configs/experiments/thor_protocol_v2.json",
+  "model_path": "models/random_scale_v1/Qwen2.5-14B-random-v152064-Q4_K_M.gguf",
+  "platform_version": {"l4t_major": "38", "l4t_revision": "2.2"},
+  "telemetry": {"clock_source": "tegrastats", "emc_tolerance_mhz": 20},
+  "grid": {
+    "gpu_hz": [1116000000, 1485000000],
+    "emc_hz": [2750000000, 4266000000],
+    "cpu_khz": 1458000
+  },
+  "cpu_probe": {
+    "gpu_hz": 1485000000,
+    "emc_hz": 4266000000,
+    "cpu_khz": [972000, 1458000, 2601000],
+    "dynamic_cpu_cap_khz": 1458000,
+    "include_cap_reference": true
+  },
+  "workloads": [[64, 64], [512, 512], [2048, 128]],
+  "repeats": 3,
+  "measurement": {
+    "interval_ms": 100,
+    "max_sample_gap_s": 0.5,
+    "min_block_s": 5.0,
+    "min_samples": 20,
+    "min_phase_samples": 3,
+    "warmup_requests": 1,
+    "settle_s": 1.0,
+    "abort_temperature_c": 85.0
+  },
+  "tpot_slos_ms": [50, 75, 100],
+  "ttft_slos_ms": [1000, 2000],
+  "quick": {
+    "workloads": [[512, 128]],
+    "repeats": 1,
+    "point_names": ["dynamic", "max_clock", "g1485_e4266_c1458_lock"]
+  },
+  "profiler": {"decode_steps": 8, "warmup_output_tokens": 32}
+}

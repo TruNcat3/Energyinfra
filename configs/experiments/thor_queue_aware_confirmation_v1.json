@@ -1,0 +1,21 @@
+{
+  "schema": "energyinfra-fixed-trace-serving-v1",
+  "static_config": "configs/experiments/thor_q4_full_frontier_v1.json",
+  "parent_run_dir": "data/protocol_v2/thor_queue_aware_validation_static_v1",
+  "calibration_trace_dir": "data/protocol_v2/thor_queue_aware_confirmation_traces_v1",
+  "output_dir": "data/protocol_v2/thor_queue_aware_confirmation_v1",
+  "trace": "long_generation_queue_pareto_confirmation",
+  "scenario": "long_context_2s",
+  "tpot_slo_ms": 100,
+  "duration_s": 600,
+  "required_observed_attainment": 0.95,
+  "strategies": [
+    "max_clock_idle_dynamic",
+    "balanced_weighted",
+    "queue_power_min"
+  ],
+  "source_trace_dir": "data/protocol_v2/thor_q4_long_generation_load_calibration_v1/confirm/arrival_x5",
+  "confirmation_trace_dir": "data/protocol_v2/thor_queue_aware_confirmation_traces_v1",
+  "confirmation_repeats": 7,
+  "trace_seed": 20261002
+}

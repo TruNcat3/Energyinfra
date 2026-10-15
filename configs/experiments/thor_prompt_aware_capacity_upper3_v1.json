@@ -1,0 +1,27 @@
+{
+  "schema": "energyinfra-thor-prompt-aware-targeted-v1",
+  "base_experiment": "configs/experiments/thor_prompt_aware_coupled_v1.json",
+  "scenarios": {
+    "capacity_upper3": {
+      "output_dir": "data/protocol_v2/thor_slo_capacity_frontier_v1/coupled_capacity_upper3_v1",
+      "seed_offset": 10000,
+      "workload_blocks": 1,
+      "rates_tps": [52, 56, 64],
+      "strategies": [
+        "native_dynamic_serial",
+        "max_clock_serial",
+        "energyinfra_dvfs_only",
+        "continuous_batching_balanced",
+        "joint_static_c1_g1485_e4266_f486000_p8",
+        "joint_static_c3_g1575_e4266_f972000_p8"
+      ],
+      "analyses": [
+        {
+          "name": "prompt_bucket",
+          "tpot_thresholds_ms": [100],
+          "require_each_prompt_bucket": true
+        }
+      ]
+    }
+  }
+}

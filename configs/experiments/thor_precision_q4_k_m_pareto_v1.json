@@ -1,0 +1,16 @@
+{
+  "schema": "energyinfra-cpu-floor-v1",
+  "diagnostic_config": "configs/experiments/thor_precision_q4_k_m_diagnostic_v1.json",
+  "grid": {"gpu_hz": [1116000000, 1485000000], "emc_hz": [2750000000, 4266000000], "cpu_floor_khz": [0, 486000, 972000], "cpu_cap_khz": 1458000, "locked_reference_gpu_hz": [1485000000]},
+  "profile_repeats": 3,
+  "validation_repeats": 20,
+  "validation_requests_by_output_tokens": {"64": 6, "128": 3, "256": 2, "512": 2, "1024": 1},
+  "measurement": {"min_block_s": 5.0, "min_samples": 20, "warmup_requests": 1, "settle_s": 1.0},
+  "quick": {"workloads": [[512, 128]], "point_names": ["dynamic", "max_clock", "cap_g1485_e4266_floor0", "cap_g1485_e4266_floor486", "cap_g1485_e4266_floor972", "lock_g1485_c1458"], "profile_repeats": 1, "validation_repeats": 1},
+  "pilot_workloads": [[64, 64], [512, 512], [2048, 128]],
+  "tpot_slos_ms": [50, 75, 100],
+  "ttft_scenarios_ms": {"tpot_only": null, "interactive_1s": 1000, "long_context_2s": 2000},
+  "required_observed_attainment": 0.95,
+  "lock_tolerance_pct": 3.0,
+  "statistics": {"bootstrap_replicates": 10000, "family_alpha": 0.05}
+}

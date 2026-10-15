@@ -1,0 +1,31 @@
+platform:
+  name: "jetson_agx_thor"
+  device: "NVIDIA Jetson AGX Thor Developer Kit"
+  jetpack: "R38.2.2"
+  architecture: "aarch64"
+  cuda: "13.0"
+
+runtime:
+  backend: "llama.cpp"
+  model_format: "GGUF"
+  model_path: "models/gguf/EnergyInfra-random-Qwen2.5-7B-Q4_K_M.gguf"
+  random_weights_allowed: true
+
+sysfs:
+  gpu_devfreq: "/sys/class/devfreq/gpu-gpc-0"
+  gpu_governor_dynamic: "nvhost_podgov"
+  emc_cap: "/sys/kernel/nvpmodel_clk_cap/emc"
+  emc_exact_lock_supported: false
+  requires_root_for_frequency_writes: true
+
+frequency_ranges_mhz:
+  gpu:
+    min: 54
+    max: 1575
+  cpu:
+    min: 972
+    max: 2601
+  emc:
+    cap_max: 4266
+    valid_setpoints: [665.6, 2750, 3200, 4266]
+    default_cap: 2750

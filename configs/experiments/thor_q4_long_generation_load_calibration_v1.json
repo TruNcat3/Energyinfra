@@ -1,0 +1,25 @@
+{
+  "schema": "energyinfra-serving-load-calibration-v1",
+  "static_config": "configs/experiments/thor_q4_full_frontier_v1.json",
+  "parent_run_dir": "data/protocol_v2/thor_q4_full_frontier_v1",
+  "output_dir": "data/protocol_v2/thor_q4_long_generation_load_calibration_v1",
+  "trace": "long_generation",
+  "scenario": "long_context_2s",
+  "tpot_slo_ms": 50,
+  "required_observed_attainment": 0.95,
+  "strategy": "max_clock",
+  "coarse": {
+    "duration_s": 300,
+    "repeats": 1,
+    "arrival_scales": [2, 4, 8, 12, 16]
+  },
+  "refine": {
+    "duration_s": 600,
+    "repeats": 1,
+    "arrival_scales": [5, 6, 7]
+  },
+  "confirm": {
+    "duration_s": 600,
+    "repeats": 3
+  }
+}

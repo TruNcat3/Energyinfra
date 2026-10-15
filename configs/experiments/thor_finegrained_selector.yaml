@@ -1,0 +1,12 @@
+# Original Phase 12 matrix, using the completed Phase 13 P1 CAP table.
+# The extra Pareto+50ms group is explicitly labelled; original groups remain.
+# Hardware values come from platform_profiles.yaml:experiments.finegrained_cap.
+required_platform: jetson_thor_r38
+cap_profile: finegrained_cap
+model: models/gguf/EnergyInfra-random-Qwen2.5-7B-Q4_K_M.gguf
+cap_rate_table: data/rate_tables/thor_finegrained/cap_rate_table_with_savings_20260915_171414.parquet
+lock_rate_table: data/rate_tables/thor_finegrained/lock_rate_table_20260915_171414.parquet
+output_dir: data/cap_selector_benchmark/thor_finegrained
+# Request-average TPOT only. This is not a TTFT or token-level p95 guarantee.
+evaluation_tpot_slo_ms: 50.0
+pareto_tpot_slo_ms: 50.0

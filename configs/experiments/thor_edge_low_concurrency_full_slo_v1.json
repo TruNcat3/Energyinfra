@@ -1,0 +1,26 @@
+{
+  "schema": "energyinfra-thor-prompt-aware-slo-v1",
+  "inputs": ["data/protocol_v2/thor_edge_low_concurrency_v1/full/results"],
+  "output_dir": "data/protocol_v2/thor_edge_low_concurrency_v1/full/prompt_aware",
+  "ttft_schedules": [
+    {
+      "name": "tiered_strict",
+      "limits_ms": {"128": 500, "512": 750, "1024": 1000}
+    },
+    {
+      "name": "tiered_balanced",
+      "limits_ms": {"128": 750, "512": 1000, "1024": 1500}
+    }
+  ],
+  "tpot_thresholds_ms": [30, 50, 100],
+  "required_attainment": 0.95,
+  "expected_repeats": 3,
+  "require_all_repeats": true,
+  "require_each_prompt_bucket": true,
+  "pareto_objectives": [
+    "avg_power_w",
+    "energy_per_token_j",
+    "ttft_p95_ms",
+    "tpot_p95_ms"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "schema": "energyinfra-thor-prompt-aware-targeted-v1",
+  "base_experiment": "configs/experiments/thor_prompt_aware_coupled_v1.json",
+  "scenarios": {
+    "capacity_upper": {
+      "output_dir": "data/protocol_v2/thor_slo_capacity_frontier_v1/coupled_capacity_upper_v1",
+      "seed_offset": 10000,
+      "workload_blocks": 1,
+      "rates_tps": [30, 32, 36],
+      "strategies": [
+        "native_dynamic_serial",
+        "max_clock_serial",
+        "energyinfra_dvfs_only",
+        "continuous_batching_balanced",
+        "joint_static_c1_g1485_e4266_f486000_p8",
+        "joint_static_c3_g1575_e4266_f972000_p8"
+      ],
+      "analyses": [
+        {
+          "name": "prompt_bucket",
+          "tpot_thresholds_ms": [100],
+          "require_each_prompt_bucket": true
+        }
+      ]
+    },
+    "tpot30_stability": {
+      "output_dir": "data/protocol_v2/thor_slo_capacity_frontier_v1/coupled_tpot30_stability_v1",
+      "seed_offset": 20000,
+      "workload_blocks": 2,
+      "rates_tps": [18, 20, 22],
+      "strategies": [
+        "joint_static_c3_g1575_e4266_f972000_p2",
+        "joint_static_c3_g1575_e4266_f972000_p8"
+      ],
+      "analyses": [
+        {
+          "name": "overall_primary",
+          "tpot_thresholds_ms": [30],
+          "require_each_prompt_bucket": false
+        },
+        {
+          "name": "prompt_bucket_diagnostic",
+          "tpot_thresholds_ms": [30],
+          "require_each_prompt_bucket": true
+        }
+      ]
+    }
+  }
+}

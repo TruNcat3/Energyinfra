@@ -1,0 +1,35 @@
+{
+  "schema": "energyinfra-serving-slo-audit-v1",
+  "output_dir": "reports/thor_slo_audit_v1",
+  "campaigns": {
+    "short_chat": "data/protocol_v2/thor_q4_full_frontier_v1/serving/short_chat_interactive_1s_50",
+    "long_generation": "data/protocol_v2/thor_q4_long_generation_fixed_trace_v1",
+    "bursty_mixed": "data/protocol_v2/thor_q4_bursty_fixed_trace_v1"
+  },
+  "profiles": {
+    "strict_interactive_8b": {
+      "ttft_ms": 500,
+      "tpot_ms": 30,
+      "required_joint_attainment": 0.95,
+      "basis": "MLPerf Llama3.1-8B interactive threshold"
+    },
+    "thor_edge_balanced": {
+      "ttft_ms": 2000,
+      "tpot_ms": 50,
+      "required_joint_attainment": 0.95,
+      "basis": "Thor edge profile between strict interactive and conversational service"
+    },
+    "conversational_8b": {
+      "ttft_ms": 2000,
+      "tpot_ms": 100,
+      "required_joint_attainment": 0.95,
+      "basis": "MLPerf Llama3.1-8B conversational threshold"
+    },
+    "capacity_reference": {
+      "ttft_ms": 3000,
+      "tpot_ms": 100,
+      "required_joint_attainment": 0.95,
+      "basis": "vLLM adaptive capacity-search defaults"
+    }
+  }
+}

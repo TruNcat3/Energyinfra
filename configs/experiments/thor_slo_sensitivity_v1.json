@@ -1,0 +1,19 @@
+{
+  "schema": "energyinfra-thor-slo-sensitivity-v1",
+  "inputs": [
+    "data/protocol_v2/thor_slo_capacity_frontier_v1/strict_confirm/serving/results",
+    "data/protocol_v2/thor_slo_capacity_frontier_v1/confirm/serving/results"
+  ],
+  "output_dir": "data/protocol_v2/thor_slo_capacity_frontier_v1/slo_sensitivity_v1",
+  "ttft_thresholds_ms": [500, 750, 1000, 1500],
+  "tpot_thresholds_ms": [30, 50, 100],
+  "required_attainment": 0.95,
+  "expected_repeats": 3,
+  "require_all_repeats": true,
+  "pareto_objectives": [
+    "avg_power_w",
+    "energy_per_token_j",
+    "ttft_p95_ms",
+    "tpot_p95_ms"
+  ]
+}
