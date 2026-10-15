@@ -1,0 +1,163 @@
+{
+  "schema": "energyinfra-thor-joint-serving-stage1b-v1",
+  "seed": 20261004,
+  "joint_resource_config": "configs/experiments/thor_joint_resource_power_v1.json",
+  "hardware_config": "configs/experiments/thor_protocol_v2.json",
+  "resource_screen_summary": "data/protocol_v2/thor_joint_resource_power_v1_4df29be/resource_screen/summary.json",
+  "output_dir": "data/protocol_v2/thor_joint_serving_stage1b_v1",
+  "server": {
+    "host": "127.0.0.1",
+    "port": 18190,
+    "threads": 4,
+    "per_slot_context_tokens": 4096,
+    "startup_timeout_s": 120,
+    "request_timeout_s": 900,
+    "launch_lead_s": 1.0,
+    "settle_s": 2.0,
+    "cooldown_s": 1.0
+  },
+  "presets": {
+    "quick": {
+      "duration_s": 60,
+      "repeats": 1,
+      "profiles": ["saturation"]
+    },
+    "full": {
+      "duration_s": 120,
+      "repeats": 3,
+      "profiles": ["edge_light", "saturation", "batched_heavy"]
+    }
+  },
+  "load_profiles": {
+    "edge_light": {"offered_output_tps": 15.0},
+    "saturation": {"offered_output_tps": 32.0},
+    "batched_heavy": {"offered_output_tps": 70.0}
+  },
+  "workload_mix": [
+    {"prompt_tokens": 128, "output_tokens": 128, "weight": 4},
+    {"prompt_tokens": 512, "output_tokens": 128, "weight": 3},
+    {"prompt_tokens": 128, "output_tokens": 512, "weight": 2},
+    {"prompt_tokens": 1024, "output_tokens": 512, "weight": 1}
+  ],
+  "slo_profiles": [
+    {"name": "interactive_strict", "ttft_ms": 500, "tpot_ms": 30},
+    {"name": "interactive", "ttft_ms": 1000, "tpot_ms": 50},
+    {"name": "edge_relaxed", "ttft_ms": 2000, "tpot_ms": 100}
+  ],
+  "required_attainment": 0.95,
+  "hardware_points": {
+    "native_dynamic": {"mode": "dynamic"},
+    "max_clock": {"mode": "max_clock"},
+    "queue_power_min": {
+      "mode": "cap",
+      "gpu_hz": 1485000000,
+      "emc_hz": 4266000000,
+      "cpu_khz": 1458000,
+      "cpu_floor_khz": 486000
+    }
+  },
+  "strategies": [
+    {
+      "name": "native_dynamic_serial",
+      "label": "Native dynamic, serial",
+      "hardware": "native_dynamic",
+      "parallel": 1,
+      "batch": 512,
+      "ubatch": 256,
+      "method_class": "native"
+    },
+    {
+      "name": "max_clock_serial",
+      "label": "MaxClock, serial",
+      "hardware": "max_clock",
+      "parallel": 1,
+      "batch": 512,
+      "ubatch": 256,
+      "method_class": "race_to_idle"
+    },
+    {
+      "name": "energyinfra_dvfs_only",
+      "label": "EnergyInfra DVFS-only",
+      "hardware": "queue_power_min",
+      "parallel": 1,
+      "batch": 512,
+      "ubatch": 256,
+      "method_class": "energyinfra"
+    },
+    {
+      "name": "continuous_batching_latency",
+      "label": "Continuous batching, latency",
+      "hardware": "native_dynamic",
+      "parallel": 2,
+      "batch": 256,
+      "ubatch": 256,
+      "method_class": "continuous_batching_proxy"
+    },
+    {
+      "name": "continuous_batching_balanced",
+      "label": "Continuous batching, balanced",
+      "hardware": "native_dynamic",
+      "parallel": 4,
+      "batch": 256,
+      "ubatch": 256,
+      "method_class": "continuous_batching_proxy"
+    },
+    {
+      "name": "joint_latency",
+      "label": "Joint power/resource, latency",
+      "hardware": "queue_power_min",
+      "parallel": 2,
+      "batch": 256,
+      "ubatch": 256,
+      "method_class": "joint"
+    },
+    {
+      "name": "joint_balanced",
+      "label": "Joint power/resource, balanced",
+      "hardware": "queue_power_min",
+      "parallel": 4,
+      "batch": 256,
+      "ubatch": 256,
+      "method_class": "joint"
+    },
+    {
+      "name": "joint_throughput",
+      "label": "Joint power/resource, throughput",
+      "hardware": "queue_power_min",
+      "parallel": 8,
+      "batch": 512,
+      "ubatch": 256,
+      "method_class": "joint"
+    }
+  ],
+  "related_work": [
+    {
+      "name": "EnergyInfra",
+      "mechanism": "SLO-constrained GPU/EMC/CPU operating-point selection",
+      "mapping": "energyinfra_dvfs_only",
+      "scope": "Direct methodological baseline on the same Thor stack",
+      "url": "https://github.com/Trouvaille1/leaf"
+    },
+    {
+      "name": "Orca",
+      "mechanism": "Iteration-level scheduling and selective continuous batching",
+      "mapping": "continuous_batching_latency / continuous_batching_balanced",
+      "scope": "Mechanism-aligned proxy; not the Orca runtime",
+      "url": "https://www.usenix.org/conference/osdi22/presentation/yu"
+    },
+    {
+      "name": "vLLM",
+      "mechanism": "PagedAttention and continuous batching",
+      "mapping": "No direct runtime mapping",
+      "scope": "Qualitative comparison; llama.cpp does not implement PagedAttention",
+      "url": "https://dl.acm.org/doi/10.1145/3600006.3613165"
+    },
+    {
+      "name": "Sarathi-Serve",
+      "mechanism": "Chunked prefill and stall-free batching",
+      "mapping": "256/256 batch-microbatch candidates",
+      "scope": "Mechanism-aligned proxy; not Sarathi chunk scheduling",
+      "url": "https://www.usenix.org/conference/osdi24/presentation/agrawal"
+    }
+  ]
+}

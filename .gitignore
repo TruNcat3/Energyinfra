@@ -14,6 +14,12 @@ venv/
 
 # Models (large binary files)
 models/gguf/*.gguf
+models/**/*.gguf
+
+# Thor local environment and runtime artifacts
+.venv-thor/
+data/protocol_v2/
+data/raw_logs/
 
 # IDE
 .vscode/

@@ -1,0 +1,39 @@
+{
+  "schema": "energyinfra-phase-switch-gate-v1",
+  "diagnostic_config": "configs/experiments/thor_phase_diagnostic_v1.json",
+  "output_dir": "data/protocol_v2/thor_phase_switch_gate_v1",
+  "seed": 20261003,
+  "prefill_point": "g1485_e4266_c1458_lock",
+  "decode_candidates": [
+    {"name": "no_switch", "point": null},
+    {"name": "same_point_switch", "point": "g1485_e4266_c1458_lock"},
+    {"name": "gpu1116_emc4266", "point": "g1116_e4266_c1458_lock"},
+    {"name": "gpu1485_emc3200", "point": "g1485_e3200_c1458_lock"},
+    {"name": "gpu1485_emc2750", "point": "g1485_e2750_c1458_lock"},
+    {"name": "gpu1575_emc4266", "point": "g1575_e4266_c1458_lock"}
+  ],
+  "workloads": [[128, 512], [512, 512], [1024, 512]],
+  "repeats": 10,
+  "requests_per_block": 1,
+  "warmup": {"prompt_tokens": 128, "output_tokens": 32, "requests": 1},
+  "measurement": {
+    "settle_s": 1.0,
+    "minimum_power_samples": 20,
+    "abort_temperature_c": 85.0
+  },
+  "quick": {
+    "workloads": [[512, 512]],
+    "candidate_names": ["no_switch", "same_point_switch", "gpu1116_emc4266", "gpu1485_emc3200"],
+    "repeats": 1
+  },
+  "slo": {
+    "ttft_ms": [1000, 2000],
+    "tpot_ms": [50, 75, 100],
+    "required_attainment": 0.95
+  },
+  "decision_gate": {
+    "primary_ttft_ms": 1000,
+    "primary_tpot_ms": 50,
+    "require_negative_energy_ci_upper": true
+  }
+}

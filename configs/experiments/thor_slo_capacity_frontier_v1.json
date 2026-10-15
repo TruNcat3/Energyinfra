@@ -1,0 +1,43 @@
+{
+  "schema": "energyinfra-thor-slo-capacity-frontier-v1",
+  "base_serving_config": "configs/experiments/thor_joint_serving_stage1b_v2.json",
+  "static_table": "data/protocol_v2/thor_q4_full_frontier_v1/static_table.csv",
+  "static_validation": "data/protocol_v2/thor_q4_full_frontier_v1/validation_summary.json",
+  "stage1b_full_summary": "data/protocol_v2/thor_joint_serving_stage1b_v2_coverage/full/summary.json",
+  "output_dir": "data/protocol_v2/thor_slo_capacity_frontier_v1",
+  "candidate_limit": 3,
+  "selection_roles": ["queue_reference", "power_min", "energy_min", "knee", "latency_min"],
+  "parallel_by_role": {
+    "default": [2, 4, 8]
+  },
+  "baseline_strategies": [
+    "native_dynamic_serial",
+    "max_clock_serial",
+    "energyinfra_dvfs_only",
+    "continuous_batching_latency",
+    "continuous_batching_balanced"
+  ],
+  "pilot": {
+    "duration_s": 60,
+    "repeats": 1,
+    "offered_output_tps": [8, 12, 16, 20, 24, 28, 32, 44, 56, 70]
+  },
+  "refine": {
+    "duration_s": 90,
+    "repeats": 1,
+    "rate_quantum_tps": 2,
+    "minimum_rate_tps": 4,
+    "maximum_rate_tps": 80
+  },
+  "confirm": {
+    "duration_s": 120,
+    "repeats": 3,
+    "screen_keep_attainment": 0.8,
+    "maximum_strategies": 8
+  },
+  "strict_confirm": {
+    "duration_s": 120,
+    "repeats": 3,
+    "offered_output_tps": [8, 12, 16, 20, 22]
+  }
+}

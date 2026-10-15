@@ -1,0 +1,30 @@
+{
+  "schema": "energyinfra-paired-confirmation-v1",
+  "campaigns": [
+    {
+      "name": "initial",
+      "path": "data/protocol_v2/thor_queue_aware_hardware_validation_v1"
+    },
+    {
+      "name": "confirmation",
+      "path": "data/protocol_v2/thor_queue_aware_confirmation_v1"
+    }
+  ],
+  "strategies": [
+    "max_clock_idle_dynamic",
+    "balanced_weighted",
+    "queue_power_min"
+  ],
+  "candidate": "queue_power_min",
+  "baselines": ["balanced_weighted", "max_clock_idle_dynamic"],
+  "required_observed_attainment": 0.95,
+  "output_dir": "reports/thor_queue_aware_confirmation_v1",
+  "profiles": [
+    {"name": "edge_2s_50ms", "ttft_limit_ms": 2000.0, "tpot_limit_ms": 50.0},
+    {"name": "edge_2s_75ms", "ttft_limit_ms": 2000.0, "tpot_limit_ms": 75.0},
+    {"name": "edge_2s_100ms", "ttft_limit_ms": 2000.0, "tpot_limit_ms": 100.0},
+    {"name": "edge_3s_75ms", "ttft_limit_ms": 3000.0, "tpot_limit_ms": 75.0},
+    {"name": "edge_3s_100ms", "ttft_limit_ms": 3000.0, "tpot_limit_ms": 100.0},
+    {"name": "background_5s_150ms", "ttft_limit_ms": 5000.0, "tpot_limit_ms": 150.0}
+  ]
+}

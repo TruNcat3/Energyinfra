@@ -1,0 +1,21 @@
+{
+  "schema": "energyinfra-fixed-trace-serving-v1",
+  "static_config": "configs/experiments/thor_q4_full_frontier_v1.json",
+  "parent_run_dir": "data/protocol_v2/thor_q4_full_frontier_v1",
+  "calibration_trace_dir": "data/protocol_v2/thor_q4_long_generation_load_calibration_v1/confirm/arrival_x5",
+  "output_dir": "data/protocol_v2/thor_q4_long_generation_fixed_trace_2s100_v1",
+  "trace": "long_generation",
+  "scenario": "long_context_2s",
+  "tpot_slo_ms": 100,
+  "duration_s": 600,
+  "required_observed_attainment": 0.95,
+  "strategies": [
+    "dynamic",
+    "max_clock",
+    "max_clock_idle_dynamic",
+    "energy_weighted",
+    "power_weighted",
+    "latency_weighted",
+    "balanced_weighted"
+  ]
+}

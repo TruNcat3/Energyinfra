@@ -1,0 +1,26 @@
+{
+  "schema": "energyinfra-thor-slo-semantics-v1",
+  "inputs": [
+    "data/protocol_v2/thor_slo_capacity_frontier_v1/coupled_tpot30_stability_v1/results"
+  ],
+  "output_dir": "data/protocol_v2/thor_slo_capacity_frontier_v1/coupled_tpot30_stability_v1/slo_semantics",
+  "ttft_schedules": [
+    {
+      "name": "tiered_strict",
+      "limits_ms": {"128": 500, "512": 750, "1024": 1000}
+    },
+    {
+      "name": "tiered_balanced",
+      "limits_ms": {"128": 750, "512": 1000, "1024": 1500}
+    }
+  ],
+  "tpot_limit_ms": 30,
+  "required_attainment": 0.95,
+  "expected_repeats": 3,
+  "pareto_objectives": [
+    "avg_power_w",
+    "energy_per_token_j",
+    "ttft_p95_ms",
+    "tpot_p95_ms"
+  ]
+}

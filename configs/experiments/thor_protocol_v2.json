@@ -1,0 +1,36 @@
+{
+  "schema": "energyinfra-token-v2",
+  "seed": 42,
+  "platform": {
+    "model_contains": "Thor",
+    "os_version": "24.04",
+    "kernel_prefix": "6.8.12-tegra",
+    "emc_control": "cap_only",
+    "power_rail": "VIN",
+    "power_scope": "tegrastats VIN input; not calibrated battery power",
+    "gpu_hz": [495000000,621000000,738000000,864000000,990000000,1116000000,1233000000,1359000000,1485000000,1575000000],
+    "emc_hz": [665600000,2750000000,3200000000,4266000000],
+    "cpu_khz": [972000,1458000,2601000],
+    "gpu_dynamic_governor": "nvhost_podgov",
+    "cpu_dynamic_governor": "schedutil",
+    "gpu_lock_governor": "performance",
+    "cpu_lock_governor": "userspace"
+  },
+  "model": {
+    "path": "models/gguf/EnergyInfra-random-Qwen2.5-7B-Q4_K_M.gguf",
+    "n_ctx": 8192,
+    "n_batch": 512,
+    "n_threads": 4,
+    "n_gpu_layers": -1
+  },
+  "workloads": [[64,64],[128,128],[128,512],[256,256],[512,128],[512,512],[512,1024],[1024,128],[1024,512],[1024,1024],[2048,128],[2048,512]],
+  "fine_workloads": [[64,64],[128,512],[512,128],[512,512],[1024,512],[2048,128],[2048,512]],
+  "calibration_workloads": [[64,64],[512,128],[2048,512]],
+  "measurement": {"interval_ms": 100,"max_sample_gap_s": 0.5,"min_block_s": 2.0,"min_samples": 10,"warmup_requests": 1,"settle_s": 1.0},
+  "profile_repeats": 3,
+  "validation_repeats": 10,
+  "tpot_slos_ms": [50,100,250],
+  "interactive_ttft_ms": 1000,
+  "required_attainment": 0.95,
+  "serving": {"duration_s": 600,"repeats": 3,"queue_limit": 256,"traces": ["short_chat","long_generation","bursty_mixed"]}
+}

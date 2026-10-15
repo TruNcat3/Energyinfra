@@ -1,0 +1,51 @@
+{
+  "schema": "energyinfra-thor-multiload-modes-v1",
+  "validated_source": "data/protocol_v2/thor_q4_full_frontier_v1/validation_summary.json",
+  "static_fallback": "data/protocol_v2/thor_q4_full_frontier_v1/static_table.csv",
+  "output_dir": "reports/thor_multiload_modes_v1",
+  "baseline": "energy_battery",
+  "modes": [
+    {
+      "name": "energy_battery",
+      "label": "Energy/Battery",
+      "point": "cap_g1485_e4266_floor486",
+      "intent": "QueuePowerMin hardware point"
+    },
+    {
+      "name": "latency",
+      "label": "Latency",
+      "point": "lock_g1575_c1458",
+      "intent": "minimum decode latency"
+    },
+    {
+      "name": "gpu_power_cap",
+      "label": "GPU power-cap",
+      "point": "cap_g1116_e4266_floor486",
+      "intent": "lower GPU power and thermal pressure"
+    },
+    {
+      "name": "emc_power_cap",
+      "label": "EMC power-cap",
+      "point": "cap_g1485_e3200_floor486",
+      "intent": "lower memory-system power and thermal pressure"
+    },
+    {
+      "name": "extreme_power_cap",
+      "label": "Extreme power-cap",
+      "point": "cap_g1485_e2750_floor486",
+      "intent": "minimum platform power among practical high-GPU points"
+    }
+  ],
+  "workloads": [
+    [64, 64], [128, 128], [128, 512], [256, 256],
+    [512, 128], [512, 512], [512, 1024],
+    [1024, 128], [1024, 512], [1024, 1024],
+    [2048, 128], [2048, 512]
+  ],
+  "slo_profiles": [
+    {"name": "interactive_strict", "ttft_ms": 500, "tpot_ms": 30},
+    {"name": "interactive", "ttft_ms": 1000, "tpot_ms": 50},
+    {"name": "long_context", "ttft_ms": 2000, "tpot_ms": 50},
+    {"name": "relaxed", "ttft_ms": 2000, "tpot_ms": 100}
+  ]
+}
