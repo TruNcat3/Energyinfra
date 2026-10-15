@@ -31,6 +31,13 @@ Every request must pass Stage 1B fixed-work and SSE-coverage gates. A strategy i
 repeat reaches at least 95% joint SLO attainment. Power, total energy, J/token, TTFT, and TPOT remain
 separate Pareto objectives.
 
+## Interpretation
+
+The three SLO profiles are deliberately separate service contracts. A point feasible at `2000/100` is
+not evidence that it is feasible at `500/30`, and a capacity improvement is not automatically a
+single-user edge energy improvement. The report must retain infeasible brackets and show whether a
+candidate fails on TTFT, TPOT, completion, queueing or telemetry integrity.
+
 ## Pilot
 
 ```bash

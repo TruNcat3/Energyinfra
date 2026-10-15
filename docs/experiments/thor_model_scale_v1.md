@@ -132,3 +132,20 @@ not the prepared model's configured output path.
 No full 12-workload sweep, serving experiment or automatic change of SLO is
 started here. First determine whether model scale changes the frequency
 sensitivity and feasible frontier enough to justify a larger campaign.
+
+## Current status and interpretation
+
+The 14B artifact being prepared is useful for system-scale sensitivity, but both 7B and 14B use
+synthetic random weights. The pilot can establish whether model shape changes power, J/token or
+frequency sensitivity under a matched protocol; it cannot establish quality, battery life or a
+universal scale law. A larger model result must be reported against its own Dynamic and MaxClock
+baselines and its own SLO feasibility, never as a direct win over a smaller model.
+
+## Archived pilot interpretation
+
+The 5-block 7B/14B pilot completed for the declared workloads. For 64/64,
+the 7B dynamic point was about 75.5 W and 2.76 J/token, while the 14B
+dynamic point was about 81.8 W and 5.13 J/token. Low-power caps reduced
+instantaneous power for both models but increased J/token relative to their
+own high-performance references. This supports scale-sensitive profiling,
+not a universal claim that larger models create more DVFS savings.

@@ -73,6 +73,13 @@ sudo -E bash scripts/active/run_thor_phase_switch_gate_nohup.sh restore
 - `data/protocol_v2/thor_phase_switch_gate_v1/summary.json`
 - `data/protocol_v2/thor_phase_switch_gate_v1/RESULTS.md`
 
+## Promotion status
+
+The gate is intentionally stricter than a power comparison. A candidate must clear both the joint SLO
+attainment rule and the paired energy confidence bound before it can be used in queue-aware or thermal
+serving. Until that report is archived, phase-aware DVFS remains `partial`; a diagnostic first-token
+switch must not be described as an online optimization result.
+
 Only a candidate that clears the energy/SLO gate should be promoted into the frozen-trace serving
 protocol. A lower-power candidate that consumes more joules for the same 512 generated tokens remains
 a valid power Pareto point, but is not an energy-efficiency improvement.

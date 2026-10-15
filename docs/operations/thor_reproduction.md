@@ -57,3 +57,15 @@ sudo kill -TERM <pid>
 ## 6. 发布前检查
 
 报告发布前应同时保存 config、runtime manifest、trace hash、trial 数量、重复次数、失败数、Power、Energy/token、TTFT、TPOT、SLO 规则和 hardware restored 记录。
+
+## 7. Thor 收口检查顺序
+
+不要在一个实验目录中混合 quick、full、不同 SLO 或不同 runtime。推荐按以下顺序推进：
+
+1. 先对 serial 和 bursty 的既有 full 结果执行 report/analyze，确认所有重复、prompt bucket、失败 trial 和 telemetry gap 都有记录；
+2. 使用同一 SLO 集合输出 native dynamic、max clock 和 EnergyInfra 候选的 Power/J-token/TTFT/TPOT 对照；
+3. 只有存在稳定的场景内 Pareto 候选时，才进入 Q4/Q5/Q8 或 7B/14B gate；
+4. phase switch 先运行 gate，未通过配对能量和 SLO 条件的候选不得进入长期 serving；
+5. 长期 serving 完成后才更新 `thermal feedback` 和 `online selector` 的状态为 available。
+
+最终研究结论应引用 [Thor 实验收口计划](../research/thor_completion_plan_20261015.md)，并把缺少原始数据的项目保留为 `partial` 或 `planned`。

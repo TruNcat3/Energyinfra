@@ -24,3 +24,10 @@ Run:
 
 Outputs are written under
 `data/protocol_v2/thor_slo_capacity_frontier_v1/prompt_aware_slo_v1`.
+
+## Interpretation
+
+Prompt-aware SLO is a feasibility analysis, not a license to select the loosest schedule after seeing
+the measurements. The schedule, TPOT threshold, 95% attainment rule, repeat count and prompt buckets
+are part of the experiment identity. If `tiered_strict` has no feasible point while `tiered_balanced`
+does, report the change in service contract explicitly and keep both frontiers.

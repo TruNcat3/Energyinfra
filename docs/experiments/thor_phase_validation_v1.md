@@ -153,3 +153,13 @@ and do not attribute a benefit to a phase-switch policy before measuring its
 switching latency and energy.
 
 Creating these files does not launch tests, benchmarks or profilers.
+
+## Archived outcome
+
+The full validation completed 300/300 blocks. The locked energy candidate was
+lower in J/token than MaxClock by about 1.23% for 64/64, 0.70% for 512/512
+and 0.56% for 2048/128, with paired intervals below zero under the declared
+family correction. These are static candidate-validation results, not evidence
+that a phase switch is beneficial. The separate 180-block phase-switch gate
+did not promote any switched candidate, so this validation remains a
+platform-specific static-control result.

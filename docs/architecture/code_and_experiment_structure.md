@@ -46,6 +46,27 @@ prepare → quick gate → full run → report → analyze → archive
 - `analyze`：离线计算 SLO、Pareto 和对 baseline 的差异；
 - `archive`：保存 config hash、trace hash、runtime manifest 和最终报告。
 
+## 3.1 统一结果契约
+
+每个可发布的 serving 结果至少包含以下四组字段。字段缺失时只能标记为 partial，不能通过脚本默认值补齐：
+
+| 组 | 必填内容 |
+|---|---|
+| 身份 | platform、OS/JetPack、runtime manifest、model hash、config hash、trace hash |
+| 工作量 | prompt/output tokens、arrival mode、batch/ubatch、parallel、repeat、固定 horizon |
+| 性能 | completed、TTFT P50/P95、TPOT P50/P95、throughput、SLO attainment、失败原因 |
+| 能源 | average/max power、total energy、J/token、temperature、telemetry sample count/gap |
+
+聚合报告还必须同时提供：
+
+- 相对 `native_dynamic` 和 `max_clock` 的绝对差值与百分比；
+- 每个 repeat 和 prompt bucket 的达标率；
+- power-minimum、energy-minimum、latency-minimum、normalized-knee 和完整非支配集合；
+- 95% confidence interval 或明确说明样本不足；
+- hardware restore、fixed-work integrity 和 telemetry gate 的结果。
+
+`Power`、`Energy/token`、`TTFT`、`TPOT` 和 `Temperature` 不应在报告生成阶段隐式加权成单一分数。用户偏好不同，就应从同一 Pareto 集合选择不同点。
+
 ## 4. 命名约定
 
 ```text
