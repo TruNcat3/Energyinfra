@@ -8,15 +8,17 @@ native dynamic, MaxClock and QueuePowerMin on the same frozen single-user trace.
 It does not reopen the frequency search and does not mix bursty or P8 evidence.
 
 The `quick` preset is an execution gate of approximately five minutes per
-strategy. The `full` preset contains six workload blocks, 60 requests and about
-30.4 minutes per trial. Three strategies and three repeats produce nine full
-trials, or roughly 4.6 hours plus startup and cooldown.
+strategy and is not a thermal-stability result. The `full` preset contains six
+workload blocks, 60 requests and about 30.4 minutes per trial. Three strategies
+and three repeats produce nine full trials, or roughly 4.6 hours plus startup
+and cooldown.
 
 ## Formal gate
 
 Every full repeat must satisfy all of the following:
 
 - exact fixed work and complete telemetry;
+- full-preset workload-block-aligned early/late power windows;
 - interactive SLO attainment of at least 95%;
 - peak measured platform temperature below 85 C;
 - final-window positive temperature slope no greater than 0.25 C/min;
@@ -24,7 +26,9 @@ Every full repeat must satisfy all of the following:
 - positive early-to-late median TPOT drift no greater than 10%.
 
 Power and Energy/token are still reported separately against native dynamic and
-MaxClock. Passing this gate establishes stability only for this model, runtime,
+MaxClock. Quick runs intentionally do not evaluate the power-drift gate because
+their early and late windows contain different workload compositions. Passing
+the full gate establishes stability only for this model, runtime,
 fan/ambient condition and trace. It is not a battery-life or model-quality claim.
 
 ## Commands
