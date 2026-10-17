@@ -114,6 +114,7 @@ def latency_window(responses: list[dict[str, Any]], start: float, end: float, ke
 def trial_row(result: dict[str, Any], config: dict[str, Any], preset: str, run_dir: Path) -> dict[str, Any]:
     analysis = config["thermal_analysis"]
     settings = analysis["windows_by_preset"][preset]
+    power_settings = analysis["power_windows_by_preset"][preset]
     start = float(result["measurement_start_monotonic"])
     duration = float(result["duration_s"])
     end = start + duration
@@ -138,8 +139,11 @@ def trial_row(result: dict[str, Any], config: dict[str, Any], preset: str, run_d
     late_tpot = latency_window(responses, duration - width, duration + 0.001, "tpot_ms")
     early_ttft = latency_window(responses, warmup, warmup + width, "ttft_end_to_end_ms")
     late_ttft = latency_window(responses, duration - width, duration + 0.001, "ttft_end_to_end_ms")
-    early_power = average_power(powers, early_start, early_end)
-    late_power = average_power(powers, late_start, late_end)
+    power_early_start = start + float(power_settings["early_start_s"])
+    power_late_start = start + float(power_settings["late_start_s"])
+    power_width = float(power_settings["width_s"])
+    early_power = average_power(powers, power_early_start, power_early_start + power_width)
+    late_power = average_power(powers, power_late_start, power_late_start + power_width)
     early_tpot_median, late_tpot_median = median(early_tpot), median(late_tpot)
     row: dict[str, Any] = {
         "profile": result["profile"],
@@ -164,6 +168,7 @@ def trial_row(result: dict[str, Any], config: dict[str, Any], preset: str, run_d
         "power_early_w": early_power,
         "power_late_w": late_power,
         "power_drift_pct": pct(late_power, early_power),
+        "power_window_comparable": bool(power_settings["comparable"]),
         "tpot_early_median_ms": early_tpot_median,
         "tpot_late_median_ms": late_tpot_median,
         "tpot_drift_pct": pct(late_tpot_median, early_tpot_median),
@@ -187,7 +192,8 @@ def trial_row(result: dict[str, Any], config: dict[str, Any], preset: str, run_d
         "fixed_work": bool(row["fixed_work_ok"]),
         "temperature_guard": row["temperature_peak_c"] < float(analysis["abort_temperature_c"]),
         "temperature_slope": row["temperature_late_slope_c_per_min"] is not None and row["temperature_late_slope_c_per_min"] <= float(analysis["max_positive_temperature_slope_c_per_min"]),
-        "power_drift": row["power_drift_pct"] is not None and abs(row["power_drift_pct"]) <= float(analysis["max_absolute_power_drift_pct"]),
+        "long_window": row["power_window_comparable"],
+        "power_drift": row["power_window_comparable"] and row["power_drift_pct"] is not None and abs(row["power_drift_pct"]) <= float(analysis["max_absolute_power_drift_pct"]),
         "tpot_drift": row["tpot_drift_pct"] is not None and row["tpot_drift_pct"] <= float(analysis["max_positive_tpot_drift_pct"]),
         "slo": row[f"{required}_attainment"] >= float(config["required_attainment"]),
     }

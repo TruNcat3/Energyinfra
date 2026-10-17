@@ -72,6 +72,10 @@
       "quick": {"warmup_s": 60.0, "comparison_window_s": 60.0},
       "full": {"warmup_s": 300.0, "comparison_window_s": 300.0}
     },
+    "power_windows_by_preset": {
+      "quick": {"comparable": false, "early_start_s": 60.0, "late_start_s": 244.0, "width_s": 60.0},
+      "full": {"comparable": true, "early_start_s": 300.0, "late_start_s": 1500.0, "width_s": 300.0}
+    },
     "start_window_s": 60.0,
     "abort_temperature_c": 85.0,
     "max_positive_temperature_slope_c_per_min": 0.25,
