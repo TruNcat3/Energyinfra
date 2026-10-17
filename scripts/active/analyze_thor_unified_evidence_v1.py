@@ -46,6 +46,8 @@ OUTPUT_FIELDS = (
     "total_energy_j",
     "energy_delta_vs_native_pct",
     "energy_delta_vs_max_clock_pct",
+    "power_delta_vs_native_pct",
+    "power_delta_vs_max_clock_pct",
     "source_file",
     "evidence_status",
     "notes",
@@ -86,6 +88,25 @@ def as_float(value: object) -> float | None:
 
 def as_bool(value: object) -> bool:
     return text(value).strip().lower() in {"1", "true", "yes", "pass", "passed"}
+
+
+def delta_pct(value: object, baseline: object) -> str:
+    measured = as_float(value)
+    reference = as_float(baseline)
+    if measured is None or reference in {None, 0.0}:
+        return ""
+    return number((measured / reference - 1.0) * 100.0)
+
+
+def baseline_role(item: dict[str, str]) -> str | None:
+    hardware = text(item.get("hardware")).strip().lower()
+    strategy = text(item.get("strategy")).strip().lower()
+    method = text(item.get("method_class")).strip().lower()
+    if hardware in {"dynamic", "native_dynamic"} or strategy in {"dynamic", "native_dynamic", "native_dynamic_p1", "native_dynamic_serial"} or method == "native":
+        return "native"
+    if hardware == "max_clock" or strategy in {"max_clock", "max_clock_p1", "max_clock_serial"} or method == "race_to_idle":
+        return "max_clock"
+    return None
 
 
 def display(value: object, digits: int = 3) -> str:
@@ -144,12 +165,23 @@ def base_row(
 def add_edge_rows(root: Path, rows: list[dict[str, str]], scenario: str, path: Path) -> None:
     if not path.is_file():
         return
-    for item in read_csv(path):
+    source_rows = read_csv(path)
+    baselines: dict[str, dict[str, dict[str, str]]] = defaultdict(dict)
+    for item in source_rows:
+        role = baseline_role(item)
+        if role:
+            baselines[item.get("profile", "")][role] = item
+    for item in source_rows:
+        workload = item.get("profile", "")
+        native = baselines.get(workload, {}).get("native", {})
+        max_clock = baselines.get(workload, {}).get("max_clock", {})
+        energy = item.get("energy_per_completed_token_j")
+        power = item.get("fixed_horizon_avg_power_w")
         for profile, passed_key, attainment_key, repeat_key in EDGE_SLO_PROFILES:
             row = base_row(
                 scenario=scenario,
                 source_kind="fixed_trace_serving",
-                workload=item.get("profile", ""),
+                workload=workload,
                 slo_profile=profile,
                 strategy=item.get("label") or item.get("strategy", ""),
                 point=item.get("hardware", ""),
@@ -167,12 +199,15 @@ def add_edge_rows(root: Path, rows: list[dict[str, str]], scenario: str, path: P
                     "passed": number(item.get(passed_key)),
                     "observed_attainment": number(item.get(attainment_key)),
                     "all_repeats_slo_pass": text(item.get(repeat_key)),
-                    "avg_power_w": number(item.get("fixed_horizon_avg_power_w")),
-                    "energy_per_token_j": number(item.get("energy_per_completed_token_j")),
+                    "avg_power_w": number(power),
+                    "energy_per_token_j": number(energy),
                     "ttft_p95_ms": number(item.get("ttft_p95_ms")),
                     "tpot_p95_ms": number(item.get("tpot_p95_ms")),
                     "total_energy_j": number(item.get("fixed_horizon_energy_j")),
-                    "energy_delta_vs_native_pct": number(item.get("energy_per_token_delta_vs_native_pct")),
+                    "energy_delta_vs_native_pct": number(item.get("energy_per_token_delta_vs_native_pct")) or delta_pct(energy, native.get("energy_per_completed_token_j")),
+                    "energy_delta_vs_max_clock_pct": number(item.get("energy_per_token_delta_vs_max_clock_pct")) or delta_pct(energy, max_clock.get("energy_per_completed_token_j")),
+                    "power_delta_vs_native_pct": delta_pct(power, native.get("fixed_horizon_avg_power_w")),
+                    "power_delta_vs_max_clock_pct": delta_pct(power, max_clock.get("fixed_horizon_avg_power_w")),
                 }
             )
             rows.append(row)
@@ -181,7 +216,13 @@ def add_edge_rows(root: Path, rows: list[dict[str, str]], scenario: str, path: P
 def add_queue_rows(root: Path, rows: list[dict[str, str]], scenario: str, path: Path) -> None:
     if not path.is_file():
         return
-    for item in read_csv(path):
+    source_rows = read_csv(path)
+    baselines = {role: item for item in source_rows if (role := baseline_role(item))}
+    native = baselines.get("native", {})
+    max_clock = baselines.get("max_clock", {})
+    for item in source_rows:
+        energy = item.get("energy_per_token_j")
+        power = item.get("avg_power_w")
         row = base_row(
             scenario=scenario,
             source_kind="queue_aware_serving",
@@ -203,13 +244,15 @@ def add_queue_rows(root: Path, rows: list[dict[str, str]], scenario: str, path: 
                 "passed": number(item.get("passed")),
                 "observed_attainment": number(item.get("observed_attainment")),
                 "all_repeats_slo_pass": text(item.get("all_repeats_observed_slo_pass")),
-                "avg_power_w": number(item.get("avg_power_w")),
-                "energy_per_token_j": number(item.get("energy_per_token_j")),
+                "avg_power_w": number(power),
+                "energy_per_token_j": number(energy),
                 "ttft_p95_ms": number(item.get("ttft_end_to_end_p95_ms")),
                 "tpot_p95_ms": number(item.get("tpot_p95_ms")),
                 "total_energy_j": number(item.get("total_energy_j")),
-                "energy_delta_vs_native_pct": number(item.get("total_energy_delta_vs_dynamic_pct")),
-                "energy_delta_vs_max_clock_pct": number(item.get("total_energy_delta_vs_max_clock_pct")),
+                "energy_delta_vs_native_pct": number(item.get("total_energy_delta_vs_dynamic_pct")) or delta_pct(energy, native.get("energy_per_token_j")),
+                "energy_delta_vs_max_clock_pct": number(item.get("total_energy_delta_vs_max_clock_pct")) or delta_pct(energy, max_clock.get("energy_per_token_j")),
+                "power_delta_vs_native_pct": delta_pct(power, native.get("avg_power_w")),
+                "power_delta_vs_max_clock_pct": delta_pct(power, max_clock.get("avg_power_w")),
             }
         )
         rows.append(row)
@@ -307,11 +350,15 @@ def edge_summary(rows: list[dict[str, str]], scenario: str) -> list[str]:
                 f"{len(feasible)}/{len(group)}",
                 energy["strategy"] if energy else "--",
                 display(energy["energy_per_token_j"], 3) if energy else "--",
+                display(energy["energy_delta_vs_native_pct"], 2) if energy else "--",
+                display(energy["energy_delta_vs_max_clock_pct"], 2) if energy else "--",
                 power["strategy"] if power else "--",
                 display(power["avg_power_w"], 2) if power else "--",
+                display(power["power_delta_vs_native_pct"], 2) if power else "--",
+                display(power["power_delta_vs_max_clock_pct"], 2) if power else "--",
             )
         )
-    lines.extend(markdown_table(["SLO profile", "all-repeat feasible", "energy anchor", "J/token", "power anchor", "W"], values))
+    lines.extend(markdown_table(["SLO profile", "all-repeat feasible", "energy anchor", "J/token", "Energy vs native %", "Energy vs MaxClock %", "power anchor", "W", "Power vs native %", "Power vs MaxClock %"], values))
     return lines
 
 
@@ -329,10 +376,13 @@ def queue_summary(rows: list[dict[str, str]], scenario: str) -> list[str]:
                 display(row["energy_per_token_j"], 3),
                 display(row["ttft_p95_ms"], 1),
                 display(row["tpot_p95_ms"], 1),
+                display(row["energy_delta_vs_native_pct"], 2),
                 display(row["energy_delta_vs_max_clock_pct"], 2),
+                display(row["power_delta_vs_native_pct"], 2),
+                display(row["power_delta_vs_max_clock_pct"], 2),
             )
         )
-    lines.extend(markdown_table(["Strategy", "All repeats", "Attainment", "W", "J/token", "TTFT P95", "TPOT P95", "Energy vs MaxClock %"], values))
+    lines.extend(markdown_table(["Strategy", "All repeats", "Attainment", "W", "J/token", "TTFT P95", "TPOT P95", "Energy vs native %", "Energy vs MaxClock %", "Power vs native %", "Power vs MaxClock %"], values))
     return lines
 
 

@@ -72,3 +72,32 @@ Report Power and Energy/token separately. A candidate can be power-Pareto but
 energy-dominated. Compare each candidate with native dynamic and MaxClock only
 within the same mode, rate, trace and SLO profile. If serial and bursty choose
 different points, that is a workload-aware result rather than an inconsistency.
+
+## Completed results
+
+Both full campaigns completed with fixed work and hardware restoration:
+
+| Mode | Completed trials | Formal result |
+|---|---:|---|
+| serial | 15/15 | QueuePowerMin is feasible for interactive and relaxed SLOs; no candidate is all-repeat feasible for strict SLO |
+| bursty | 45/45 | No candidate is all-repeat feasible at 95% under strict, interactive or relaxed SLO |
+
+For the serial `rate_008` profile, QueuePowerMin measured 37.47 W and
+4.684 J/token. Relative to native dynamic this is approximately 4.77% lower
+power and 4.77% lower energy/token, while TTFT P95 improved from 895.1 ms to
+803.2 ms and TPOT P95 improved from 38.4 ms to 26.4 ms. Relative to MaxClock,
+QueuePowerMin reduces power and energy/token by approximately 9.88%, trading
+about 118.7 ms TTFT P95 and 2.0 ms TPOT P95 while remaining within the
+interactive SLO. The c3 point is a separate lower-latency Pareto tradeoff; the
+low-EMC point is dominated by QueuePowerMin in this campaign.
+
+For bursty rates 4/8/12 tok/s, QueuePowerMin lowers power by approximately
+4.07%/2.62%/2.83% and energy/token by approximately 5.01%/4.47%/6.52% versus
+native dynamic. These are diagnostic savings, not constrained wins, because at
+least one repeat misses the 95% attainment gate at every rate. Queueing delay,
+rather than token generation alone, is the dominant feasibility limit.
+
+The completed evidence therefore supports a scenario-scoped claim: Thor has a
+useful serial low-concurrency Pareto point, but the same point is not formally
+validated for bursty low-concurrency traffic. It does not support a universal
+Thor advantage.
