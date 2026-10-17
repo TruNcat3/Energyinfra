@@ -13,11 +13,12 @@
 | 运行时 | 完成 | llama.cpp Thor 构建、随机模型、fixed-work integrity gate |
 | 资源筛选 | 完成 | batch、ubatch、parallel 等 Stage 1A 初筛 |
 | serving | 完成 | 固定 trace、重复、日志、结果摘要和恢复 |
-| 多目标分析 | 完成初版 | SLO 过滤、prompt bucket、Pareto 候选 |
+| 多目标分析 | 完成 v1 | 12 个来源、281 行统一证据，保留场景边界和双基线差值 |
 | P8 容量 | 完成 | 高并发共享容量证据 |
 | bursty 低并发 | 完成 | 90 个 full trials |
 | serial think-time | 完成 | 30 秒间隔，已生成 full 结果 |
 | queue-aware serving | 完成 | 1,041,216-policy search 后的硬件验证和 paired confirmation |
+| targeted edge confirmation | 完成 | serial 15/15、bursty 45/45，五个 P1 候选同协议确认 |
 | phase-switch gate | 完成但未晋级 | 180/180 blocks，所有 switch 候选未通过能量 gate |
 | Q4/Q5/Q8 precision pilot | 完成首轮 | 同源 gate 与 20-block pilot 已有，仍限定于 llama.cpp |
 | 7B/14B scale pilot | 完成首轮 | 两个随机权重模型均有 5-block validation |
@@ -27,6 +28,12 @@
 ### Queue-aware serving
 
 在 600 秒 frozen arrival trace 的硬件验证中，Dynamic 完成率为 81.43%，未满足正式 joint SLO；MaxClock、MaxClockIdleDynamic、BalancedWeighted、QueueEnergyMin 和 QueuePowerMin 均为 100% 观测达标。`queue_power_min` 的验证结果为约 52.047 W、3.219 J/token，相对 MaxClock 约降低 5.47% J/token 和约 5.53% 功率；随后 165/165 请求的 paired confirmation 保留了 QueuePowerMin 的可行性和排序。该结论属于 queue-aware long-generation serving，不迁移为单用户串行结论。
+
+### Targeted low-concurrency confirmation
+
+五个 P1 候选完成了串行 15/15 和 bursty 45/45 trials。串行 `rate_008` 下，QueuePowerMin 为约 37.47 W、4.684 J/token，在 interactive 和 relaxed SLO 下通过全重复门槛；相对 native dynamic 的功率与 J/token 均降低约 4.77%，相对 MaxClock 均降低约 9.88%。严格 SLO 下没有全重复可行点。
+
+bursty 的 4/8/12 tok/s 下，QueuePowerMin 相对 native dynamic 分别降低约 4.07%/2.62%/2.83% 功率和 5.01%/4.47%/6.52% J/token，但所有策略、所有速率均未通过 95% 全重复门槛。因此它是近可行的多目标证据，不是正式 SLO 约束收益。两组结果说明控制点必须按 arrival mode 选择，串行可行点不能直接迁移到突发队列。
 
 ### Phase-switch
 
@@ -71,9 +78,9 @@ Q4/Q5/Q8 的结果共同显示，低频/低 EMC 点可以显著降低功率，�
 
 | 优先级 | 任务 | 结束条件 | 当前状态 |
 |---|---|---|---|
-| P0 | 串行 think-time 统一汇总 | 3 repeats、prompt-aware SLO、Power/J-token/P95 | 已完成首版，需统一横向表 |
-| P0 | bursty 结果归档 | 90 trials、失败/缺样本说明、近可行候选 | 已完成，需统一横向表 |
-| P0 | 结果契约统一 | 绝对值、相对 dynamic、95% CI 和 trace/hash | 文档已定义 |
+| P0 | 串行 think-time 统一汇总 | 3 repeats、prompt-aware SLO、Power/J-token/P95 | 已完成并确认可行 Pareto 点 |
+| P0 | bursty 结果归档 | 完整 trials、失败/缺样本说明、近可行候选 | 已完成，无正式可行点 |
+| P0 | 结果契约统一 | 绝对值、相对 dynamic/MaxClock、trace/hash | 已实现统一离线证据表 |
 | P1 | Q4/Q5/Q8 同源 gate | 同一 F16 source、5 validation repeats | 首轮完成，llama.cpp 范围内 |
 | P1 | 7B/14B matched pilot | 同一 SLO 下分别选择 Pareto | 首轮完成，仍为随机模型 |
 | P1 | phase-switch gate | 配对能量 CI 上界低于 0 且 SLO 达标 | 完成但未通过 |
@@ -90,7 +97,7 @@ Q4/Q5/Q8 的结果共同显示，低频/低 EMC 点可以显著降低功率，�
 | L0 | 工程可运行 | 已达到 |
 | L1 | 单点/quick 可重复 | 已达到，但只能作探索性证据 |
 | L2 | 同 trace、多重复、可恢复 | bursty full 已达到 |
-| L3 | 跨场景、跨 SLO、Pareto 可解释 | 正在完成 |
+| L3 | 跨场景、跨 SLO、Pareto 可解释 | serial 与 queue-aware 子场景达到；bursty 保留负结果 |
 | L4 | 跨模型/精度/真实模型质量约束 | 尚未完成 |
 
 ## 下一阶段出口条件
