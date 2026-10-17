@@ -33,6 +33,10 @@ DEFAULT_CONFIG = ROOT / "configs/experiments/thor_joint_serving_stage1b_v2.json"
 STOP = threading.Event()
 
 
+class ThermalSafetyError(RuntimeError):
+    pass
+
+
 def resolve(value: str | Path) -> Path:
     path = Path(value)
     return path if path.is_absolute() else ROOT / path
@@ -145,7 +149,11 @@ def make_coupled_stratified_trace(
 ) -> dict[str, Any]:
     generation = experiment["trace_generation"]
     target_tps = float(experiment["load_profiles"][profile]["offered_output_tps"])
-    blocks = int(generation.get("workload_blocks", 1))
+    blocks = int(
+        generation.get("workload_blocks_by_preset", {}).get(
+            preset, generation.get("workload_blocks", 1)
+        )
+    )
     if blocks < 1:
         raise RuntimeError("trace_generation.workload_blocks must be positive")
     final_fraction = float(generation.get("final_arrival_fraction", 0.99))
@@ -458,9 +466,20 @@ class Server:
             self.handle.close()
 
 
-def request_once(server: Server, request: dict[str, Any], epoch: float) -> dict[str, Any]:
+def enforce_thermal_limit(power: Power) -> None:
+    state = power.thermal_state()
+    if state["exceeded"]:
+        STOP.set()
+        raise ThermalSafetyError(
+            f"temperature safety limit reached: {state['maximum_c']} C >= "
+            f"{state['abort_temperature_c']} C"
+        )
+
+
+def request_once(server: Server, request: dict[str, Any], epoch: float, power: Power) -> dict[str, Any]:
     scheduled = epoch + float(request["scheduled_time_s"])
     wait_until(scheduled)
+    enforce_thermal_limit(power)
     dispatched = time.monotonic()
     token_times: list[float] = []
     final: dict[str, Any] = {}
@@ -487,6 +506,7 @@ def request_once(server: Server, request: dict[str, Any], epoch: float) -> dict[
         )
         with urllib.request.urlopen(http_request, timeout=float(server.settings["request_timeout_s"])) as response:
             for raw in response:
+                enforce_thermal_limit(power)
                 line = raw.decode(errors="replace").strip()
                 if not line.startswith("data: "):
                     continue
@@ -498,6 +518,8 @@ def request_once(server: Server, request: dict[str, Any], epoch: float) -> dict[
                     final = value
                     received_final_stop = True
                     final_stop_time = now
+    except ThermalSafetyError:
+        raise
     except BaseException as exc:
         error = repr(exc)
     ended = time.monotonic()
@@ -558,7 +580,7 @@ def run_trace(server: Server, trace: dict[str, Any], power: Power, minimum_sampl
     epoch = time.monotonic() + float(server.settings["launch_lead_s"])
     workers = max(1, len(requests))
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=workers)
-    futures = [executor.submit(request_once, server, request, epoch) for request in requests]
+    futures = [executor.submit(request_once, server, request, epoch, power) for request in requests]
     try:
         responses = [future.result() for future in concurrent.futures.as_completed(futures)]
     finally:
@@ -694,6 +716,10 @@ def execute(config_path: Path, preset: str, run_dir: Path) -> None:
                                 "applied_hardware": applied,
                                 "server_command": active_server.command,
                                 "telemetry_attempt": attempt,
+                                "telemetry_file": str(
+                                    Path(power.file.name).resolve().relative_to(run_dir.resolve())
+                                ),
+                                "thermal_state": power.thermal_state(),
                                 **measured,
                             }
                             atomic(target, result)

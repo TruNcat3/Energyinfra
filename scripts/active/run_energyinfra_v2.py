@@ -186,6 +186,8 @@ class Power:
         )
         self.rail = cfg['platform']['power_rail']
         self.samples = []
+        self.temperature_samples = []
+        self.abort_temperature_c = float(self.cfg.get('abort_temperature_c', 85.0))
         self.error = None
         self.lock = threading.Lock()
         self.file = (directory / f"telemetry_{uuid.uuid4().hex}.jsonl").open('w')
@@ -200,13 +202,38 @@ class Power:
                 now = time.monotonic()
                 match = re.search(r'(?<!\S)' + re.escape(self.rail) + r'\s+(\d+)mW/', line)
                 value = int(match.group(1))/1000 if match else None
-                self.file.write(json.dumps(dict(t=now, power_w=value, raw=line.rstrip()))+'\n')
+                temperatures = {
+                    name: float(raw)
+                    for name, raw in re.findall(
+                        r'(?<!\S)([A-Za-z][A-Za-z0-9_]*)@(-?\d+(?:\.\d+)?)C', line
+                    )
+                }
+                maximum_temperature = max(temperatures.values()) if temperatures else None
+                self.file.write(json.dumps(dict(
+                    t=now,
+                    power_w=value,
+                    temperatures_c=temperatures,
+                    raw=line.rstrip(),
+                ))+'\n')
                 self.file.flush()
-                if value is not None:
-                    with self.lock:
+                with self.lock:
+                    if value is not None:
                         self.samples.append((now, value))
+                    if maximum_temperature is not None:
+                        self.temperature_samples.append((now, maximum_temperature, temperatures))
         except Exception as exc:
             self.error = str(exc)
+
+    def thermal_state(self):
+        with self.lock:
+            if not self.temperature_samples:
+                return dict(latest_c=None, maximum_c=None,
+                            abort_temperature_c=self.abort_temperature_c, exceeded=False)
+            latest = self.temperature_samples[-1][1]
+            maximum = max(sample[1] for sample in self.temperature_samples)
+        return dict(latest_c=latest, maximum_c=maximum,
+                    abort_temperature_c=self.abort_temperature_c,
+                    exceeded=maximum >= self.abort_temperature_c)
 
     def wait_after(self, t):
         deadline = time.monotonic()+10

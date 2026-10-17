@@ -85,7 +85,7 @@ Q4/Q5/Q8 的结果共同显示，低频/低 EMC 点可以显著降低功率，�
 | P1 | 7B/14B matched pilot | 同一 SLO 下分别选择 Pareto | 首轮完成，仍为随机模型 |
 | P1 | phase-switch gate | 配对能量 CI 上界低于 0 且 SLO 达标 | 完成但未通过 |
 | P1 | queue-aware serving | 每个 block SLO 达标、paired confirmation | 已完成 |
-| P2 | 长时间 thermal serving | 温度、切换开销、恢复和 telemetry 完整 | planned |
+| P2 | 长时间 thermal serving | 温度、漂移、恢复和 telemetry 完整 | 实现完成，等待 quick/full 硬件验证 |
 | P2 | 真实权重 sanity check | 模型 provenance 和最小质量集完整 | planned |
 
 详细入口和出口条件见 [Thor 实验收口计划](thor_completion_plan_20261015.md)。

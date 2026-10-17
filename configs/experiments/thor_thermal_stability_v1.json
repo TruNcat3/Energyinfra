@@ -1,0 +1,89 @@
+{
+  "schema": "energyinfra-thor-joint-serving-stage1b-v2",
+  "seed": 20261017,
+  "joint_resource_config": "configs/experiments/thor_joint_resource_power_v1.json",
+  "hardware_config": "configs/experiments/thor_protocol_v2.json",
+  "resource_screen_summary": "data/protocol_v2/thor_joint_resource_power_v1_4df29be/resource_screen/summary.json",
+  "output_dir": "data/protocol_v2/thor_thermal_stability_v1",
+  "runtime": {
+    "repository": "https://github.com/ggml-org/llama.cpp.git",
+    "base_commit": "4df29be4f4c3673f428170fda944a5b19f743bb8",
+    "cuda_architectures": "110",
+    "base_source_dir": "third_party/llama.cpp-4df29be4f4c3",
+    "source_dir": "third_party/llama.cpp-4df29be4f4c3-stage1b-content-only-v1",
+    "base_build_dir": "build/llama.cpp-4df29be4f4c3-thor-make",
+    "build_dir": "build/llama.cpp-4df29be4f4c3-thor-stage1b-content-only-fast-v2",
+    "server_binary": "build/llama.cpp-4df29be4f4c3-thor-stage1b-content-only-fast-v2/bin/llama-server",
+    "patch": "patches/llama.cpp-4df29be-content-only-raw-v1.patch",
+    "manifest": "data/protocol_v2/thor_joint_serving_stage1b_runtime_v1/runtime_manifest.json"
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 18214,
+    "threads": 4,
+    "per_slot_context_tokens": 4096,
+    "startup_timeout_s": 120,
+    "request_timeout_s": 900,
+    "launch_lead_s": 1.0,
+    "settle_s": 2.0,
+    "cooldown_s": 60.0,
+    "required_stop_type": "limit",
+    "minimum_stream_event_coverage": 0.98,
+    "suppressed_token_ids": [0]
+  },
+  "trace_generation": {
+    "mode": "interactive_think_time_v1",
+    "workload_blocks": 6,
+    "workload_blocks_by_preset": {"quick": 1, "full": 6},
+    "final_arrival_fraction": 0.99,
+    "seed_offset": 17100,
+    "think_time_s": 30.0,
+    "tail_guard_s": 30.0
+  },
+  "presets": {
+    "quick": {"duration_s": 300, "repeats": 1, "profiles": ["rate_008"]},
+    "full": {"duration_s": 1800, "repeats": 3, "profiles": ["rate_008"]}
+  },
+  "load_profiles": {"rate_008": {"offered_output_tps": 8.0}},
+  "workload_mix": [
+    {"prompt_tokens": 128, "output_tokens": 128, "weight": 4},
+    {"prompt_tokens": 512, "output_tokens": 128, "weight": 3},
+    {"prompt_tokens": 128, "output_tokens": 512, "weight": 2},
+    {"prompt_tokens": 1024, "output_tokens": 512, "weight": 1}
+  ],
+  "slo_profiles": [
+    {"name": "interactive_strict", "ttft_ms": 500, "tpot_ms": 30},
+    {"name": "interactive", "ttft_ms": 1000, "tpot_ms": 50},
+    {"name": "edge_relaxed", "ttft_ms": 2000, "tpot_ms": 100}
+  ],
+  "required_attainment": 0.95,
+  "hardware_points": {
+    "native_dynamic": {"mode": "dynamic"},
+    "max_clock": {"mode": "max_clock"},
+    "queue_power_min": {"mode": "cap", "gpu_hz": 1485000000, "emc_hz": 4266000000, "cpu_khz": 1458000, "cpu_floor_khz": 486000}
+  },
+  "strategies": [
+    {"name": "thermal_native_dynamic_p1", "label": "Native dynamic P1", "hardware": "native_dynamic", "parallel": 1, "batch": 512, "ubatch": 256, "method_class": "native"},
+    {"name": "thermal_max_clock_p1", "label": "MaxClock P1", "hardware": "max_clock", "parallel": 1, "batch": 512, "ubatch": 256, "method_class": "race_to_idle"},
+    {"name": "thermal_queue_power_min_p1", "label": "QueuePowerMin P1", "hardware": "queue_power_min", "parallel": 1, "batch": 512, "ubatch": 256, "method_class": "energyinfra_static_point"}
+  ],
+  "thermal_analysis": {
+    "windows_by_preset": {
+      "quick": {"warmup_s": 60.0, "comparison_window_s": 60.0},
+      "full": {"warmup_s": 300.0, "comparison_window_s": 300.0}
+    },
+    "start_window_s": 60.0,
+    "abort_temperature_c": 85.0,
+    "max_positive_temperature_slope_c_per_min": 0.25,
+    "max_absolute_power_drift_pct": 5.0,
+    "max_positive_tpot_drift_pct": 10.0,
+    "required_slo": "interactive"
+  },
+  "study_scope": {
+    "deployment": "single-user edge inference with explicit 30-second think time",
+    "confirmation": "long-duration thermal stability of the serial P1 Pareto candidate",
+    "energy_scope": "fixed-horizon platform energy including inter-request idle periods",
+    "comparison_rule": "same frozen trace and repeat for native dynamic, MaxClock and QueuePowerMin",
+    "quality_scope": "random weights; systems and thermal behavior only"
+  }
+}
