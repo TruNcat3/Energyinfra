@@ -93,6 +93,11 @@ sudo -E bash scripts/active/run_thor_precision_nohup.sh gate
 
 # C: phase gate
 sudo -E bash scripts/active/run_thor_phase_switch_gate_nohup.sh run
+
+# C: long thermal stability (quick gate before full)
+bash scripts/active/run_thor_thermal_stability_nohup.sh quick prepare
+sudo -E bash scripts/active/run_thor_thermal_stability_nohup.sh quick run
+bash scripts/active/run_thor_thermal_stability_nohup.sh quick analyze
 ```
 
 如果历史目录由 root 创建，使用新的 run directory 或先只修复目标目录 owner；不要对整个仓库执行无差别权限修改。每个 campaign 完成后先检查 `RESULTS.md`、重复数、失败数、hash 和 `hardware_restored`，再进入下一阶段。
