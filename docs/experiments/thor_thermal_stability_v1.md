@@ -73,3 +73,21 @@ failure and SIGTERM. If restoration remains pending, use the existing Stage 1B
 - `thermal_trials.json`: individual gate outcomes;
 - `thermal_analysis_manifest.json`: analysis provenance;
 - `telemetry/*.jsonl`: receive-timestamped raw tegrastats and parsed sensors.
+
+## Completed full result
+
+The full campaign completed 9/9 trials, with 180/180 exact requests in every
+trial and hardware restoration completed. Peak temperatures remained below the
+85 C safety limit:
+
+| Strategy | Power | Energy/token | Peak temperature | Interactive attainment | Thermal gate |
+|---|---:|---:|---:|---:|---:|
+| Native dynamic P1 | 38.98 W | 4.872 J/token | 58.5 C | 95.0% | 1/3 |
+| MaxClock P1 | 42.09 W | 5.261 J/token | 64.0 C | 100.0% | 2/3 |
+| QueuePowerMin P1 | 37.87 W | 4.734 J/token | 61.2 C | 98.3% | 2/3 |
+
+QueuePowerMin is approximately 2.84% lower in power and Energy/token than native
+dynamic, and approximately 10.02% lower than MaxClock. The long-run direction
+is consistent with the shorter serial confirmation, but strict thermal
+stability is not yet an all-repeat result: the remaining failures are one
+temperature-slope gate and one SLO repeat, not an over-temperature event.

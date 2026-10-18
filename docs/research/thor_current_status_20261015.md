@@ -35,6 +35,16 @@
 
 bursty 的 4/8/12 tok/s 下，QueuePowerMin 相对 native dynamic 分别降低约 4.07%/2.62%/2.83% 功率和 5.01%/4.47%/6.52% J/token，但所有策略、所有速率均未通过 95% 全重复门槛。因此它是近可行的多目标证据，不是正式 SLO 约束收益。两组结果说明控制点必须按 arrival mode 选择，串行可行点不能直接迁移到突发队列。
 
+### Long-duration thermal serving
+
+长时 thermal full 完成 9/9 trials，每个 trial 均为 180/180 fixed-work 请求。QueuePowerMin 约为 37.87 W、4.734 J/token，相对 native dynamic 的功率和 J/token 均降低约 2.84%，相对 MaxClock 均降低约 10.02%。三种策略的峰值温度分别约为 58.5 C、64.0 C 和 61.2 C，未触发 85 C 安全阈值；功率和 TPOT 的早晚 workload-block 对齐漂移也保持在较小范围。
+
+严格 thermal gate 仍未全重复通过：Native dynamic 为 1/3，MaxClock 和 QueuePowerMin 均为 2/3。失败主要是一次温度斜率门槛和一次 SLO 重复，不应被解释为 thermal runaway。该结果支持“长时收益方向存在”，但尚不足以写成无条件的 thermal-stable 结论。
+
+### Model-space and MoE assessment
+
+当前 Thor 收益偏小的首要原因不是控制器一定无效，而是实验对象仍偏向小型 dense 随机权重模型：7B Q4 模型可以完整驻留设备，单用户低并发下没有明显的专家放置、主机到 GPU 搬运或显存容量压力，频率变化只能优化已经较窄的 active bottleneck。MoE 评估和下一阶段 placement-aware 方案见 [Thor MoE 模型空间评估](thor_moe_model_space_assessment_20261018.md)。
+
 ### Phase-switch
 
 phase-switch gate 已完成 180/180 blocks。GPU 1575 MHz/EMC 4266 MHz 的切换候选在三个 workload 上相对 no-switch 的能量变化约为 `+0.608%`、`-0.149%`、`-0.073%`，置信区间均不能支持严格的负能量结论；其余降频切换候选能量明显上升。因此 phase-aware 控制目前是完整的负结果：保留诊断价值，但不能晋级为在线能效策略。
@@ -85,7 +95,8 @@ Q4/Q5/Q8 的结果共同显示，低频/低 EMC 点可以显著降低功率，�
 | P1 | 7B/14B matched pilot | 同一 SLO 下分别选择 Pareto | 首轮完成，仍为随机模型 |
 | P1 | phase-switch gate | 配对能量 CI 上界低于 0 且 SLO 达标 | 完成但未通过 |
 | P1 | queue-aware serving | 每个 block SLO 达标、paired confirmation | 已完成 |
-| P2 | 长时间 thermal serving | 温度、漂移、恢复和 telemetry 完整 | 实现完成，等待 quick/full 硬件验证 |
+| P2 | 长时间 thermal serving | 温度、漂移、恢复和 telemetry 完整 | full 已完成；收益方向稳定，但 thermal gate 为 1/3、2/3、2/3，尚非全重复认证 |
+| P2 | MoE model-space study | 专家放置、路由统计、DVFS 和 SLO 联合证据 | 方案已完成，等待 runtime gate |
 | P2 | 真实权重 sanity check | 模型 provenance 和最小质量集完整 | planned |
 
 详细入口和出口条件见 [Thor 实验收口计划](thor_completion_plan_20261015.md)。
