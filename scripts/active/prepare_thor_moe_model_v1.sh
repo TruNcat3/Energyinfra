@@ -83,15 +83,28 @@ fi
 
 printf 'Downloading %s bytes (%s already present) to %s\n' \
   "$EXPECTED_SIZE" "$partial_size" "$PART"
-curl \
-  --fail \
-  --location \
-  --continue-at - \
-  --retry 20 \
-  --retry-all-errors \
-  --retry-delay 5 \
-  --output "$PART" \
-  "$URL"
+if command -v wget >/dev/null 2>&1; then
+  wget \
+    --continue \
+    --timeout=60 \
+    --waitretry=5 \
+    --tries=100 \
+    --progress=dot:giga \
+    --output-document="$PART" \
+    "$URL"
+else
+  curl \
+    --http1.1 \
+    --fail \
+    --location \
+    --continue-at - \
+    --retry 100 \
+    --retry-all-errors \
+    --retry-delay 5 \
+    --no-progress-meter \
+    --output "$PART" \
+    "$URL"
+fi
 
 actual_size="$(stat -c %s "$PART")"
 if [[ "$actual_size" -ne "$EXPECTED_SIZE" ]]; then
