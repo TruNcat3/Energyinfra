@@ -96,7 +96,7 @@ Q4/Q5/Q8 的结果共同显示，低频/低 EMC 点可以显著降低功率，�
 | P1 | phase-switch gate | 配对能量 CI 上界低于 0 且 SLO 达标 | 完成但未通过 |
 | P1 | queue-aware serving | 每个 block SLO 达标、paired confirmation | 已完成 |
 | P2 | 长时间 thermal serving | 温度、漂移、恢复和 telemetry 完整 | full 已完成；收益方向稳定，但 thermal gate 为 1/3、2/3、2/3，尚非全重复认证 |
-| P2 | MoE model-space study | 专家放置、路由统计、DVFS 和 SLO 联合证据 | 方案已完成，等待 runtime gate |
+| P2 | MoE model-space study | 专家放置、路由统计、DVFS 和 SLO 联合证据 | runtime gate 已实现，等待外部 GGUF |
 | P2 | 真实权重 sanity check | 模型 provenance 和最小质量集完整 | planned |
 
 详细入口和出口条件见 [Thor 实验收口计划](thor_completion_plan_20261015.md)。

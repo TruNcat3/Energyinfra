@@ -1,0 +1,29 @@
+{
+  "schema": "energyinfra-thor-moe-runtime-gate-v1",
+  "seed": 20261018,
+  "runtime": {
+    "server_binary": "build/llama.cpp-4df29be4f4c3-thor-stage1b-content-only-fast-v2/bin/llama-server",
+    "manifest": "data/protocol_v2/thor_joint_serving_stage1b_runtime_v1/runtime_manifest.json",
+    "base_commit": "4df29be4f4c3673f428170fda944a5b19f743bb8",
+    "host": "127.0.0.1",
+    "port_base": 18310,
+    "threads": 4,
+    "context_tokens": 4096,
+    "batch": 512,
+    "ubatch": 256,
+    "startup_timeout_s": 120,
+    "request_timeout_s": 900
+  },
+  "placements": [
+    {"name": "all_gpu", "label": "All GPU", "extra_args": []},
+    {"name": "cpu_moe", "label": "All CPU-MoE", "extra_args": ["--cpu-moe"]},
+    {"name": "partial_cpu_moe_24", "label": "Partial CPU-MoE first 24 layers", "extra_args": ["--n-cpu-moe", "24"]}
+  ],
+  "workloads": [
+    {"name": "short_prompt", "prompt_tokens": 128, "output_tokens": 128},
+    {"name": "long_prompt", "prompt_tokens": 1024, "output_tokens": 128}
+  ],
+  "repeats": 2,
+  "quality_scope": "runtime and fixed-output gate only; no quality claim",
+  "output_dir": "data/protocol_v2/thor_moe_runtime_gate_v1"
+}
