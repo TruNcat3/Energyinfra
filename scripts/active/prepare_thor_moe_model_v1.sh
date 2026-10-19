@@ -83,27 +83,63 @@ fi
 
 printf 'Downloading %s bytes (%s already present) to %s\n' \
   "$EXPECTED_SIZE" "$partial_size" "$PART"
-if command -v wget >/dev/null 2>&1; then
-  wget \
-    --continue \
-    --timeout=60 \
-    --waitretry=5 \
-    --tries=100 \
-    --progress=dot:giga \
-    --output-document="$PART" \
-    "$URL"
-else
-  curl \
+HF_CLI="$ROOT/.venv-hf/bin/hf"
+if [[ -x "$HF_CLI" ]]; then
+  echo "Using Hugging Face Xet downloader with adaptive concurrency."
+  if [[ -f "$PART" ]]; then
+    echo "Preserving legacy partial download until Xet output passes integrity validation: $PART"
+  fi
+  HF_HOME="$OUTPUT_DIR/.hf-home" \
+  HF_XET_HIGH_PERFORMANCE="${HF_XET_HIGH_PERFORMANCE:-1}" \
+    "$HF_CLI" download \
+      Qwen/Qwen3-30B-A3B-GGUF \
+      "$NAME" \
+      --revision "$REVISION" \
+      --local-dir "$OUTPUT_DIR"
+
+  if ! verify_file "$FINAL"; then
+    echo "Xet output failed size or SHA256 validation: $FINAL" >&2
+    exit 1
+  fi
+  rm -f "$PART"
+  rm -rf "$OUTPUT_DIR/.hf-home" "$OUTPUT_DIR/.cache/huggingface"
+  write_manifest
+  echo "Model preparation complete: $FINAL"
+  exit 0
+fi
+
+downloaded=false
+for attempt in $(seq 1 100); do
+  echo "Direct download attempt $attempt/100; requesting a fresh signed URL."
+  if command -v wget >/dev/null 2>&1; then
+    if wget \
+      --continue \
+      --timeout=60 \
+      --tries=1 \
+      --progress=dot:giga \
+      --output-document="$PART" \
+      "$URL"; then
+      downloaded=true
+      break
+    fi
+  elif curl \
     --http1.1 \
     --fail \
     --location \
     --continue-at - \
-    --retry 100 \
-    --retry-all-errors \
-    --retry-delay 5 \
     --no-progress-meter \
     --output "$PART" \
-    "$URL"
+    "$URL"; then
+    downloaded=true
+    break
+  fi
+  echo "Attempt $attempt failed; refreshing the signed URL in 5 seconds." >&2
+  sleep 5
+done
+
+if [[ "$downloaded" != true ]]; then
+  echo "Download failed after 100 fresh-URL attempts; preserving: $PART" >&2
+  exit 1
 fi
 
 actual_size="$(stat -c %s "$PART")"

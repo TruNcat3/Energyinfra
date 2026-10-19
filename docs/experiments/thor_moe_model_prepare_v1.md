@@ -14,6 +14,15 @@ The downloader reserves 8 GiB beyond the remaining download, resumes a `.part` f
 
 ## Prepare
 
+Create the isolated Hugging Face Xet download environment once:
+
+```bash
+cd /home/wt/energyinfra/Energyinfra-main
+bash scripts/active/setup_thor_moe_download_env.sh
+```
+
+The worker prefers the official Xet client and uses adaptive concurrent chunk downloads. If Xet is unavailable, the direct-download fallback requests a fresh signed URL after every failure so an expired CDN redirect cannot terminate a resumable transfer.
+
 Use the repository model directory:
 
 ```bash
