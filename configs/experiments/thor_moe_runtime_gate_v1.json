@@ -17,7 +17,7 @@
   "placements": [
     {"name": "all_gpu", "label": "All GPU", "extra_args": []},
     {"name": "cpu_moe", "label": "All CPU-MoE", "extra_args": ["--cpu-moe"]},
-    {"name": "partial_cpu_moe_24", "label": "Partial CPU-MoE first 24 layers", "extra_args": ["--n-cpu-moe", "24"]}
+    {"name": "partial_cpu_moe_10", "label": "Partial CPU-MoE first 10 layers", "extra_args": ["--n-cpu-moe", "10"]}
   ],
   "workloads": [
     {"name": "short_prompt", "prompt_tokens": 128, "output_tokens": 128},
