@@ -44,10 +44,14 @@ Orin 和 Thor 都以 llama.cpp/GGUF 为主要运行时。Thor 当前主模型为
 | Queue-aware long generation | 已完成 | QueuePowerMin 在同一 arrival trace 下通过硬件验证和 paired confirmation |
 | 低并发突发负载 | 已完成 | 90 个测试点完成；严格的全重复、全 prompt bucket 门槛下暂无最终可行点 |
 | 单用户串行 think-time | 已完成运行 | 请求间隔固定为 30 秒；用于判断真正边端交互场景，结果需与突发场景分开解释 |
+| MoE fixed-horizon serving | 已完成 | 在相同请求窗口下验证静态 CAP、原生动态和 MoE placement/DVFS 候选 |
+| Phase-aware serving | 已完成 v1 | Prefill/Decode 分阶段策略在 edge SLO 下取得约 1.6%~3.6% 固定窗口能耗收益，峰值功率最高下降约 20.3% |
 | 静态硬件候选 | 已完成初版 | 已覆盖动态、最高频、低 EMC、c1/c3 等候选配置 |
 | 运行时和采集 | 已完成 | 硬件恢复、tegrastats、固定工作完整性和 telemetry gap 防护已接入 |
 
 低并发突发场景中，目前最接近严格可行的是 `edge_c3_p2 @ rate_012`：TPOT 100 ms 下总体达标率约 90%，三次重复为 `[100%, 80%, 80%]`，平均功率约 40.5 W，TPOT P95 约 30.9 ms。它是候选点，不应标记为已经满足 95% SLO。
+
+MoE fixed-horizon 和 phase-aware serving 的最新结果见 [Thor phase-aware 结果分析](docs/research/thor_phase_aware_findings_20261022.md)。当前证据表明，Thor 上 phase-aware 控制的收益主要出现在较长 decode 和较宽松的 edge SLO；严格 20/30 ms SLO 下当前协议没有可行点，短请求更适合静态低功率 CAP。
 
 ## 文档入口
 
@@ -56,6 +60,7 @@ Orin 和 Thor 都以 llama.cpp/GGUF 为主要运行时。Thor 当前主模型为
 - [平台与实验矩阵](docs/research/platform_experiment_matrix.md)
 - [数据目录与证据等级](data/README.md)
 - [Thor 当前研究状态](docs/research/thor_current_status_20261015.md)
+- [Thor phase-aware 结果分析](docs/research/thor_phase_aware_findings_20261022.md)
 - [Thor 统一证据汇总协议](docs/experiments/thor_unified_evidence_v1.md)
 - [Thor 边端定向确认协议](docs/experiments/thor_edge_confirmation_v1.md)
 - [代码与实验组织方式](docs/architecture/code_and_experiment_structure.md)
@@ -76,6 +81,9 @@ bash scripts/active/run_thor_edge_interactive_think_nohup.sh full prepare
 
 # root：运行硬件实验
 sudo -E bash scripts/active/run_thor_edge_interactive_think_nohup.sh full run
+
+# Thor MoE：固定窗口 phase-aware serving
+sudo -E bash scripts/active/run_thor_moe_phase_aware_serving_nohup.sh quick run
 
 # 普通用户：生成报告
 bash scripts/active/run_thor_edge_interactive_think_nohup.sh full report

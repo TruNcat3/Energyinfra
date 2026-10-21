@@ -8,6 +8,7 @@ EnergyInfra 的统一主题是面向边端 GPU 的多目标能效调优框架。
 - [Thor 实验收口计划](research/thor_completion_plan_20261015.md)
 - [平台与实验矩阵](research/platform_experiment_matrix.md)
 - [Thor 当前研究状态](research/thor_current_status_20261015.md)
+- [Thor phase-aware 结果分析](research/thor_phase_aware_findings_20261022.md)
 - [数据目录与证据等级](../data/README.md)
 - [代码与实验组织方式](architecture/code_and_experiment_structure.md)
 - [Thor 复现实验指南](operations/thor_reproduction.md)
@@ -23,6 +24,7 @@ EnergyInfra 的统一主题是面向边端 GPU 的多目标能效调优框架。
 - [Phase validation 与静态候选诊断](experiments/thor_phase_validation_v1.md)
 - [Thor unified evidence aggregation](experiments/thor_unified_evidence_v1.md)
 - [Thor targeted edge confirmation](experiments/thor_edge_confirmation_v1.md)
+- [MoE phase-aware serving](experiments/thor_moe_phase_aware_serving_v1.md)
 
 ## 文档分层
 

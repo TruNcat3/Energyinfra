@@ -1,5 +1,7 @@
 # Thor 当前研究状态
 
+最近更新：2026-10-22
+
 ## 总体判断
 
 项目已经完成 Thor 上的工程适配和主要实验闭环，当前处于“按场景收敛多目标证据”的阶段，而不是继续盲目增加频率档位。主要风险从“能否运行”转移到了“trace、SLO 和重复统计是否能支持可比结论”。
@@ -20,6 +22,8 @@
 | queue-aware serving | 完成 | 1,041,216-policy search 后的硬件验证和 paired confirmation |
 | targeted edge confirmation | 完成 | serial 15/15、bursty 45/45，五个 P1 候选同协议确认 |
 | phase-switch gate | 完成但未晋级 | 180/180 blocks，所有 switch 候选未通过能量 gate |
+| MoE fixed-horizon serving | 完成 | 同一固定窗口下完成 native dynamic、静态 CAP、MoE placement/DVFS 对比 |
+| MoE phase-aware serving v1 | 完成 v1 | Long/Short 无并发 trace 完成 3 repeats；收益有限但可重复，尚不进入并发在线控制 |
 | Q4/Q5/Q8 precision pilot | 完成首轮 | 同源 gate 与 20-block pilot 已有，仍限定于 llama.cpp |
 | 7B/14B scale pilot | 完成首轮 | 两个随机权重模型均有 5-block validation |
 
@@ -49,6 +53,21 @@ bursty 的 4/8/12 tok/s 下，QueuePowerMin 相对 native dynamic 分别降低�
 
 phase-switch gate 已完成 180/180 blocks。GPU 1575 MHz/EMC 4266 MHz 的切换候选在三个 workload 上相对 no-switch 的能量变化约为 `+0.608%`、`-0.149%`、`-0.073%`，置信区间均不能支持严格的负能量结论；其余降频切换候选能量明显上升。因此 phase-aware 控制目前是完整的负结果：保留诊断价值，但不能晋级为在线能效策略。
 
+### MoE fixed-horizon 与 phase-aware v1
+
+为避免 request-active energy 的变量时长偏差，MoE serving 使用固定的
+`periodic_short`（6 个 `128/128` 请求、40 秒）和 `periodic_long`（6 个
+`1024/128` 请求、60 秒）窗口，并使用同一随机权重 Qwen3 MoE Q4_K_M、同一
+llama.cpp Thor runtime 和三次重复。
+
+- Long：`phase_high_to_memory_aware` 相对 `static_native_dynamic` 的固定窗口能耗和平均功率均下降约 3.6%，峰值功率下降约 14.9%；`phase_power_guard` 的峰值功率下降约 20.3%，但 TPOT p95 接近 31 ms。
+- Short：最低固定窗口能耗来自 `static_peak_guard_1359_3200_972`，能耗和平均功率下降约 3.7%；phase-aware 最佳能耗点约下降 2.2%，但没有稳定超过静态点。
+- `strict_20` 和 `balanced_30` 在当前 TTFT 约束下没有可行策略；`edge_50` 和 `relaxed_100` 才形成可解释的 Pareto 集合。
+- Phase switch p95 约为 87~111 ms，说明切换本身是主要开销之一；短请求无法充分摊平该开销，Long decode 更适合继续探索 phase-aware。
+
+因此当前结论是“phase-aware 在 Thor 上存在有限、场景相关的收益”，而不是已经得到通用在线策略。详细数据、SLO 和边界见
+[Thor phase-aware 结果分析](thor_phase_aware_findings_20261022.md)。
+
 ### Precision 和 model scale
 
 Q4/Q5/Q8 的结果共同显示，低频/低 EMC 点可以显著降低功率，但常以更高 J/token 和更差尾延迟为代价；高性能锁频点相对 MaxClock 的 J/token 改善通常只有约 0.5% 到 1.2% 的量级，不能包装成普遍收益。7B/14B pilot 也呈现同样边界：14B 的低功率点并不意味着更低 J/token，模型规模改变了工作点和可行 SLO，但没有推出单调的“模型越大越值得调频”规律。
@@ -76,7 +95,7 @@ Q4/Q5/Q8 的结果共同显示，低频/低 EMC 点可以显著降低功率，�
 ### 尚未成立
 
 - Thor 相对 native dynamic 的全面功率或 J/token 优势；
-- phase switch 在长时间 serving 中稳定降低总能量；
+- phase-aware 在并发和长时间 serving 中稳定降低总能量；当前只在无并发固定窗口上观察到有限收益；
 - Q4/Q5/Q8 或 7B/14B 的差异能稳定改变 Pareto 排序；
 - 随机权重结果可以代表预训练模型或真实电池续航。
 
@@ -94,6 +113,7 @@ Q4/Q5/Q8 的结果共同显示，低频/低 EMC 点可以显著降低功率，�
 | P1 | Q4/Q5/Q8 同源 gate | 同一 F16 source、5 validation repeats | 首轮完成，llama.cpp 范围内 |
 | P1 | 7B/14B matched pilot | 同一 SLO 下分别选择 Pareto | 首轮完成，仍为随机模型 |
 | P1 | phase-switch gate | 配对能量 CI 上界低于 0 且 SLO 达标 | 完成但未通过 |
+| P1 | phase-aware v1 fixed-horizon | Long/Short 三重复、固定窗口、SLO/Pareto 报告 | 已完成；收益有限，待 v2 优化切换开销 |
 | P1 | queue-aware serving | 每个 block SLO 达标、paired confirmation | 已完成 |
 | P2 | 长时间 thermal serving | 温度、漂移、恢复和 telemetry 完整 | full 已完成；收益方向稳定，但 thermal gate 为 1/3、2/3、2/3，尚非全重复认证 |
 | P2 | MoE model-space study | 专家放置、路由统计、DVFS 和 SLO 联合证据 | runtime gate 已实现，等待外部 GGUF |

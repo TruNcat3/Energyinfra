@@ -4,7 +4,7 @@
 **平台实例**：Jetson Orin、Jetson AGX Thor 及后续 Jetson 边端 GPU
 **统一运行时**：以 llama.cpp/GGUF 为主，平台可扩展其他 runtime
 **当前主模型**：Orin 使用多模型历史基线；Thor 以随机权重 Qwen2.5 7B Q4_K_M 做系统控制变量
-**文档日期**：2026-10-15
+**文档日期**：2026-10-22
 
 ## 1. 框架定位与研究问题
 
@@ -76,7 +76,7 @@ Orin 是当前已有数据最完整的平台，包含 GPU/EMC profiling、7B/8B/
 
 `edge_c3_p2 @ rate_012` 在 bursty 低并发 full 数据中，TPOT 100 ms 下总体达标率约 90%，三次重复为 `[100%, 80%, 80%]`，平均功率约 40.5 W，TPOT P95 约 30.9 ms。由于未达到 95% 保守门槛，它应标记为“接近可行候选”，不能写成“满足 SLO”。
 
-另外，1,041,216-policy queue-aware search 已完成硬件 validation 和 paired confirmation；QueuePowerMin 在 long-generation arrival trace 下保持 100% 观测达标，并相对 MaxClock 取得约 5.47% J/token 改善。phase-switch gate 已完成 180/180 blocks，但没有候选同时通过能量和 SLO 晋级门槛。上述结果不能合并成一个 Thor 总收益：queue-aware 改善来自 arrival/queue/drain 场景，serial/bursty 的排序不同；phase-switch 的负结果也不能否定静态或 queue-aware Pareto。
+另外，1,041,216-policy queue-aware search 已完成硬件 validation 和 paired confirmation；QueuePowerMin 在 long-generation arrival trace 下保持 100% 观测达标，并相对 MaxClock 取得约 5.47% J/token 改善。phase-switch gate 已完成 180/180 blocks，但没有候选同时通过能量和 SLO 晋级门槛。随后完成的 MoE fixed-horizon phase-aware v1 在无并发周期 trace 上重新隔离了 Prefill/Decode 阶段：Long workload 的最佳 phase-aware 点相对 native dynamic 降低约 3.6% 固定窗口能耗和 14.9% 峰值功率，Short workload 的最佳能耗点仍是静态 peak-guard，能耗降低约 3.7%。上述结果不能合并成一个 Thor 总收益：queue-aware、fixed-horizon、serial/bursty 的 arrival 和测量窗口不同；phase-aware 的收益也受频率切换延迟限制。
 
 Thor 当前最重要的结论是方法边界已经比单点 benchmark 清楚：低并发场景中 idle horizon、到达过程和重复达标率会改变候选排序；P8 场景中 batch/并发效率又会改变排序。因此 Thor 的后续工作应优先完成场景内的统一结果表和置信区间，而不是把所有场景压成一个平均收益。
 
@@ -118,7 +118,8 @@ phase switch、thermal feedback 和 queue-aware policy 都可能在低功率时�
 2. 对 A/B/C 三类场景使用同一指标表输出绝对值、相对 native dynamic 的变化和置信区间；
 3. 完成 Q4/Q5/Q8 同源 gate，再决定是否扩大精度和 serving 搜索；
 4. 完成 7B/14B matched pilot，明确模型规模是否改变频率敏感性；
-5. 仅将通过 gate 的静态 Pareto 点转化为 phase-aware 和 workload-aware 在线选择器；
-6. 用长时间 serving 验证温度、功率波动、频率切换开销和恢复可靠性；
-7. 在真实权重 sanity check 后，再讨论随机模型结果的外推边界；
-8. 同一模型、同一 runtime、同一 trace 和同一 SLO 对齐后，再汇报“超越”结论。
+5. 优先完成 phase-aware v2 的提前切换、切换开销摊销和短请求回退策略；
+6. 仅将通过 gate 的静态 Pareto 点转化为 phase-aware 和 workload-aware 在线选择器；
+7. 用长时间 serving 验证温度、功率波动、频率切换开销和恢复可靠性；
+8. 在真实权重 sanity check 后，再讨论随机模型结果的外推边界；
+9. 同一模型、同一 runtime、同一 trace 和同一 SLO 对齐后，再汇报“超越”结论。
