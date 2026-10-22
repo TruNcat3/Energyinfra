@@ -25,6 +25,7 @@ EnergyInfra 的统一主题是面向边端 GPU 的多目标能效调优框架。
 - [Thor unified evidence aggregation](experiments/thor_unified_evidence_v1.md)
 - [Thor targeted edge confirmation](experiments/thor_edge_confirmation_v1.md)
 - [MoE phase-aware serving](experiments/thor_moe_phase_aware_serving_v1.md)
+- [MoE phase-aware serving v2](experiments/thor_moe_phase_aware_serving_v2.md)
 
 ## 文档分层
 
