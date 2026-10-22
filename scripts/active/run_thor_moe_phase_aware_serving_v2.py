@@ -26,7 +26,9 @@ def fmt(value: Any, digits: int = 2) -> str:
     return "-" if value is None else f"{float(value):.{digits}f}"
 
 
-def percentile(values: list[float], q: float) -> float:
+def percentile(values: list[float], q: float) -> float | None:
+    if not values:
+        return None
     ordered = sorted(values)
     index = (len(ordered) - 1) * q
     lower, upper = int(index), min(len(ordered) - 1, int(index) + 1)
