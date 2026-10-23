@@ -99,13 +99,33 @@ v2 的结论是：提前 Prefill 切换确实改善了长输出的 TTFT，但 De
 fallback 反而比 native dynamic 增加约 2.6% 能耗。因此当前应采用 workload-aware
 hybrid，而不是对所有请求统一切换。
 
-## 7. 下一步 workload-aware hybrid
+## 7. Workload-aware hybrid v3 结果
 
-下一阶段不再直接增加更多频率点，而验证按输出长度选择策略：
+v3 将 v2 的输出长度策略放入同一个 `mixed_output_lengths` 固定 trace：
+`short_128`、`long_128`、`long_256`、`long_512`、`short_128`、`long_256`，
+总窗口 120 秒，full 三次重复。
 
-1. Short 请求回退 native dynamic；
-2. `long_128` 使用静态 peak guard；
-3. `long_256` 选择 high-prefill/memory-aware-decode；
-4. `long_512` 选择 max-prefill/balanced-decode；
-5. 在一个混合输出长度的固定 trace 中与 native、静态 peak guard 做三重复比较；
-6. 最后再在全局控制约束下测试并发 trace，不把串行收益直接外推到 shared serving。
+| 策略 | 固定窗口能耗 | 平均功率 | 峰值功率 | TTFT p95 | TPOT p95 |
+|---|---:|---:|---:|---:|---:|
+| native dynamic | 3623.24 J | 30.19 W | 79.29 W | 722.76 ms | 23.01 ms |
+| static peak guard | **3586.20 J (-1.0%)** | **29.88 W (-1.0%)** | **72.77 W (-8.2%)** | 987.56 ms | 24.04 ms |
+| workload hybrid | 3642.12 J (+0.5%) | 30.35 W (+0.5%) | 77.70 W (-2.0%) | 950.49 ms | 26.20 ms |
+
+在 `edge_50` 下混合 trace 没有策略通过；在 `relaxed_100` 下三种策略均可行。
+quick 单次运行的 hybrid 能耗约低 1.2%，但 full 三重复变为比 native 高约 0.5%，
+因此 quick 结果不能作为收益证据。这个结果说明 workload-aware 选择本身还不够，
+全局硬件切换开销、策略切换后的尾延迟和固定窗口基线差异抵消了 phase-aware 的
+局部收益。
+
+当前 phase-aware 结论降级为：在 Thor 的全局 DVFS 控制下，长 decode 存在局部
+峰值功率收益，但尚未形成稳健的总能耗或 SLO 优势，不进入在线默认策略。
+
+## 8. 下一步 workload-aware hybrid
+
+下一阶段不再继续增加 phase-aware 频点，而转向运行时和 arrival-aware 控制：
+
+1. 将静态 peak guard 作为当前低并发默认候选；
+2. 把到达间隔、队列深度和 batch/ubatch 状态纳入选择器，而不是只按 output length 切换；
+3. 在 shared serving 中验证 queue-aware 静态策略，优先于 per-request 全局频率切换；
+4. 只有当 runtime 能降低切换延迟或提供 phase-local 控制后，再重新评估 phase-aware；
+5. 不把当前串行负结果外推为所有 GPU 或所有 runtime 的结论。

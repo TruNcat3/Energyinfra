@@ -25,6 +25,7 @@
 | MoE fixed-horizon serving | 完成 | 同一固定窗口下完成 native dynamic、静态 CAP、MoE placement/DVFS 对比 |
 | MoE phase-aware serving v1 | 完成 v1 | Long/Short 无并发 trace 完成 3 repeats；收益有限但可重复，尚不进入并发在线控制 |
 | MoE phase-aware serving v2 | 完成 v2 | 提前 Prefill 切换、短输出 fallback、128/256/512 token 摊销测试完成；待 hybrid selector 验证 |
+| MoE workload-aware hybrid v3 | 完成但未晋级 | 混合输出长度三重复完成；hybrid 能耗高于 native 和静态 peak guard，不进入在线策略 |
 | Q4/Q5/Q8 precision pilot | 完成首轮 | 同源 gate 与 20-block pilot 已有，仍限定于 llama.cpp |
 | 7B/14B scale pilot | 完成首轮 | 两个随机权重模型均有 5-block validation |
 
@@ -83,6 +84,22 @@ peak guard。full 结果显示：
 因此当前更合理的控制形式是 workload-aware hybrid，而不是所有请求统一启用
 phase switch：短请求使用 native，128 token 长请求使用静态 peak guard，256/512
 token 长请求再分别选择 phase-aware 候选。
+
+### Workload-aware hybrid v3：未形成稳健收益
+
+v3 将上述规则放入同一个 `mixed_output_lengths` 固定 trace，在相同 120 秒
+窗口中执行 `short_128`、`long_128`、`long_256` 和 `long_512`，并与 native
+dynamic、静态 peak guard 做三次重复比较。full 结果为：
+
+- native dynamic：`3623.24 J`、`30.19 W`、峰值 `79.29 W`；
+- static peak guard：`3586.20 J`、`29.88 W`、峰值 `72.77 W`，相对 native 能耗下降约 1.0%；
+- workload hybrid：`3642.12 J`、`30.35 W`、峰值 `77.70 W`，相对 native 能耗增加约 0.5%，相对静态 peak guard 增加约 1.6%；
+- hybrid 的 TTFT/TPOT p95 为 `950.49/26.20 ms`，均差于 native dynamic 的 `722.76/23.01 ms`。
+
+`edge_50` 下混合 trace 没有策略通过，`relaxed_100` 下三种策略均可行。quick
+单次结果曾显示约 1.2% hybrid 能耗下降，但 full 三重复没有复现，因此不能作为
+收益证据。当前应停止继续扩展 phase-aware 频点，保留该结果作为“全局硬件切换
+开销抵消细粒度策略收益”的负结果。
 
 ### Precision 和 model scale
 
