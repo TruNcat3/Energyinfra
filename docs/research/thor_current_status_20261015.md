@@ -24,6 +24,7 @@
 | phase-switch gate | 完成但未晋级 | 180/180 blocks，所有 switch 候选未通过能量 gate |
 | MoE fixed-horizon serving | 完成 | 同一固定窗口下完成 native dynamic、静态 CAP、MoE placement/DVFS 对比 |
 | MoE phase-aware serving v1 | 完成 v1 | Long/Short 无并发 trace 完成 3 repeats；收益有限但可重复，尚不进入并发在线控制 |
+| MoE phase-aware serving v2 | 完成 v2 | 提前 Prefill 切换、短输出 fallback、128/256/512 token 摊销测试完成；待 hybrid selector 验证 |
 | Q4/Q5/Q8 precision pilot | 完成首轮 | 同源 gate 与 20-block pilot 已有，仍限定于 llama.cpp |
 | 7B/14B scale pilot | 完成首轮 | 两个随机权重模型均有 5-block validation |
 
@@ -67,6 +68,21 @@ llama.cpp Thor runtime 和三次重复。
 
 因此当前结论是“phase-aware 在 Thor 上存在有限、场景相关的收益”，而不是已经得到通用在线策略。详细数据、SLO 和边界见
 [Thor phase-aware 结果分析](thor_phase_aware_findings_20261022.md)。
+
+### MoE phase-aware v2：切换摊销
+
+v2 将 Prefill 切换提前约 250 ms，并对小于 256 output tokens 的请求回退到静态
+peak guard。full 结果显示：
+
+- `long_128`：phase-aware 请求回退后，静态 peak guard 相对 native dynamic 约降低 4.9% 固定窗口能耗；这不是 phase switch 的增量收益。
+- `long_256`：`phase_long_high_to_memory_aware` 相对 native dynamic 约降低 0.4% 能耗，TTFT p95 约 952 ms。
+- `long_512`：`phase_long_max_to_balanced` 相对 native dynamic 约降低 1.3% 能耗，TTFT p95 约 323 ms。
+- `short_128`：native dynamic 仍是最低能耗点，phase-aware fallback 增加约 2.6% 能耗。
+- 实际 phase switch p95 在 `45~143 ms`，提前 Prefill 切换改善了长输出 TTFT，但没有消除 Decode 切换的能耗成本。
+
+因此当前更合理的控制形式是 workload-aware hybrid，而不是所有请求统一启用
+phase switch：短请求使用 native，128 token 长请求使用静态 peak guard，256/512
+token 长请求再分别选择 phase-aware 候选。
 
 ### Precision 和 model scale
 

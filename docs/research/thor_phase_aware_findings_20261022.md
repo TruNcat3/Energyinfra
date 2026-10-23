@@ -82,12 +82,30 @@ v1 只使用无并发周期 trace。Thor 的 GPU/EMC/CPU 控制是全局的，�
 因此 v1 还不能晋级为通用在线控制策略，也不能替代已有 queue-aware 或静态
 Pareto 结论。
 
-## 6. 下一步 phase-aware v2
+## 6. Phase-aware v2 结果：切换摊销
 
-下一阶段不再直接增加更多频率点，而解决切换机制本身：
+v2 将 Prefill 切换提前约 250 ms，并对小于 256 output tokens 的请求回退到静态
+peak guard。full 结果如下：
 
-1. 根据已知 arrival trace 提前切换 Prefill 配置，避免把切换延迟计入请求 dispatch 和 TTFT；
-2. 按预计输出长度设置切换门槛，短请求回退到静态 peak guard；
-3. 增加 128/256/512 output-token workload，估计切换开销的摊销阈值；
-4. 比较 phase-aware 与静态 Pareto 点在相同 edge SLO 下的置信区间；
-5. 最后再在全局控制约束下测试并发 trace，不把串行收益直接外推到 shared serving。
+| Trace | 最佳策略 | 相对 native dynamic 的能耗变化 | TTFT p95 | TPOT p95 | Switch p95 |
+|---|---|---:|---:|---:|---:|
+| `long_128` | static peak guard | -4.9% | 993.83 ms | 21.41 ms | - |
+| `long_256` | phase high → memory-aware | -0.4% | 952.40 ms | 27.78 ms | 131.57 ms |
+| `long_512` | phase max → balanced | -1.3% | 322.58 ms | 24.34 ms | 45.29 ms |
+| `short_128` | native dynamic | 0.0% | 312.39 ms | 17.48 ms | - |
+
+v2 的结论是：提前 Prefill 切换确实改善了长输出的 TTFT，但 Decode 阶段的
+切换仍有 `45~143 ms` 开销，能耗增益只有 `0.3%~1.3%`。短请求使用 phase-aware
+fallback 反而比 native dynamic 增加约 2.6% 能耗。因此当前应采用 workload-aware
+hybrid，而不是对所有请求统一切换。
+
+## 7. 下一步 workload-aware hybrid
+
+下一阶段不再直接增加更多频率点，而验证按输出长度选择策略：
+
+1. Short 请求回退 native dynamic；
+2. `long_128` 使用静态 peak guard；
+3. `long_256` 选择 high-prefill/memory-aware-decode；
+4. `long_512` 选择 max-prefill/balanced-decode；
+5. 在一个混合输出长度的固定 trace 中与 native、静态 peak guard 做三重复比较；
+6. 最后再在全局控制约束下测试并发 trace，不把串行收益直接外推到 shared serving。

@@ -46,6 +46,7 @@ Orin 和 Thor 都以 llama.cpp/GGUF 为主要运行时。Thor 当前主模型为
 | 单用户串行 think-time | 已完成运行 | 请求间隔固定为 30 秒；用于判断真正边端交互场景，结果需与突发场景分开解释 |
 | MoE fixed-horizon serving | 已完成 | 在相同请求窗口下验证静态 CAP、原生动态和 MoE placement/DVFS 候选 |
 | Phase-aware serving | 已完成 v1 | Prefill/Decode 分阶段策略在 edge SLO 下取得约 1.6%~3.6% 固定窗口能耗收益，峰值功率最高下降约 20.3% |
+| Phase-aware amortization v2 | 已完成 | 提前切换和短请求回退已验证；256/512 token 长输出的能耗收益约 0.3%~1.3%，仍需 workload-aware hybrid 验证 |
 | 静态硬件候选 | 已完成初版 | 已覆盖动态、最高频、低 EMC、c1/c3 等候选配置 |
 | 运行时和采集 | 已完成 | 硬件恢复、tegrastats、固定工作完整性和 telemetry gap 防护已接入 |
 

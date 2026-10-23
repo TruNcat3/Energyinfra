@@ -1,0 +1,117 @@
+{
+  "schema": "energyinfra-thor-moe-workload-hybrid-v3",
+  "seed": 20261025,
+  "hardware_config": "configs/experiments/thor_protocol_v2.json",
+  "runtime": {
+    "server_binary": "build/llama.cpp-4df29be4f4c3-thor-stage1b-content-only-fast-v2/bin/llama-server",
+    "manifest": "data/protocol_v2/thor_joint_serving_stage1b_runtime_v1/runtime_manifest.json",
+    "base_commit": "4df29be4f4c3673f428170fda944a5b19f743bb8",
+    "host": "127.0.0.1",
+    "port": 18760,
+    "threads": 4,
+    "context_tokens": 4096,
+    "batch": 512,
+    "ubatch": 256,
+    "startup_timeout_s": 180,
+    "request_timeout_s": 900
+  },
+  "placement": {"name": "all_gpu", "label": "All GPU", "cpu_moe_layers": 0, "extra_args": []},
+  "strategies": [
+    {
+      "name": "static_native_dynamic",
+      "label": "Native dynamic throughout",
+      "phase_aware": false,
+      "fallback": {"id": "native_dynamic", "mode": "dynamic"},
+      "prefill": {"id": "native_dynamic", "mode": "dynamic"},
+      "decode": {"id": "native_dynamic", "mode": "dynamic"}
+    },
+    {
+      "name": "static_peak_guard_1359_3200_972",
+      "label": "Static peak-power guard",
+      "phase_aware": false,
+      "fallback": {"id": "g1359_e3200_c972", "mode": "cap", "gpu_hz": 1359000000, "emc_hz": 3200000000, "cpu_khz": 972000},
+      "prefill": {"id": "g1359_e3200_c972", "mode": "cap", "gpu_hz": 1359000000, "emc_hz": 3200000000, "cpu_khz": 972000},
+      "decode": {"id": "g1359_e3200_c972", "mode": "cap", "gpu_hz": 1359000000, "emc_hz": 3200000000, "cpu_khz": 972000}
+    },
+    {
+      "name": "workload_hybrid_phase_selector",
+      "label": "Output-length workload-aware hybrid",
+      "phase_aware": false,
+      "fallback": {"id": "native_dynamic", "mode": "dynamic"},
+      "prefill": {"id": "native_dynamic", "mode": "dynamic"},
+      "decode": {"id": "native_dynamic", "mode": "dynamic"},
+      "workload_policies": {
+        "short_128": {
+          "name": "short_native",
+          "phase_aware": false,
+          "fallback": {"id": "native_dynamic", "mode": "dynamic"},
+          "prefill": {"id": "native_dynamic", "mode": "dynamic"},
+          "decode": {"id": "native_dynamic", "mode": "dynamic"}
+        },
+        "long_128": {
+          "name": "long_128_static_peak_guard",
+          "phase_aware": false,
+          "fallback": {"id": "g1359_e3200_c972", "mode": "cap", "gpu_hz": 1359000000, "emc_hz": 3200000000, "cpu_khz": 972000},
+          "prefill": {"id": "g1359_e3200_c972", "mode": "cap", "gpu_hz": 1359000000, "emc_hz": 3200000000, "cpu_khz": 972000},
+          "decode": {"id": "g1359_e3200_c972", "mode": "cap", "gpu_hz": 1359000000, "emc_hz": 3200000000, "cpu_khz": 972000}
+        },
+        "long_256": {
+          "name": "long_256_phase_memory_aware",
+          "phase_aware": true,
+          "minimum_output_tokens": 256,
+          "fallback": {"id": "g1359_e3200_c972", "mode": "cap", "gpu_hz": 1359000000, "emc_hz": 3200000000, "cpu_khz": 972000},
+          "prefill": {"id": "g1575_e4266_c2601", "mode": "cap", "gpu_hz": 1575000000, "emc_hz": 4266000000, "cpu_khz": 2601000},
+          "decode": {"id": "g1116_e2750_c972", "mode": "cap", "gpu_hz": 1116000000, "emc_hz": 2750000000, "cpu_khz": 972000}
+        },
+        "long_512": {
+          "name": "long_512_phase_balanced",
+          "phase_aware": true,
+          "minimum_output_tokens": 512,
+          "fallback": {"id": "g1359_e3200_c972", "mode": "cap", "gpu_hz": 1359000000, "emc_hz": 3200000000, "cpu_khz": 972000},
+          "prefill": {"id": "max_clock", "mode": "max_clock"},
+          "decode": {"id": "g1359_e3200_c972", "mode": "cap", "gpu_hz": 1359000000, "emc_hz": 3200000000, "cpu_khz": 972000}
+        }
+      }
+    }
+  ],
+  "presets": {
+    "quick": {"strategies": ["static_native_dynamic", "static_peak_guard_1359_3200_972", "workload_hybrid_phase_selector"], "repeats": 1},
+    "full": {"strategies": ["static_native_dynamic", "static_peak_guard_1359_3200_972", "workload_hybrid_phase_selector"], "repeats": 3}
+  },
+  "traces": [
+    {
+      "name": "mixed_output_lengths",
+      "duration_s": 120.0,
+      "requests": [
+        {"scheduled_time_s": 0.0, "workload": "short_128"},
+        {"scheduled_time_s": 10.0, "workload": "long_128"},
+        {"scheduled_time_s": 22.0, "workload": "long_256"},
+        {"scheduled_time_s": 38.0, "workload": "long_512"},
+        {"scheduled_time_s": 64.0, "workload": "short_128"},
+        {"scheduled_time_s": 74.0, "workload": "long_256"}
+      ]
+    }
+  ],
+  "workloads": {
+    "short_128": {"prompt_tokens": 128, "output_tokens": 128},
+    "long_128": {"prompt_tokens": 1024, "output_tokens": 128},
+    "long_256": {"prompt_tokens": 1024, "output_tokens": 256},
+    "long_512": {"prompt_tokens": 1024, "output_tokens": 512}
+  },
+  "measurement": {
+    "launch_lead_s": 1.0,
+    "prefill_lead_s": 0.25,
+    "settle_after_apply_s": 0.5,
+    "minimum_samples": 10,
+    "telemetry_attempts": 2,
+    "abort_temperature_c": 85.0,
+    "required_attainment": 0.95
+  },
+  "slo_profiles": [
+    {"name": "edge_50", "tpot_ms": 50.0, "ttft_ms": {"short_128": 500.0, "long_128": 1500.0, "long_256": 1500.0, "long_512": 1500.0}},
+    {"name": "relaxed_100", "tpot_ms": 100.0, "ttft_ms": {"short_128": 1000.0, "long_128": 3000.0, "long_256": 3000.0, "long_512": 3000.0}}
+  ],
+  "quality_scope": "random-weight fixed-output mixed-length fixed-horizon workload-aware hybrid experiment; no model-quality claim",
+  "protocol_scope": "sequential non-overlapping mixed-output trace; global Thor hardware controls; policy selected by workload length",
+  "output_dir": "data/protocol_v2/thor_moe_workload_hybrid_v3"
+}

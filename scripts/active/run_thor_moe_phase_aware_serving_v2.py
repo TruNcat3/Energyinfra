@@ -332,7 +332,7 @@ def render(preset: str, aggregates: list[dict[str, Any]], frontiers: list[dict[s
     lines += ["", "## Pareto sets", "", "| SLO | Trace | Feasible | Pareto strategies |", "|---|---|---:|---|"]
     for row in frontiers:
         lines.append(f"| {row['slo']} | {row['trace']} | {len(row['feasible'])} | {', '.join(row['pareto']) or '-'} |")
-    lines += ["", "The first token is the phase boundary. This v1 intentionally excludes concurrent traces because hardware frequency is global on Thor; concurrent phase-aware control is a separate experiment.", "", "Quality scope: random-weight fixed-output systems measurement; no model-quality claim.", ""]
+    lines += ["", "The first token is the phase boundary. This v2 intentionally excludes concurrent traces because hardware frequency is global on Thor; concurrent phase-aware control is a separate experiment.", "", "Quality scope: random-weight fixed-output systems measurement; no model-quality claim.", ""]
     return "\n".join(lines)
 
 
